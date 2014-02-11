@@ -1,0 +1,32 @@
+[INFO] 2014-02-11 13:43:08 Transaction Success correlationId: 4d5c22dcf3de0 
+[INFO] 2014-02-11 13:47:48 Transaction Success correlationId: cf99046c5286c 
+[INFO] 2014-02-11 13:48:31 Transaction Success correlationId: 1f3e56479f961 
+[INFO] 2014-02-11 13:48:44 Transaction Success correlationId: 43f81f9541ad8 
+[INFO] 2014-02-11 13:48:49 Transaction Success correlationId: 3ce2d82883b24 
+[INFO] 2014-02-11 13:52:41 Transaction Success correlationId: f6cfcdaca194a 
+[WARNING] 2014-02-11 13:52:45 Transaction SuccessWithWarning correlationId: 3eacf3041bea error: [11607] <Duplicate Request> A successful transaction has already been completed for this token. 
+[INFO] 2014-02-11 13:54:02 Transaction Success correlationId: c21bb1a04af89 
+[INFO] 2014-02-11 13:54:14 Transaction Success correlationId: 853650919a942 
+[INFO] 2014-02-11 13:54:20 Transaction Success correlationId: 3ac932af1331e 
+[INFO] 2014-02-11 13:58:11 Transaction Success correlationId: f25cb026de466 
+[INFO] 2014-02-11 13:58:27 Transaction Success correlationId: 1f38fc25d3be 
+[INFO] 2014-02-11 13:58:37 Transaction Success correlationId: a85ef8aec496d 
+[INFO] 2014-02-11 14:00:47 Transaction Success correlationId: 174eb25c75803 
+[INFO] 2014-02-11 14:01:00 Transaction Success correlationId: 7a27759d232a5 
+[INFO] 2014-02-11 14:01:05 Transaction Success correlationId: e1cf3386c983d 
+[INFO] 2014-02-11 14:02:15 Transaction Success correlationId: 6f6c1990137d6 
+[WARNING] 2014-02-11 14:02:21 Transaction SuccessWithWarning correlationId: e16d7ca2c3a15 error: [11607] <Duplicate Request> A successful transaction has already been completed for this token. 
+[INFO] 2014-02-11 14:02:53 Transaction Success correlationId: 345d881a295c0 
+[INFO] 2014-02-11 14:03:27 Transaction Success correlationId: 6a3732eb7f0fe 
+[INFO] 2014-02-11 14:03:32 Transaction Success correlationId: 740116254698f 
+[INFO] 2014-02-11 14:10:57 Transaction Success correlationId: c6ed873deee97 
+[INFO] 2014-02-11 14:11:09 Transaction Success correlationId: 999e01e21b280 
+[INFO] 2014-02-11 14:11:14 Transaction Success correlationId: 43954f2cb3dc3 
+[INFO] 2014-02-11 14:12:42 Transaction Success correlationId: fa78e6df972cd 
+[INFO] 2014-02-11 14:12:52 Transaction Success correlationId: 3579087338782 
+[INFO] 2014-02-11 14:12:57 Transaction Success correlationId: f2c3ce20e560b 
+[INFO] 2014-02-11 14:16:30 Transaction Success correlationId: 9ef1e803a6951 
+[WARNING] 2014-02-11 14:16:33 Transaction SuccessWithWarning correlationId: 72066298f302c error: [11607] <Duplicate Request> A successful transaction has already been completed for this token. 
+[INFO] 2014-02-11 14:17:06 Transaction Success correlationId: ed7032c13559 
+[INFO] 2014-02-11 14:17:17 Transaction Success correlationId: a28791e470b25 
+[INFO] 2014-02-11 14:17:22 Transaction Success correlationId: d41b4d8cb233 

@@ -1,0 +1,29 @@
+<routes xmlns="http://symfony.com/schema/routing"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
+
+	<route id="paypal.configure" path="/admin/module/paypal/configure" methods="post">
+		<default key="_controller">Paypal\Controller\ConfigurePaypal::configure</default>
+	</route>
+
+    <route id="paypal.goto" path="/module/paypal/goto/{order_id}" methods="get">
+        <default key="_controller">Paypal\Controller\GotoPaypal::go</default>
+        <requirement key="order_id">\d+</requirement>
+    </route>
+
+    <route id="paypal.cancel" path="/module/paypal/cancel/{order_id}" methods="get">
+        <default key="_controller">Paypal\Controller\PaypalResponse::cancel</default>
+        <requirement key="order_id">\d+</requirement>
+    </route>
+
+    <route id="paypal.ok" path="/module/paypal/ok/{order_id}" methods="get">
+        <default key="_controller">Paypal\Controller\PaypalResponse::ok</default>
+        <requirement key="order_id">\d+</requirement>
+    </route>
+
+    <!-- ??? -->
+    <route id="paypal.listener" path="/module/paypal/listen" methods="post">
+        <default key="_controller">Paypal\Listener\CheckoutIpnListener::listen</default>
+    </route>
+
+</routes>

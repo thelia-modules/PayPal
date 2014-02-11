@@ -1,0 +1,126 @@
+<div class="row">
+	<!-- Errors -->
+    
+	{loop name="checkpaypalrights" type="paypal.check.rights"}
+	<div class="alert alert-danger">
+    	<p>{$ERRMES} {$ERRFILE} | {intl l="Please change the access rights"}.</p>
+    </div>
+	{/loop}
+
+</div>
+{elseloop rel="checkpaypalrights"}
+{* Calc tab selection *}
+{assign var="tab" value="0"}
+{if isset($smarty.get.current_tab)}
+    {if $smarty.get.current_tab eq "configure_sandbox"}
+        {assign var="tab" value="1"}
+    {/if}
+{/if}
+<div class="general-block-decorator">
+    <div class="col-md-12">
+        <ul id="tabbed-menu" class="nav nav-tabs">
+            <li class="{if $tab eq "0"}active{/if}"><a data-toggle="tab" href="#configure_account">{intl l="Configure paypal account"}</a></li>
+            <li class="{if $tab eq "1"}active{/if}"><a data-toggle="tab" href="#configure_sandbox">{intl l="Configure sandbox"}</a></li>
+        </ul>
+        <br/>
+        <div class="tab-content">
+            <div id="configure_account" class="tab-pane {if $tab eq "0"}active{/if} form-container">
+            <form action="{url path="/admin/module/paypal/configure"}" method="post">
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix">
+                        {intl l="Configure Paypal module"}
+                    </div>
+                    <div class="panel-body">
+                    {form name="paypal.configure"}
+                        {form_hidden_fields form=$form}
+
+                        {form_field form=$form field="login"}
+                        <div class="form-group {if $error}has-error{/if}">
+                            <label for="{$label_attr.for}">
+                                {$label}
+                            </label>
+
+                            <input type="text" required placeholder="{$label_attr.for}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
+                        </div>
+                        {/form_field}
+                        {form_field form=$form field="password"}
+                        <div class="form-group {if $error}has-error{/if}">
+                            <label for="{$label_attr.for}">
+                                {$label}
+                            </label>
+
+                            <input type="text" required placeholder="{$label_attr.for}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
+                        </div>
+                        {/form_field}
+                        {form_field form=$form field="signature"}
+                        <div class="form-group {if $error}has-error{/if}">
+                            <label for="{$label_attr.for}">
+                                {$label}
+                            </label>
+
+                            <input type="text" required placeholder="{$label_attr.for}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
+                        </div>
+                        {/form_field}
+                        <button type="submit" name="save" value="stay" class="form-submit-button btn btn-sm btn-default btn-save" title="{intl l='Save'}">{intl l='Save'} <span class="glyphicon glyphicon-ok"></span></button>
+                    {/form}
+                    </div>
+                </div>
+            </form>
+            </div>
+            <div id="configure_sandbox" class="tab-pane {if $tab eq "1"}active{/if} form-container">
+            <form action="{url path="/admin/module/paypal/configure"}" method="post">
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix">
+                        {intl l="Configure Paypal module"}
+                    </div>
+                    <div class="panel-body">
+                    {form name="paypal.configure.sandbox"}
+                        {form_hidden_fields form=$form}
+
+                        {form_field form=$form field="sandbox"}
+                            <label for="{$label_attr.for}">
+                                {$label}
+                            </label>
+
+                            <input type="checkbox" value="true" id="{$label_attr.for}" name="{$name}" class="form-control" {if !empty($value)} checked {/if} />
+                        {/form_field}
+
+                        {form_field form=$form field="login"}
+                        <div class="form-group {if $error}has-error{/if}">
+                            <label for="{$label_attr.for}">
+                                {$label}
+                            </label>
+
+                            <input type="text" required placeholder="{$label_attr.for}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
+                        </div>
+                        {/form_field}
+                        {form_field form=$form field="password"}
+                        <div class="form-group {if $error}has-error{/if}">
+                            <label for="{$label_attr.for}">
+                                {$label}
+                            </label>
+
+                            <input type="text" required placeholder="{$label_attr.for}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
+                        </div>
+                        {/form_field}
+                        {form_field form=$form field="signature"}
+                        <div class="form-group {if $error}has-error{/if}">
+                            <label for="{$label_attr.for}">
+                                {$label}
+                            </label>
+
+                            <input type="text" required placeholder="{$label_attr.for}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
+                        </div>
+                        {/form_field}
+                        <button type="submit" name="save" value="stay" class="form-submit-button btn btn-sm btn-default btn-save" title="{intl l='Save'}">{intl l='Save'} <span class="glyphicon glyphicon-ok"></span></button>
+                        {/form}
+                    </div>
+                </div>
+            </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{/elseloop}

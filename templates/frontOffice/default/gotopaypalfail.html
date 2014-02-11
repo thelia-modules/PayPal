@@ -1,0 +1,39 @@
+{extends file="layout.tpl"}
+
+{* Security *}
+{block name="no-return-functions" prepend}
+{check_auth context="front" role="CUSTOMER" login_tpl="login"}
+{/block}
+
+{* Breadcrumb *}
+{block name='no-return-functions' append}
+{$breadcrumbs = [
+['title' => {intl l="Error with paypal service"}]
+]}
+{/block}
+
+{block name="body-class"}page-gotobankservice{/block}
+
+{block name="main-content"}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            {intl l="Failed to pay with paypal"}
+        </h3>
+    </div>
+    <div class="panel-body">
+        <h3>
+            {intl l="Internal error"}
+        </h3>
+        <p>
+            {intl l="We're sorry, an internal error prevent us to deliver you a paypal service."}
+        </p>
+    </div>
+</div>
+<a class="btn btn-back" role="button" href="{url path="/order/invoice"}">
+    <span>{intl l="Back"}</span>
+</a>
+<br/><br/>
+{/block}
+
+{block name="after-javascript-include"}{/block}

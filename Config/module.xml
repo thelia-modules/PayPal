@@ -12,7 +12,7 @@
         <name>Thelia</name>
         <email>info@thelia.net</email>
     </author>
-    <type>paiement</type>
+    <type>payment</type>
     <thelia>2.0.0</thelia>
     <stability>alpha</stability>
 </module>
