@@ -46,12 +46,18 @@ class CheckRightsLoop extends BaseLoop implements ArraySearchLoopInterface
     public function buildArray()
     {
         $ret = array();
-        $dir = __DIR__."/../Config/";
-        if (!is_readable($dir)) {
-            $ret[] = array("ERRMES"=>Translator::getInstance()->trans("Can't read Config directory"), "ERRFILE"=>"");
-        }
-        if (!is_writable($dir)) {
-            $ret[] = array("ERRMES"=>Translator::getInstance()->trans("Can't write Config directory"), "ERRFILE"=>"");
+        $dirs = array("Config", "logs");
+        while($dir=array_pop($dirs)) {
+            $dir_path = __DIR__."/../".$dir."/";
+            if(!is_dir($dir_path) && !is_writable(__DIR__."/../")) {
+                $ret[] = array("ERRMES"=>Translator::getInstance()->trans("This directory doesn't exists and Paypal plugin directory isn't writable: "), "ERRFILE"=>$dir);
+            }
+            elseif (is_dir($dir_path) && !is_readable($dir_path)) {
+                $ret[] = array("ERRMES"=>Translator::getInstance()->trans("Can't read directory "), "ERRFILE"=>$dir);
+            }
+            elseif (is_dir($dir_path) && !is_writable($dir_path)) {
+                $ret[] = array("ERRMES"=>Translator::getInstance()->trans("Can't write directory "), "ERRFILE"=>$dir);
+            }
         }
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
