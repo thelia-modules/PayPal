@@ -41,7 +41,8 @@ class Paypal extends BaseModule implements PaymentModuleInterface
 {
 
     const JSON_CONFIG_PATH = "Config/config.json";
-    const PAYPAL_MAX_PRODUCTS = 10;
+    const PAYPAL_MAX_PRODUCTS = 9;
+    const PAYPAL_MAX_PRICE = 8000;
 
     const STATUS_PAID = 2;
     const STATUS_CANCELED = 5;
@@ -80,7 +81,9 @@ class Paypal extends BaseModule implements PaymentModuleInterface
      */
     public function isValidPayment()
     {
-        return $this->container->get('request')->getSession()->getOrder()->getOrderProducts()->count() <= self::PAYPAL_MAX_PRODUCTS;
+        $order = $this->container->get('request')->getSession()->getOrder();
+        return $order->getOrderProducts()->count() <= self::PAYPAL_MAX_PRODUCTS &&
+            $order->getTotalAmount() < self::PAYPAL_MAX_PRICE;
     }
 
     public function postActivation(ConnectionInterface $con = null)

@@ -33,6 +33,7 @@ use Paypal\Model\Config;
 use Paypal\Paypal;
 
 use Thelia\Controller\Front\BaseFrontController;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\Base\CountryQuery;
 use Thelia\Model\OrderAddressQuery;
 use Thelia\Model\OrderQuery;
@@ -73,17 +74,31 @@ class GotoPaypal extends BaseFrontController {
         /*
          * Store products into 2d array $products
          */
+        $products_amount = 0;
         foreach($order->getOrderProducts() as $product) {
             if($product !== null) {
-                $amount = floatval($product->getPromoPrice() !== "0" ? $product->getPromoPrice():$product->getPrice());
+                $amount = floatval($product->getPromoPrice() != 0 ? $product->getPromoPrice():$product->getPrice());
                 foreach($product->getOrderProductTaxes() as $tax) {
                     $amount+= ($tax->getPromoAmount() != 0 ? $tax->getPromoAmount():$tax->getAmount());
                 }
+                $products_amount+=$amount;
                 $products[0]["NAME".$i]=urlencode($product->getTitle());
                 $products[0]["AMT".$i]=urlencode($amount);
                 $products[0]["QTY".$i]=urlencode($product->getQuantity());
                 $i++;
             }
+        }
+
+        /*
+         * Compute difference between prodcts total and cart amount
+         * -> get Coupons.
+         */
+        $delta = $products_amount - $order->getTotalAmount($useless,false);
+
+        if($delta > 0) {
+            $products[0]["NAME".$i]=Translator::getInstance()->trans("Discount");
+            $products[0]["AMT".$i]=-$delta;
+            $products[0]["QTY".$i]=1;
         }
 
         /*
@@ -136,7 +151,6 @@ class GotoPaypal extends BaseFrontController {
             $response = $sender->send();
             $logger->logTransaction($response);
             $response = PaypalApiManager::nvpToArray($response);
-
             /*
              * if setExpressCheckout is correct, store values in the session & redirect to paypal checkout page
              * else print error. ( return $this->render ... )
