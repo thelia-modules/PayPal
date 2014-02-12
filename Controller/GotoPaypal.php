@@ -77,9 +77,9 @@ class GotoPaypal extends BaseFrontController {
         $products_amount = 0;
         foreach($order->getOrderProducts() as $product) {
             if($product !== null) {
-                $amount = floatval($product->getPromoPrice() != 0 ? $product->getPromoPrice():$product->getPrice());
+                $amount = floatval($product->getWasInPromo()  ? $product->getPromoPrice():$product->getPrice());
                 foreach($product->getOrderProductTaxes() as $tax) {
-                    $amount+= ($tax->getPromoAmount() != 0 ? $tax->getPromoAmount():$tax->getAmount());
+                    $amount+= ($product->getWasInPromo() ? $tax->getPromoAmount():$tax->getAmount());
                 }
                 $products_amount+=$amount*$product->getQuantity();
                 $products[0]["NAME".$i]=urlencode($product->getTitle());
@@ -94,7 +94,6 @@ class GotoPaypal extends BaseFrontController {
          * -> get Coupons.
          */
         $delta = $products_amount - $order->getTotalAmount($useless,false);
-        var_dump($delta);
         if($delta > 0) {
             $products[0]["NAME".$i]=Translator::getInstance()->trans("Discount");
             $products[0]["AMT".$i]=-$delta;
