@@ -126,7 +126,7 @@ class GotoPaypal extends BaseFrontController {
          * Try to get customer's delivery address
          */
         $address= OrderAddressQuery::create()
-            ->findPk($order->getInvoiceOrderAddressId());
+            ->findPk($order->getDeliveryOrderAddressId());
 
         if($address !== null) {
             /*
