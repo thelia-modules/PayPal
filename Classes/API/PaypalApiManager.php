@@ -252,27 +252,4 @@ class PaypalApiManager
 
         return $url;
     }
-
-    /**
-     * Convert a database key to a NVP key
-     *
-     * @param string $databaseKey
-     *
-     * @return string NVP key
-     */
-    public function convertDatabaseKeyToNvpKey($databaseKey)
-    {
-        $keys = array(
-            PayPalVariableRepository::VARIABLE_COLUMN_CHECKOUT_LOGO_TEXT => 'BRANDNAME',
-            PayPalVariableRepository::VARIABLE_COLUMN_CHECKOUT_LOGO_IMAGE => 'LOGOIMG',
-            PayPalVariableRepository::VARIABLE_COLUMN_CHECKOUT_BODY_BG_COLOR => 'PAYFLOWCOLOR',
-        );
-
-        $return = false;
-        if (isset($keys[$databaseKey])) {
-            $return = $keys[$databaseKey];
-        }
-
-        return $return;
-    }
 }

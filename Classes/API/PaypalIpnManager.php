@@ -86,45 +86,5 @@ class PaypalIpnManager
         return $response;
     }
 
-    /**
-     * Check Paypal IPN
-     * check whether the payment_status is Completed
-     * check that txn_id has not been previously processed
-     * check that receiver_email is your Primary PayPal email
-     * check that payment_amount/payment_currency are correct
-     * process the notification
-     *
-     * @param PaypalApiErrorManager $errorManager Paypal module
-     * @param string                $response     Second request received from Paypal
-     *
-     * @return bool
-     */
-    public function checkCheckoutIpn(PaypalApiErrorManager $errorManager, $response)
-    {
-        $paypalApiLogManager = new PaypalApiLogManager();
-        $txnId = $_POST['txn_id'];
-
-        if (strcmp($response, 'VERIFIED') == 0) {
-            $itemName = $_POST['item_name'];
-            $itemNumber = $_POST['item_number'];
-            $paymentStatus = $_POST['payment_status'];
-            $paymentAmount = $_POST['mc_gross'];
-            $paymentCurrency = $_POST['mc_currency'];
-
-            $receiverEmail = $_POST['receiver_email'];
-            $payerEmail = $_POST['payer_email'];
-
-            $paypalApiLogManager->logText("Paypal Plugin : IPN attempt $txnId : IPN response set as VALID by customer $payerEmail", PaypalApiLogManager::NOTICE);
-
-            $checkout = new Commande();
-            $checkout->charger_trans($itemName);
-
-            return $errorManager->isCheckoutIpnValid($checkout, $paymentStatus, $txnId, $receiverEmail, $paymentAmount, $paymentCurrency);
-        }
-
-        $paypalApiLogManager->logText("Paypal Plugin : IPN attempt $txnId : IPN response set as INVALID", PaypalApiLogManager::NOTICE);
-
-        return false;
-    }
 
 }
