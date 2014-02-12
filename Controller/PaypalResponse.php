@@ -94,6 +94,13 @@ class PaypalResponse extends BaseFrontController {
                     isset($response['PAYMENTINFO_0_PAYMENTSTATUS']) && $response['PAYMENTINFO_0_PAYMENTSTATUS'] === "Completed" &&
                     isset($response['TOKEN']) && $response['TOKEN'] === $token) {
 
+                    /*
+                     * Set order status as paid
+                     */
+                    $event = new OrderEvent($order);
+                    $event->setStatus(Paypal::STATUS_PAID);
+                    $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
+
                     $this->redirect(
                         URL::getInstance()->absoluteUrl(
                             $this->getRoute(
