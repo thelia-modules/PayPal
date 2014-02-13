@@ -29,7 +29,7 @@ use Paypal\Classes\API\PaypalApiManager;
 use Paypal\Classes\NVP\Operations\PaypalNvpOperationsSetExpressCheckout;
 use Paypal\Classes\NVP\PaypalNvpMessageSender;
 
-use Paypal\Model\Config;
+use Paypal\Model\PaypalConfig;
 use Paypal\Paypal;
 
 use Thelia\Controller\Front\BaseFrontController;
@@ -63,7 +63,8 @@ class GotoPaypal extends BaseFrontController {
          * $logger PaypalApiLogManager used to log transactions with paypal
          */
         $order = OrderQuery::create()->findPk($order_id);
-        $config = new Config(Paypal::JSON_CONFIG_PATH);
+        $config = new PaypalConfig();
+        $config->pushValues();
         $api = new PaypalApiCredentials($config);
         $redirect_api = new PaypalApiManager($config);
         $sandbox=$api->getConfig()->getSandbox();

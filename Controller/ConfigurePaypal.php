@@ -2,7 +2,7 @@
 
 namespace Paypal\Controller;
 
-use Paypal\Model\Config;
+use Paypal\Model\PaypalConfig;
 use Paypal\Paypal;
 use Thelia\Controller\Admin\BaseAdminController;
 
@@ -17,7 +17,7 @@ class ConfigurePaypal extends BaseAdminController {
      * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
      */
     public function configure() {
-        $conf = new Config(Paypal::JSON_CONFIG_PATH);
+        $conf = new PaypalConfig();
         $one_is_done=0;
         $tab="";
         // Case form is paypal.configure
@@ -27,7 +27,7 @@ class ConfigurePaypal extends BaseAdminController {
             $conf->setLogin($vform->get('login')->getData())
                 ->setPassword($vform->get('password')->getData())
                 ->setSignature($vform->get('signature')->getData())
-                ->write(Paypal::JSON_CONFIG_PATH);
+                ->write();
             $one_is_done=1;
             $tab="configure_account";
         } catch (\Exception $e) {}
@@ -42,7 +42,7 @@ class ConfigurePaypal extends BaseAdminController {
                 ->setSignatureSandbox($vform->get('signature')->getData())
                 ->setSandbox($vform->get('sandbox')->getData() ?"true":"");
 
-                $conf->write(Paypal::JSON_CONFIG_PATH);
+                $conf->write();
 
         } catch (\Exception $e) {}
         //Redirect to module configuration page

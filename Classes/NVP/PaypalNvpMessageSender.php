@@ -11,8 +11,7 @@ namespace Paypal\Classes\NVP;
 
 use Paypal\Classes\NVP\Operations\PaypalNvpOperationInterface;
 use Paypal\Classes\API\PaypalApiManager;
-use Paypal\Paypal;
-use Paypal\Model\Config;
+use Paypal\Model\PaypalConfig;
 
 /**
  * Class PaypalNvpMessageSender
@@ -58,7 +57,8 @@ class PaypalNvpMessageSender
      */
     public function send()
     {
-        $config = new Config(Paypal::JSON_CONFIG_PATH);
+        $config = new PaypalConfig();
+        $config->pushValues();
         $paypalApiManager = new PaypalApiManager($config);
 
         $url = $paypalApiManager->getApiUrl() . '?' . $this->message;

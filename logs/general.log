@@ -1,0 +1,28 @@
+[WARNING] 2014-02-12 08:34:26 Transaction Failure correlationId: ef894c23abd2 error: [10413] <Transaction refused because of an invalid argument. See additional error messages for details.> The totals of the cart item amounts do not match order amounts. 
+[WARNING] 2014-02-12 08:46:07 Transaction Failure correlationId: 43ab5c9360b66 error: [10413] <Transaction refused because of an invalid argument. See additional error messages for details.> The totals of the cart item amounts do not match order amounts. 
+[WARNING] 2014-02-12 08:48:35 Transaction Failure correlationId: cd0656f1eef5c error: [10413] <Transaction refused because of an invalid argument. See additional error messages for details.> The totals of the cart item amounts do not match order amounts. 
+[WARNING] 2014-02-12 09:17:41 Transaction Failure correlationId: cd062faa924d6 error: [10413] <Transaction refused because of an invalid argument. See additional error messages for details.> The totals of the cart item amounts do not match order amounts. 
+[WARNING] 2014-02-12 09:19:54 Transaction Failure correlationId: 820cf27791e23 error: [10413] <Transaction refused because of an invalid argument. See additional error messages for details.> The totals of the cart item amounts do not match order amounts. 
+[INFO] 2014-02-12 09:20:17 Transaction Success correlationId: 6f4805a7154bc 
+[INFO] 2014-02-12 09:21:13 Transaction Success correlationId: ca37273281e88 
+[INFO] 2014-02-12 09:21:49 Transaction Success correlationId: 2eabe465ac6a7 
+[INFO] 2014-02-12 11:01:58 Transaction Success correlationId: b1cb3e18bb114 
+[INFO] 2014-02-12 11:11:21 Transaction Success correlationId: 749ff7705aae2 
+[INFO] 2014-02-12 11:11:41 Transaction Success correlationId: 8cfac9a2ce83 
+[INFO] 2014-02-12 11:11:43 Transaction Success correlationId: 453468a114142 
+[INFO] 2014-02-12 11:12:36 Transaction Success correlationId: 199e9966adfb0 
+[INFO] 2014-02-12 11:12:56 Transaction Success correlationId: 8f13768466706 
+[INFO] 2014-02-12 11:12:59 Transaction Success correlationId: 3608cfed7a0bc 
+[INFO] 2014-02-12 11:15:09 Transaction Success correlationId: 736a7dab47651 
+[INFO] 2014-02-12 11:19:43 Transaction Success correlationId: 86fe7871571e2 
+[INFO] 2014-02-12 11:19:46 Transaction Success correlationId: dfe3a7d030e88 
+[INFO] 2014-02-12 11:28:56 Transaction Success correlationId: 4d2665fee0ef2 
+[INFO] 2014-02-12 11:29:21 Transaction Success correlationId: 4da5112a9891e 
+[INFO] 2014-02-12 11:29:24 Transaction Success correlationId: 491efd5b647ff 
+[INFO] 2014-02-12 11:32:18 Transaction Success correlationId: a05fa2b548f42 
+[INFO] 2014-02-12 11:32:36 Transaction Success correlationId: 573bc51c7225e 
+[INFO] 2014-02-12 11:32:38 Transaction Success correlationId: 50c76d0023a74 
+[INFO] 2014-02-12 11:38:16 Transaction Success correlationId: accaf330ab62a 
+[INFO] 2014-02-12 11:38:38 Transaction Success correlationId: 5eaa5113471d2 
+[INFO] 2014-02-12 11:38:40 Transaction Success correlationId: e7f0d7bbf34c9 
+[INFO] 2014-02-13 11:10:53 Transaction Success correlationId: 85969efe90cde 

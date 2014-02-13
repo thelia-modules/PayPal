@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database defaultIdMethod="native" name="thelia" namespace="Paypal\Model">
+    <table name="paypal_config">
+    	<column name="name" required="true" size="255" type="VARCHAR" primaryKey="true"/>
+	    <column name="value" size="255" type="VARCHAR" />
+    </table>
+	<external-schema filename="/home/benjamin/dev/thelia2/local/config/schema.xml" referenceOnly="true" />
+</database>

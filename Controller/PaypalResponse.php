@@ -14,8 +14,7 @@ use Paypal\Classes\API\PaypalApiCredentials;
 use Paypal\Classes\API\PaypalApiManager;
 use Paypal\Classes\NVP\PaypalNvpMessageSender;
 
-use Paypal\Classes\PaypalResources;
-use Paypal\Model\Config;
+use Paypal\Model\PaypalConfig;
 use Paypal\Paypal;
 
 use Thelia\Controller\Front\BaseFrontController;
@@ -51,7 +50,8 @@ class PaypalResponse extends BaseFrontController {
              * $api PaypalApiCredentials Class used by the library to store and use 3T login(username, password, signature)
              * $sandbox bool true if sandbox is enabled
              */
-            $config = new Config(Paypal::JSON_CONFIG_PATH);
+            $config = new PaypalConfig();
+            $config->pushValues();
             $api = new PaypalApiCredentials($config);
             $sandbox=$api->getConfig()->getSandbox();
             /*

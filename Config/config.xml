@@ -5,7 +5,6 @@
         xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-1.0.xsd">
 
     <loops>
-        <loop class="Paypal\Loop\CheckRightsLoop" name="paypal.check.rights" />
         <!-- sample definition
         <loop name="MySuperLoop" class="MyModule\Loop\MySuperLoop" />
         -->

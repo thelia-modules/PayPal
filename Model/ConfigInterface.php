@@ -3,8 +3,8 @@ namespace Paypal\Model;
 
 interface ConfigInterface {
     // Data access
-    public function write($file=null);
-    public static function read($file=null);
+    public function write();
+    public static function read();
 
     // variables setters
     /**

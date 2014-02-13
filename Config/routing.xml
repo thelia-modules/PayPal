@@ -20,10 +20,4 @@
         <default key="_controller">Paypal\Controller\PaypalResponse::ok</default>
         <requirement key="order_id">\d+</requirement>
     </route>
-
-    <!-- ??? -->
-    <route id="paypal.listener" path="/module/paypal/listen" methods="post">
-        <default key="_controller">Paypal\Listener\CheckoutIpnListener::listen</default>
-    </route>
-
 </routes>

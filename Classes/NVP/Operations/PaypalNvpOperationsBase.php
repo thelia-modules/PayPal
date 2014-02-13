@@ -46,14 +46,4 @@ abstract class PaypalNvpOperationsBase implements PaypalNvpOperationInterface
         return $this->operationName;
     }
 
-    /**
-     * Add extra payload to the current payload
-     *
-     * @param array $payload Payload data
-     */
-    public function addExtraPayload(array $payload)
-    {
-        $this->payload = array_merge($this->payload, $payload);
-    }
-
 }

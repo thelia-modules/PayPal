@@ -31,6 +31,7 @@ use Thelia\Model\Base\ModuleImageQuery;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Thelia\Tools\Redirect;
 use Thelia\Tools\URL;
+use Thelia\Install\Database;
 
 /**
  * Class Paypal
@@ -39,8 +40,6 @@ use Thelia\Tools\URL;
  */
 class Paypal extends BaseModule implements PaymentModuleInterface
 {
-
-    const JSON_CONFIG_PATH = "Config/config.json";
     const PAYPAL_MAX_PRODUCTS = 9;
     const PAYPAL_MAX_PRICE = 8000;
 
@@ -81,6 +80,7 @@ class Paypal extends BaseModule implements PaymentModuleInterface
      */
     public function isValidPayment()
     {
+        /** @var Order $order */
         $order = $this->container->get('request')->getSession()->getOrder();
         return $order->getOrderProducts()->count() <= self::PAYPAL_MAX_PRODUCTS &&
             $order->getTotalAmount() < self::PAYPAL_MAX_PRICE;
@@ -88,6 +88,10 @@ class Paypal extends BaseModule implements PaymentModuleInterface
 
     public function postActivation(ConnectionInterface $con = null)
     {
+        $database = new Database($con->getWrappedConnection());
+
+        $database->insertSql(null, array(__DIR__ . '/Config/thelia.sql'));
+
         /* insert the images from image folder if first module activation */
         $module = $this->getModuleModel();
         if(ModuleImageQuery::create()->filterByModule($module)->count() == 0) {

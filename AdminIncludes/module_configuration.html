@@ -1,14 +1,3 @@
-<div class="row">
-	<!-- Errors -->
-    
-	{loop name="checkpaypalrights" type="paypal.check.rights"}
-	<div class="alert alert-danger">
-    	<p>{$ERRMES} {$ERRFILE} | {intl l="Please change the access rights"}.</p>
-    </div>
-	{/loop}
-
-</div>
-{elseloop rel="checkpaypalrights"}
 {* Calc tab selection *}
 {assign var="tab" value="0"}
 {if isset($smarty.get.current_tab)}
@@ -122,5 +111,3 @@
 
     </div>
 </div>
-
-{/elseloop}

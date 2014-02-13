@@ -3,7 +3,7 @@
 namespace Paypal\Form;
 
 
-use Paypal\Paypal;
+use Paypal\Model\PaypalConfig;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Core\Translation\Translator;
 use Thelia\Form\BaseForm;
@@ -31,11 +31,7 @@ class ConfigureSandboxPaypal extends BaseForm {
      */
     protected function buildForm()
     {
-        //if($this->getName() == "")
-        $path=__DIR__."/../".Paypal::JSON_CONFIG_PATH;
-        if(is_readable($path)) {
-            $json_data = json_decode(file_get_contents($path),true);
-        }
+        $config_data = PaypalConfig::read();
         $this->formBuilder
             ->add("login","text", array(
                 'constraints'=>array(new NotBlank()),
@@ -43,7 +39,7 @@ class ConfigureSandboxPaypal extends BaseForm {
                 'label_attr'=>array(
                     'for'=>'login'
                 ),
-                'data'=>(isset($json_data['login_sandbox'])?$json_data['login_sandbox']:""),
+                'data'=>(isset($config_data['login_sandbox'])?$config_data['login_sandbox']:""),
             ))
             ->add("password","text", array(
                     'constraints'=>array(new NotBlank()),
@@ -51,7 +47,7 @@ class ConfigureSandboxPaypal extends BaseForm {
                     'label_attr'=>array(
                         'for'=>'password'
                     ),
-                    'data'=>(isset($json_data['password_sandbox'])?$json_data['password_sandbox']:""),
+                    'data'=>(isset($config_data['password_sandbox'])?$config_data['password_sandbox']:""),
                 ))
             ->add("signature","text", array(
                 'constraints'=>array(new NotBlank()),
@@ -59,14 +55,14 @@ class ConfigureSandboxPaypal extends BaseForm {
                 'label_attr'=>array(
                     'for'=>'signature'
                 ),
-                'data'=>(isset($json_data['signature_sandbox'])?$json_data['signature_sandbox']:""),
+                'data'=>(isset($config_data['signature_sandbox'])?$config_data['signature_sandbox']:""),
             ))
             ->add("sandbox", "checkbox", array(
                 'label'=>Translator::getInstance()->trans("Activate sandbox mode"),
                 'label_attr'=>array(
                     'for'=>'sandbox'
                 ),
-                'value'=>(isset($json_data['sandbox'])?$json_data['sandbox']:"")
+                'value'=>(isset($config_data['sandbox'])?$config_data['sandbox']:"")
             ))
         ;
     }

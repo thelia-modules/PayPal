@@ -3,6 +3,7 @@
 namespace Paypal\Form;
 
 
+use Paypal\Model\PaypalConfig;
 use Paypal\Paypal;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Core\Translation\Translator;
@@ -31,11 +32,7 @@ class ConfigurePaypal extends BaseForm {
      */
     protected function buildForm()
     {
-        //if($this->getName() == "")
-        $path=__DIR__."/../".Paypal::JSON_CONFIG_PATH;
-        if(is_readable($path)) {
-            $json_data = json_decode(file_get_contents($path),true);
-        }
+        $config_data=PaypalConfig::read();
         $this->formBuilder
             ->add("login","text", array(
                 'constraints'=>array(new NotBlank()),
@@ -43,7 +40,7 @@ class ConfigurePaypal extends BaseForm {
                 'label_attr'=>array(
                     'for'=>'login'
                 ),
-                'data'=>(isset($json_data['login'])?$json_data['login']:""),
+                'data'=>(isset($config_data['login'])?$config_data['login']:""),
             ))
             ->add("password","text", array(
                     'constraints'=>array(new NotBlank()),
@@ -51,7 +48,7 @@ class ConfigurePaypal extends BaseForm {
                     'label_attr'=>array(
                         'for'=>'password'
                     ),
-                    'data'=>(isset($json_data['password'])?$json_data['password']:""),
+                    'data'=>(isset($config_data['password'])?$config_data['password']:""),
                 ))
             ->add("signature","text", array(
                 'constraints'=>array(new NotBlank()),
@@ -59,7 +56,7 @@ class ConfigurePaypal extends BaseForm {
                 'label_attr'=>array(
                     'for'=>'signature'
                 ),
-                'data'=>(isset($json_data['signature'])?$json_data['signature']:""),
+                'data'=>(isset($config_data['signature'])?$config_data['signature']:""),
             ))
 
         ;
