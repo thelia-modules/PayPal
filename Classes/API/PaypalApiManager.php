@@ -32,13 +32,6 @@ class PaypalApiManager
     CONST PAYMENT_TYPE_SALE = 'Sale';
     CONST PAYMENT_TYPE_AUTHORIZATION = 'Authorization';
 
-    CONST COMPLETE_TYPE_COMPLETE = 'Complete';
-    CONST COMPLETE_TYPE_NOT_COMPLETE = 'NotComplete';
-    CONST COMPLETE_TYPE_PENDING = 'Pending';
-
-    /** @var string link to database */
-    protected $link = null;
-
     /** @var bool if SandBox mode is enabled or not */
     protected $isModeSandbox = true;
 
@@ -75,55 +68,6 @@ class PaypalApiManager
         return $this->isModeSandbox;
     }
 
-    /**
-     * Return Token from query string
-     *
-     * @param string $response API NVP response
-     *
-     * @return string Token
-     */
-    public static function extractTokenFromQueryString($response)
-    {
-        return self::extractFromQueryString(
-            $response,
-            PaypalApiErrorManager::RESPONSE_KEY_TOKEN
-        );
-    }
-
-    /**
-     * Return CorrelationId from query string
-     *
-     * @param string $response API NVP response
-     *
-     * @return string Correlation Id
-     */
-    public static function extractCorrelationIdFromQueryString($response)
-    {
-        return self::extractFromQueryString(
-            $response,
-            PaypalApiErrorManager::RESPONSE_KEY_CORRELATIONID
-        );
-    }
-
-    /**
-     * Return value from query string key
-     *
-     * @param string $response API NVP response
-     * @param string $key      Key parameter to extract value from
-     *
-     * @return string value
-     */
-    public static function extractFromQueryString($response, $key)
-    {
-        $response = self::nvpToArray($response);
-
-        $return = null;
-        if (isset($response) && isset($response[$key])) {
-            $return = $response[$key];
-        }
-
-        return $return;
-    }
 
     /**
      * Convert NVP string to array
