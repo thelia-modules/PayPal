@@ -35,7 +35,6 @@ class ConfigurePaypal extends BaseAdminController {
         $form = new \Paypal\Form\ConfigureSandboxPaypal($this->getRequest());
         try {
             $vform = $this->validateForm($form);
-            $one_is_done=2;
             $tab="configure_sandbox";
             $conf->setLoginSandbox($vform->get('login')->getData())
                 ->setPasswordSandbox($vform->get('password')->getData())
