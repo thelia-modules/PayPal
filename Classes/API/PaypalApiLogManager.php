@@ -27,22 +27,9 @@ class PaypalApiLogManager
     const DEBUG     = 'DEBUG';
 
     const LOGCLASS = "\\Thelia\\Log\\Destination\\TlogDestinationFile";
-    protected $log;
 
-    /**
-     * Construct a new ApiLogManager
-     *
-     * @param string $name Name of the file where the log will be stored
-     */
-    public function __construct()
-    {
-        /*
-         * Connecting to Thelia Log service
-         */
-        $this->log = Tlog::getInstance();
-        $this->log->setDestinations(self::LOGCLASS);
-        $this->log->setConfig(self::LOGCLASS, 0, THELIA_ROOT."log".DS."log-paypal.txt");
-    }
+    /** @var Tlog $log */
+    protected $log;
 
     /**
      * Parse and log the return of the Paypal NVP API
@@ -51,6 +38,7 @@ class PaypalApiLogManager
      */
     public function logTransaction($transaction)
     {
+        $this->setTLogPaypal();
         /*
          * Then write
          */
@@ -69,7 +57,9 @@ class PaypalApiLogManager
             $logLine .= $parsedTransaction['L_LONGMESSAGE0'] . ' ';
         }
 
+
         $this->log->info($logLine);
+        $this->getBackToPreviousState();
     }
 
     /**
@@ -79,11 +69,36 @@ class PaypalApiLogManager
      * @param string $severity EMERGENCY|ALERT|CRITICAL|ERROR|WARNING|NOTICE|INFO|DEBUG
      * @param string $category Category
      */
+
     public function logText($message, $severity = 'INFO', $category = 'paypal')
     {
+        $this->setTLogPaypal();
+
+
         $now = date('Y-m-d h:i:s');
-        $log = "[$now] $category.$severity: $message.";
-        $this->log->info($log);
+        $msg = "[$now] $category.$severity: $message.";
+        $this->log->info($msg);
+
+        // Back to previous state
+        $this->getBackToPreviousState();
+    }
+
+    /**
+     * @return Tlog
+     */
+    protected function setTLogPaypal()
+    {
+        /*
+         * Write Log
+         */
+        $this->log = Tlog::getInstance();
+        $this->log->setDestinations(self::LOGCLASS);
+        $this->log->setConfig(self::LOGCLASS, 0, THELIA_ROOT . "log" . DS . "log-paypal.txt");
+    }
+
+    protected function getBackToPreviousState()
+    {
+        $this->log->setDestinations("\\Thelia\\Log\\Destination\\TlogDestinationRotatingFile");
     }
 
 }

@@ -94,7 +94,7 @@ class GotoPaypal extends BaseFrontController {
          * Compute difference between prodcts total and cart amount
          * -> get Coupons.
          */
-        $delta = $products_amount - $order->getTotalAmount($useless,false);
+        $delta = round($products_amount - $order->getTotalAmount($useless,false),2);
         if($delta > 0) {
             $products[0]["NAME".$i]=Translator::getInstance()->trans("Discount");
             $products[0]["AMT".$i]=-$delta;
