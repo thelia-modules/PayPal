@@ -32,13 +32,12 @@ III) Integration
 
 I)  Installation
 
-Pour installer le module paypal, téléchargez l'archive et importez la dans le back-office, onglet Modules,
-ou décompressez l'achive dans <dossier de thelia>/local/modules
+Pour installer le module paypal, téléchargez l'archive et décompressez la dans <dossier de thelia>/local/modules
 
 
 II) Utilisation
 
-Pour utiliser le module paypal, danns dans le back-office, onglet Modules, et activez le module Paypal,
+Pour utiliser le module paypal, allez dans le back-office, onglet Modules, et activez le module Paypal,
 puis cliquez sur "Configurer" sur la ligne de Paypal. Remplissez vos identifants et enregistrez.
 Pensez à effectuer quelques commandes factices en mode sandbox ( cochez la case "Activer la sandbox" dans l'onglet
 Configurer la sandbox de la page de configuration et enregistrez).
@@ -57,14 +56,14 @@ To install the paypal module, download the archive and import it in the backoffi
 or uncompress it in <path to thelia>/local/modules
 
 
-II) Utilisation
+II) How to use
 
 To use the module, you first need to activate it in the back-office, tab Modules, and click on "Configure" on the line
 of paypal module. Enter your paypal login informations and save.
 Don't forget to do some fake orders in sandbox mode ( check "Active sandbox mode" box in tab Configure sandbox in the
 configuration page, and save ).
 
-III) Intégration
+III) Integration
 
 There is an integration example in the directory <module path>/templates/frontOffice/deufault
 You must do a page containing a internal error message called gotopaypalfail.html and a order cancel page called ordercanacled.html
