@@ -43,16 +43,15 @@ use Thelia\Model\OrderQuery;
  * @package Paypal\Controller
  * @author Thelia <info@thelia.net>
  */
-class GotoPaypal extends BaseFrontController {
-
+class GotoPaypal extends BaseFrontController
+{
     /*
      * @param $order_id int
      * @return \Thelia\Core\HttpFoundation\Response
-     * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
+     *                                              Checks paypal.configure || paypal.configure.sandbox form and save config into json file
      */
-    public function go($order_id) {
-
-
+    public function go($order_id)
+    {
         /*
          * vars used for setExpressCheckout
          * $order Order The order object, which is used to get products and prices
@@ -78,10 +77,10 @@ class GotoPaypal extends BaseFrontController {
          * Store products into 2d array $products
          */
         $products_amount = 0;
-        foreach($order->getOrderProducts() as $product) {
-            if($product !== null) {
+        foreach ($order->getOrderProducts() as $product) {
+            if ($product !== null) {
                 $amount = floatval($product->getWasInPromo()  ? $product->getPromoPrice():$product->getPrice());
-                foreach($product->getOrderProductTaxes() as $tax) {
+                foreach ($product->getOrderProductTaxes() as $tax) {
                     $amount+= ($product->getWasInPromo() ? $tax->getPromoAmount():$tax->getAmount());
                 }
                 $products_amount+=$amount*$product->getQuantity();
@@ -97,7 +96,7 @@ class GotoPaypal extends BaseFrontController {
          * -> get Coupons.
          */
         $delta = round($products_amount - $order->getTotalAmount($useless,false),2);
-        if($delta > 0) {
+        if ($delta > 0) {
             $products[0]["NAME".$i]=Translator::getInstance()->trans("Discount");
             $products[0]["AMT".$i]=-$delta;
             $products[0]["QTY".$i]=1;
@@ -130,7 +129,7 @@ class GotoPaypal extends BaseFrontController {
         $address= OrderAddressQuery::create()
             ->findPk($order->getDeliveryOrderAddressId());
 
-        if($address !== null) {
+        if ($address !== null) {
             /*
              * If address is found, set address in setExpressCheckout request
              */
@@ -164,6 +163,7 @@ class GotoPaypal extends BaseFrontController {
                 $this->redirect($redirect_api->getExpressCheckoutUrl($response['TOKEN']));
             }
         }
+
         return $this->render("gotopaypalfail",array(), 500);
     }
 }

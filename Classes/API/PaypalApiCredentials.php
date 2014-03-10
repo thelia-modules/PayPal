@@ -36,10 +36,10 @@ class PaypalApiCredentials
     /**
      * Create a NVP Credentials
      *
-     * @param ConfigInterface          $config Variable
-     * @param string                   $user               PayPal API username
-     * @param string                   $password           PayPal API password
-     * @param string                   $signature          PayPal API signature (3T)
+     * @param ConfigInterface $config    Variable
+     * @param string          $user      PayPal API username
+     * @param string          $password  PayPal API password
+     * @param string          $signature PayPal API signature (3T)
      *
      * @throws \InvalidArgumentException
      */

@@ -4,7 +4,6 @@ namespace Paypal\Model;
 
 use Paypal\Model\Base\PaypalConfigQuery as BasePaypalConfigQuery;
 
-
 /**
  * Skeleton subclass for performing query and update operations on the 'paypal_config' table.
  *

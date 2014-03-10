@@ -8,7 +8,6 @@
  */
 namespace Paypal\Classes\NVP;
 
-
 use Paypal\Classes\NVP\Operations\PaypalNvpOperationInterface;
 use Paypal\Classes\API\PaypalApiManager;
 use Paypal\Model\PaypalConfig;
@@ -42,7 +41,7 @@ class PaypalNvpMessageSender
      * Constructor
      *
      * @param PaypalNvpOperationInterface $nvpMessage NVP message to send
-     * @param bool                  $isSandbox  if sandbox mode enabled
+     * @param bool                        $isSandbox  if sandbox mode enabled
      */
     public function __construct(PaypalNvpOperationInterface $nvpMessage, $isSandbox = true)
     {

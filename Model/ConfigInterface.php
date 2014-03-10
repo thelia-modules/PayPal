@@ -1,50 +1,51 @@
 <?php
 namespace Paypal\Model;
 
-interface ConfigInterface {
+interface ConfigInterface
+{
     // Data access
     public function write();
     public static function read();
 
     // variables setters
     /**
-     * @param string $login
+     * @param  string                        $login
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setLogin($login);
 
     /**
-     * @param string $login_sandbox
+     * @param  string                        $login_sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setLoginSandbox($login_sandbox);
 
     /**
-     * @param string $password
+     * @param  string                        $password
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setPassword($password);
 
     /**
-     * @param string $password_sandbox
+     * @param  string                        $password_sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setPasswordSandbox($password_sandbox);
 
     /**
-     * @param string $sandbox
+     * @param  string                        $sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setSandbox($sandbox);
 
     /**
-     * @param string $signature
+     * @param  string                        $signature
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setSignature($signature);
 
     /**
-     * @param string $signature_sandbox
+     * @param  string                        $signature_sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setSignatureSandbox($signature_sandbox);

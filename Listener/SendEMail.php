@@ -49,7 +49,7 @@ class SendEMail extends BaseAction implements EventSubscriberInterface
      */
     protected $parser;
 
-    function __construct(ParserInterface $parser,MailerFactory $mailer)
+    public function __construct(ParserInterface $parser,MailerFactory $mailer)
     {
         $this->parser = $parser;
         $this->mailer = $mailer;
@@ -67,9 +67,10 @@ class SendEMail extends BaseAction implements EventSubscriberInterface
      * @params OrderEvent $order
      * Checks if order payment module is paypal and if order new status is paid, send an email to the customer.
      */
-    public function update_status(OrderEvent $event) {
-        if($event->getOrder()->getPaymentModuleId() === Paypal::getModCode()) {
-            if($event->getOrder()->getStatusId() === Paypal::STATUS_PAID ) {
+    public function update_status(OrderEvent $event)
+    {
+        if ($event->getOrder()->getPaymentModuleId() === Paypal::getModCode()) {
+            if ($event->getOrder()->getStatusId() === Paypal::STATUS_PAID ) {
 
                 $contact_email = ConfigQuery::read('store_email');
 
@@ -134,4 +135,4 @@ class SendEMail extends BaseAction implements EventSubscriberInterface
         );
     }
 
-} 
+}

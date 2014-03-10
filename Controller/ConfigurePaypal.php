@@ -13,13 +13,13 @@ use Thelia\Core\Security\AccessManager;
  * @package Paypal\Controller
  * @author Thelia <info@thelia.net>
  */
-class ConfigurePaypal extends BaseAdminController {
-
+class ConfigurePaypal extends BaseAdminController
+{
     /*
      * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
      */
-    public function configure() {
-
+    public function configure()
+    {
         if (null !== $response = $this->checkAuth(array(AdminResources::MODULE), array('Paypal'), AccessManager::UPDATE)) {
             return $response;
         }

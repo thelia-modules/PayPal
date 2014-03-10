@@ -51,14 +51,14 @@ class Paypal extends BaseModule implements PaymentModuleInterface
         Redirect::exec(URL::getInstance()->absoluteUrl("/module/paypal/goto/".$order->getId()));
     }
 
-
     /**
-     * @param string $type
+     * @param  string $type
      * @return string
      */
-    public static function getPaypalURL($type,$order_id) {
+    public static function getPaypalURL($type,$order_id)
+    {
         $ret="";
-        switch($type) {
+        switch ($type) {
             case 'cancel':
                 $ret=URL::getInstance()->absoluteUrl("/module/paypal/cancel/".$order_id);
                 break;
@@ -66,6 +66,7 @@ class Paypal extends BaseModule implements PaymentModuleInterface
                 $ret=URL::getInstance()->absoluteUrl("/module/paypal/ok/".$order_id);
                 break;
         }
+
         return $ret;
     }
 
@@ -82,6 +83,7 @@ class Paypal extends BaseModule implements PaymentModuleInterface
     {
         /** @var Order $order */
         $order = $this->container->get('request')->getSession()->getOrder();
+
         return $order->getOrderProducts()->count() <= self::PAYPAL_MAX_PRODUCTS &&
             $order->getTotalAmount() < self::PAYPAL_MAX_PRICE;
     }
@@ -94,7 +96,7 @@ class Paypal extends BaseModule implements PaymentModuleInterface
 
         /* insert the images from image folder if first module activation */
         $module = $this->getModuleModel();
-        if(ModuleImageQuery::create()->filterByModule($module)->count() == 0) {
+        if (ModuleImageQuery::create()->filterByModule($module)->count() == 0) {
             $this->deployImageFolder($module, sprintf('%s/images', __DIR__), $con);
         }
 
@@ -111,7 +113,8 @@ class Paypal extends BaseModule implements PaymentModuleInterface
     /**
      * @return string
      */
-    public function getCode() {
+    public function getCode()
+    {
         return "Paypal";
     }
 

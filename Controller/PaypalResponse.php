@@ -25,13 +25,14 @@ use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Tools\URL;
 use Paypal\Classes\API\PaypalApiLogManager;
 
-class PaypalResponse extends BaseFrontController {
-
+class PaypalResponse extends BaseFrontController
+{
     /**
      * @param $order_id
      * @return \Thelia\Core\HttpFoundation\Response
      */
-    public function ok($order_id) {
+    public function ok($order_id)
+    {
         /*
          * Check if token&order are valid
          */
@@ -44,7 +45,7 @@ class PaypalResponse extends BaseFrontController {
         $payerid=$this->getRequest()->get('PayerID');
         $logger = new PaypalApiLogManager();
 
-        if(!empty($payerid)) {
+        if (!empty($payerid)) {
             /*
              * $config ConfigInterface Object that contains configuration
              * $api PaypalApiCredentials Class used by the library to store and use 3T login(username, password, signature)
@@ -128,7 +129,8 @@ class PaypalResponse extends BaseFrontController {
      * @param $order_id int
      * @return \Thelia\Core\HttpFoundation\Response
      */
-    public function cancel($order_id) {
+    public function cancel($order_id)
+    {
         /*
          * Check if token&order are valid
          */
@@ -158,9 +160,10 @@ class PaypalResponse extends BaseFrontController {
      * @throws \Exception
      * @return \Thelia\Model\Order
      */
-    public function checkorder($order_id, &$token) {
+    public function checkorder($order_id, &$token)
+    {
         $token = $this->getRequest()->getSession()->get('Paypal.token');
-        if($token !== $this->getRequest()->get('token')) {
+        if ($token !== $this->getRequest()->get('token')) {
             throw new \Exception("The token is not valid.");
         }
 
@@ -168,10 +171,10 @@ class PaypalResponse extends BaseFrontController {
         $order =OrderQuery::create()
             ->filterByCustomerId($customer_id)
             ->findPk($order_id);
-        if($order === null) {
+        if ($order === null) {
             throw new \Exception("The order id is not valid. This order doesn't exists or doesn't belong to you.");
         }
 
         return $order;
     }
-} 
+}
