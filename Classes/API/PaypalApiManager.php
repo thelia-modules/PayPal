@@ -3,12 +3,11 @@
  * Created by JetBrains PhpStorm.
  * Date: 8/6/13
  * Time: 5:33 PM
- * 
+ *
  * @author Guillaume MOREL <gmorel@openstudio.fr>
  */
 
 namespace Paypal\Classes\API;
-
 
 use Paypal\Model\ConfigInterface;
 use Paypal\Classes\PaypalResources;
@@ -68,7 +67,6 @@ class PaypalApiManager
         return $this->isModeSandbox;
     }
 
-
     /**
      * Convert NVP string to array
      *
@@ -104,12 +102,12 @@ class PaypalApiManager
      */
     public static function arrayToNvp($data,\stdClass $ret=null, $construct_scheme=null)
     {
-        if($ret===null) {
+        if ($ret===null) {
             $ret = new \stdClass();
             $ret->value="";
         }
-        if(is_array($data)) {
-            foreach($data as $key=>$value) {
+        if (is_array($data)) {
+            foreach ($data as $key=>$value) {
                 self::arrayToNvp($value, $ret, $construct_scheme===null?$key:$construct_scheme."_".$key);
             }
         } else {

@@ -8,7 +8,6 @@
 
 namespace Paypal\Classes\API;
 use Thelia\Log\Tlog;
-use Thelia\Log\TlogDestinationConfig;
 
 /**
  * Class PaypalApiLogManager
@@ -57,7 +56,6 @@ class PaypalApiLogManager
             $logLine .= $parsedTransaction['L_LONGMESSAGE0'] . ' ';
         }
 
-
         $this->log->info($logLine);
         $this->getBackToPreviousState();
     }
@@ -73,7 +71,6 @@ class PaypalApiLogManager
     public function logText($message, $severity = 'INFO', $category = 'paypal')
     {
         $this->setTLogPaypal();
-
 
         $now = date('Y-m-d h:i:s');
         $msg = "[$now] $category.$severity: $message.";

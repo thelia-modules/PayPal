@@ -2,13 +2,13 @@
 
 namespace Paypal\Form;
 
-
 use Paypal\Model\PaypalConfig;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Core\Translation\Translator;
 use Thelia\Form\BaseForm;
 
-class ConfigureSandboxPaypal extends BaseForm {
+class ConfigureSandboxPaypal extends BaseForm
+{
     /**
      *
      * in this function you add all the fields you need for your Form.
@@ -76,4 +76,3 @@ class ConfigureSandboxPaypal extends BaseForm {
     }
 
 }
-

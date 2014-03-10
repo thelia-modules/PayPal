@@ -37,7 +37,6 @@ class PaypalNvpOperationsSetExpressCheckout extends PaypalNvpOperationsBase
     /** @var bool If Paypal has to use Thelia Customer Address */
     protected $isPaypalAddressOverrided = false;
 
-
     /** @var string Delivery Address  */
     protected $name = null;
     /** @var string Delivery Address  */
@@ -113,8 +112,6 @@ class PaypalNvpOperationsSetExpressCheckout extends PaypalNvpOperationsBase
 
         return $this;
     }
-
-
 
     /**
      * {@inheritdoc }

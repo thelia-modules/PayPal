@@ -3,7 +3,7 @@
  * Created by JetBrains PhpStorm.
  * Date: 8/12/13
  * Time: 2:17 PM
- * 
+ *
  * @author Guillaume MOREL <gmorel@openstudio.fr>
  */
 namespace Paypal\Classes\NVP\Operations;

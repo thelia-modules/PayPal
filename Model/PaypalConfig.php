@@ -18,9 +18,10 @@ class PaypalConfig extends BasePaypalConfig implements ConfigInterface
     /**
      * @return array|mixed ObjectCollection
      */
-    protected function getDbValues($keysflag=true) {
+    protected function getDbValues($keysflag=true)
+    {
         $pks = $this->getThisVars();
-        if($keysflag) {
+        if ($keysflag) {
             $pks=array_keys($pks);
         }
         $query = PaypalConfigQuery::create()
@@ -30,12 +31,13 @@ class PaypalConfig extends BasePaypalConfig implements ConfigInterface
     }
 
     /**
-     * @param null $file
+     * @param  null  $file
      * @return array
      */
     public static function read()
     {
         $pks = self::getSelfVars();
+
         return $pks;
     }
 
@@ -49,6 +51,7 @@ class PaypalConfig extends BasePaypalConfig implements ConfigInterface
         $this_class_vars = get_object_vars($obj);
         $base_class_vars = get_class_vars("\\Paypal\\Model\\Base\\PaypalConfig");
         $pks = array_diff_key($this_class_vars, $base_class_vars);
+
         return $pks;
     }
 
@@ -59,13 +62,13 @@ class PaypalConfig extends BasePaypalConfig implements ConfigInterface
     {
         $dbvals = $this->getDbValues();
         $isnew=array();
-        foreach($dbvals as $var) {
+        foreach ($dbvals as $var) {
             /** @var PaypalConfig $var */
             $isnew[$var->getName()] = true;
         }
         $this->pushValues();
         $vars=$this->getThisVars();
-        foreach($vars as $key=>$value) {
+        foreach ($vars as $key=>$value) {
             $tmp = new PaypalConfig();
             $tmp->setNew(!isset($isnew[$key]));
             $tmp->setName($key);
@@ -131,72 +134,79 @@ class PaypalConfig extends BasePaypalConfig implements ConfigInterface
     }
 
     /**
-     * @param string $login
+     * @param  string                        $login
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setLogin($login)
     {
         $this->login = $login;
+
         return $this;
     }
 
     /**
-     * @param string $login_sandbox
+     * @param  string                        $login_sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setLoginSandbox($login_sandbox)
     {
         $this->login_sandbox = $login_sandbox;
+
         return $this;
     }
 
     /**
-     * @param string $password
+     * @param  string                        $password
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setPassword($password)
     {
         $this->password = $password;
+
         return $this;
     }
 
     /**
-     * @param string $password_sandbox
+     * @param  string                        $password_sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setPasswordSandbox($password_sandbox)
     {
         $this->password_sandbox = $password_sandbox;
+
         return $this;
     }
 
     /**
-     * @param string $sandbox
+     * @param  string                        $sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setSandbox($sandbox)
     {
         $this->sandbox = $sandbox;
+
         return $this;
     }
 
     /**
-     * @param string $signature
+     * @param  string                        $signature
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setSignature($signature)
     {
         $this->signature = $signature;
+
         return $this;
     }
 
     /**
-     * @param string $signature_sandbox
+     * @param  string                        $signature_sandbox
      * @return \Paypal\Model\ConfigInterface $this
      */
     public function setSignatureSandbox($signature_sandbox)
     {
         $this->signature_sandbox = $signature_sandbox;
+
         return $this;
     }
 
@@ -208,16 +218,17 @@ class PaypalConfig extends BasePaypalConfig implements ConfigInterface
         $this_class_vars = get_object_vars($this);
         $base_class_vars = get_class_vars("\\Paypal\\Model\\Base\\PaypalConfig");
         $pks = array_diff_key($this_class_vars, $base_class_vars);
+
         return $pks;
     }
 
-    public  function pushValues()
+    public function pushValues()
     {
         $query = $this->getDbValues();
         foreach ($query as $var) {
             /** @var PaypalConfig $var */
             $name = $var->getName();
-            if($this->$name === null ) {
+            if ($this->$name === null) {
                 $this->$name = $var->getValue();
             }
         }

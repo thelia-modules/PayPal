@@ -40,13 +40,13 @@ class PaypalNvpOperationsDoExpressCheckoutPayment extends PaypalNvpOperationsBas
     /**
      * Constructor
      *
-     * @param PaypalApiCredentials $credentials API Credentials (3T)
-     * @param string $amount Transaction amount. Must be specified as 2000.00 or 2,000.00. The specified amount cannot exceed USD $10,000.00, regardless of the currency used.
-     * @param string $currencyId Currency id ex: EUR
-     * @param string $payerId Payer ID returned by PayPal when it redirects the buyer's browser to your site
-     * @param string $paymentAction Payment action ex: sale/order
-     * @param string $token Token returned by PayPal SetExpressCheckout API when it redirects the buyer's browser to your site.
-     * @param string $ipnListenerUrl Url Paypal will call in order to confirm payment
+     * @param PaypalApiCredentials $credentials    API Credentials (3T)
+     * @param string               $amount         Transaction amount. Must be specified as 2000.00 or 2,000.00. The specified amount cannot exceed USD $10,000.00, regardless of the currency used.
+     * @param string               $currencyId     Currency id ex: EUR
+     * @param string               $payerId        Payer ID returned by PayPal when it redirects the buyer's browser to your site
+     * @param string               $paymentAction  Payment action ex: sale/order
+     * @param string               $token          Token returned by PayPal SetExpressCheckout API when it redirects the buyer's browser to your site.
+     * @param string               $ipnListenerUrl Url Paypal will call in order to confirm payment
      * @param $buttonSource
      */
     public function __construct(
@@ -83,7 +83,6 @@ class PaypalNvpOperationsDoExpressCheckoutPayment extends PaypalNvpOperationsBas
         $request .='&PAYMENTREQUEST_0_CURRENCYCODE=' . $this->currencyId;
         $request .='&PAYMENTREQUEST_0_PAYMENTACTION=' . $this->paymentAction;
         //$request .='&BUTTONSOURCE=' . $this->buttonSource;
-
         return $request;
     }
 
