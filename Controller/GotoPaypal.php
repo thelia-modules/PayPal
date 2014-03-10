@@ -51,6 +51,8 @@ class GotoPaypal extends BaseFrontController {
      * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
      */
     public function go($order_id) {
+
+
         /*
          * vars used for setExpressCheckout
          * $order Order The order object, which is used to get products and prices
