@@ -37,6 +37,7 @@ use Thelia\Core\Event\TheliaEvents;
 use Thelia\Model\Base\OrderQuery;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Model\OrderStatus;
+use Thelia\Model\OrderStatusQuery;
 use Thelia\Tools\URL;
 use Paypal\Classes\API\PaypalApiLogManager;
 
@@ -119,7 +120,7 @@ class PaypalResponse extends BaseFrontController
                      * Set order status as paid
                      */
                     $event = new OrderEvent($order);
-                    $event->setStatus(OrderStatus::CODE_PAID);
+                    $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_PAID)->getId());
                     $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
                     $this->redirect(
@@ -168,7 +169,7 @@ class PaypalResponse extends BaseFrontController
         $this->dispatch(TheliaEvents::CART_CLEAR, $cart_event);
 
         $event = new OrderEvent($order);
-        $event->setStatus(OrderStatus::CODE_CANCELED);
+        $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_CANCELED)->getId());
         $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
         return $this->render("ordercanceled", array("order_ref"=>$order->getRef()));
