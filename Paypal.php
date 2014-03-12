@@ -43,9 +43,6 @@ class Paypal extends BaseModule implements PaymentModuleInterface
     const PAYPAL_MAX_PRODUCTS = 9;
     const PAYPAL_MAX_PRICE = 8000;
 
-    const STATUS_PAID = 2;
-    const STATUS_CANCELED = 5;
-
     public function pay(Order $order)
     {
         Redirect::exec(URL::getInstance()->absoluteUrl("/module/paypal/goto/".$order->getId()));
