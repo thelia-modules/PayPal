@@ -23,6 +23,8 @@
 
 namespace Paypal;
 
+use Thelia\Model\AddressQuery;
+use Thelia\Model\Cart;
 use Thelia\Module\BaseModule;
 use Thelia\Model\Order;
 use Thelia\Model\ModuleQuery;
@@ -32,6 +34,8 @@ use Propel\Runtime\Connection\ConnectionInterface;
 use Thelia\Tools\Redirect;
 use Thelia\Tools\URL;
 use Thelia\Install\Database;
+
+use Thelia\Core\HttpFoundation\Session\Session;
 
 /**
  * Class Paypal
@@ -78,11 +82,22 @@ class Paypal extends BaseModule implements PaymentModuleInterface
      */
     public function isValidPayment()
     {
-        /** @var Order $order */
-        $order = $this->container->get('request')->getSession()->getOrder();
+        /** @var Session $session */
+        $session = $this->container->get('request')->getSession();
+        /** @var Cart $cart */
+        $cart = $session->getCart();
+        /** @var \Thelia\Model\Order $order */
+        $order = $session->getOrder();
+        /** @var \Thelia\TaxEngine\TaxEngine $taxEngine */
+        $taxEngine = $this->container->get("thelia.taxengine");
+        /** @var \Thelia\Model\Country $country */
+        $country = $taxEngine->getDeliveryCountry();
 
-        return $order->getOrderProducts()->count() <= self::PAYPAL_MAX_PRODUCTS &&
-            $order->getTotalAmount() < self::PAYPAL_MAX_PRICE;
+        $item_number = $cart->countCartItems();
+        $price = $cart->getTaxedAmount($country) + $order->getPostage();
+
+        return $item_number <= self::PAYPAL_MAX_PRODUCTS &&
+            $price < self::PAYPAL_MAX_PRICE;
     }
 
     public function postActivation(ConnectionInterface $con = null)
