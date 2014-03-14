@@ -1,10 +1,25 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: benjamin
- * Date: 11/02/14
- * Time: 10:52
- */
+/*************************************************************************************/
+/*                                                                                   */
+/*      Thelia	                                                                     */
+/*                                                                                   */
+/*      Copyright (c) OpenStudio                                                     */
+/*      email : info@thelia.net                                                      */
+/*      web : http://www.thelia.net                                                  */
+/*                                                                                   */
+/*      This program is free software; you can redistribute it and/or modify         */
+/*      it under the terms of the GNU General Public License as published by         */
+/*      the Free Software Foundation; either version 3 of the License                */
+/*                                                                                   */
+/*      This program is distributed in the hope that it will be useful,              */
+/*      but WITHOUT ANY WARRANTY; without even the implied warranty of               */
+/*      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                */
+/*      GNU General Public License for more details.                                 */
+/*                                                                                   */
+/*      You should have received a copy of the GNU General Public License            */
+/*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
+/*                                                                                   */
+/*************************************************************************************/
 
 namespace Paypal\Controller;
 
@@ -15,16 +30,22 @@ use Paypal\Classes\API\PaypalApiManager;
 use Paypal\Classes\NVP\PaypalNvpMessageSender;
 
 use Paypal\Model\PaypalConfig;
-use Paypal\Paypal;
 
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Cart\CartEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Model\Base\OrderQuery;
 use Thelia\Core\Event\Order\OrderEvent;
+use Thelia\Model\OrderStatus;
+use Thelia\Model\OrderStatusQuery;
 use Thelia\Tools\URL;
 use Paypal\Classes\API\PaypalApiLogManager;
 
+/**
+ * Class PaypalResponse
+ * @package Paypal\Controller
+ * @author Thelia <info@thelia.net>
+ */
 class PaypalResponse extends BaseFrontController
 {
     /**
@@ -99,7 +120,7 @@ class PaypalResponse extends BaseFrontController
                      * Set order status as paid
                      */
                     $event = new OrderEvent($order);
-                    $event->setStatus(Paypal::STATUS_PAID);
+                    $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_PAID)->getId());
                     $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
                     $this->redirect(
@@ -148,7 +169,7 @@ class PaypalResponse extends BaseFrontController
         $this->dispatch(TheliaEvents::CART_CLEAR, $cart_event);
 
         $event = new OrderEvent($order);
-        $event->setStatus(Paypal::STATUS_CANCELED);
+        $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_CANCELED)->getId());
         $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
         return $this->render("ordercanceled", array("order_ref"=>$order->getRef()));
