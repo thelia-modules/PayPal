@@ -38,6 +38,7 @@ use Thelia\Model\Base\OrderQuery;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Model\OrderStatus;
 use Thelia\Model\OrderStatusQuery;
+use Thelia\Module\BasePaymentModuleController;
 use Thelia\Tools\URL;
 use Paypal\Classes\API\PaypalApiLogManager;
 
@@ -46,7 +47,7 @@ use Paypal\Classes\API\PaypalApiLogManager;
  * @package Paypal\Controller
  * @author Thelia <info@thelia.net>
  */
-class PaypalResponse extends BaseFrontController
+class PaypalResponse extends BasePaymentModuleController
 {
     /**
      * @param $order_id
@@ -120,19 +121,10 @@ class PaypalResponse extends BaseFrontController
                      * Set order status as paid
                      */
                     $event = new OrderEvent($order);
-                    $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_PAID)->getId());
+                    $event->setStatus(OrderStatusQuery::getPaidStatus()->getId());
                     $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
-                    $this->redirect(
-                        URL::getInstance()->absoluteUrl(
-                            $this->getRoute(
-                                "order.placed",
-                                array(
-                                    "order_id"=>$order_id
-                                )
-                            )
-                        )
-                    );
+                    $this->redirectToSuccessPage($order_id);
                 }
             }
 
@@ -140,10 +132,8 @@ class PaypalResponse extends BaseFrontController
         /*
          * If no redirection done ( === error ): Empty cart
          */
-        $cart_event = new CartEvent($this->getRequest()->getSession()->getCart());
-        $this->dispatch(TheliaEvents::CART_CLEAR, $cart_event);
 
-        return $this->render("gotopaypalfail");
+        return $this->render("order-failed", ["failed_order_id" => $order_id]);
     }
 
     /*
@@ -162,17 +152,12 @@ class PaypalResponse extends BaseFrontController
          */
         $logger = new PaypalApiLogManager('canceled_orders');
         $logger->logText("Order canceled: ".$order->getRef());
-        /*
-         * Empty cart and update order status to canceled by using the event
-         */
-        $cart_event = new CartEvent($this->getRequest()->getSession()->getCart());
-        $this->dispatch(TheliaEvents::CART_CLEAR, $cart_event);
 
         $event = new OrderEvent($order);
         $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_CANCELED)->getId());
         $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS,$event);
 
-        return $this->render("ordercanceled", array("order_ref"=>$order->getRef()));
+        return $this->render("order-failed", ["failed_order_id" => $order_id]);
     }
 
     /*
@@ -197,5 +182,16 @@ class PaypalResponse extends BaseFrontController
         }
 
         return $order;
+    }
+
+    /**
+     * Return a module identifier used to calculate the name of the log file,
+     * and in the log messages.
+     *
+     * @return string the module code
+     */
+    protected function getModuleCode()
+    {
+        return "Paypal";
     }
 }
