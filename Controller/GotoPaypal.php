@@ -107,7 +107,7 @@ class GotoPaypal extends BaseFrontController
          */
         $setExpressCheckout = new PaypalNvpOperationsSetExpressCheckout(
             $api,
-            $order->getTotalAmount(),
+            round($order->getTotalAmount(), 2),
             $order->getCurrency()->getCode(),
             Paypal::getPaypalURL('paiement', $order_id),
             Paypal::getPaypalURL('cancel', $order_id),
@@ -117,7 +117,7 @@ class GotoPaypal extends BaseFrontController
                 "PAYMENTREQUEST"=>array(
                     array(
                         "SHIPPINGAMT"=>$order->getPostage(),
-                        "ITEMAMT"=>$order->getTotalAmount($useless,false)
+                        "ITEMAMT"=>round($order->getTotalAmount($useless,false), 2)
                     )
                 )
             )
