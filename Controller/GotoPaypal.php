@@ -85,7 +85,7 @@ class GotoPaypal extends BaseFrontController
                 }
                 $products_amount+=$amount*$product->getQuantity();
                 $products[0]["NAME".$i]=urlencode($product->getTitle());
-                $products[0]["AMT".$i]=urlencode($amount);
+                $products[0]["AMT".$i]=urlencode(round($amount, 2));
                 $products[0]["QTY".$i]=urlencode($product->getQuantity());
                 $i++;
             }
@@ -116,7 +116,7 @@ class GotoPaypal extends BaseFrontController
                 "L_PAYMENTREQUEST"=>$products,
                 "PAYMENTREQUEST"=>array(
                     array(
-                        "SHIPPINGAMT"=>$order->getPostage(),
+                        "SHIPPINGAMT"=>round($order->getPostage(), 2),
                         "ITEMAMT"=>round($order->getTotalAmount($useless,false), 2)
                     )
                 )
