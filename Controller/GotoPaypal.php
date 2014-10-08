@@ -85,7 +85,7 @@ class GotoPaypal extends BaseFrontController
                 }
                 $products_amount+=$amount*$product->getQuantity();
                 $products[0]["NAME".$i]=urlencode($product->getTitle());
-                $products[0]["AMT".$i]=urlencode($amount);
+                $products[0]["AMT".$i]=urlencode(round($amount, 2));
                 $products[0]["QTY".$i]=urlencode($product->getQuantity());
                 $i++;
             }
@@ -107,7 +107,7 @@ class GotoPaypal extends BaseFrontController
          */
         $setExpressCheckout = new PaypalNvpOperationsSetExpressCheckout(
             $api,
-            $order->getTotalAmount(),
+            round($order->getTotalAmount(), 2),
             $order->getCurrency()->getCode(),
             Paypal::getPaypalURL('paiement', $order_id),
             Paypal::getPaypalURL('cancel', $order_id),
@@ -116,8 +116,8 @@ class GotoPaypal extends BaseFrontController
                 "L_PAYMENTREQUEST"=>$products,
                 "PAYMENTREQUEST"=>array(
                     array(
-                        "SHIPPINGAMT"=>$order->getPostage(),
-                        "ITEMAMT"=>$order->getTotalAmount($useless,false)
+                        "SHIPPINGAMT"=>round($order->getPostage(), 2),
+                        "ITEMAMT"=>round($order->getTotalAmount($useless,false), 2)
                     )
                 )
             )
