@@ -32,6 +32,7 @@ use Paypal\Classes\NVP\PaypalNvpMessageSender;
 use Paypal\Model\PaypalConfig;
 use Paypal\Paypal;
 
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Base\CountryQuery;
@@ -95,7 +96,7 @@ class GotoPaypal extends BaseFrontController
          * Compute difference between prodcts total and cart amount
          * -> get Coupons.
          */
-        $delta = round($products_amount - $order->getTotalAmount($useless,false),2);
+        $delta = round($products_amount - $order->getTotalAmount($useless, false), 2);
         if ($delta > 0) {
             $products[0]["NAME".$i]=Translator::getInstance()->trans("Discount");
             $products[0]["AMT".$i]=-$delta;
@@ -117,7 +118,7 @@ class GotoPaypal extends BaseFrontController
                 "PAYMENTREQUEST"=>array(
                     array(
                         "SHIPPINGAMT"=>$order->getPostage(),
-                        "ITEMAMT"=>$order->getTotalAmount($useless,false)
+                        "ITEMAMT"=>$order->getTotalAmount($useless, false)
                     )
                 )
             )
@@ -148,7 +149,7 @@ class GotoPaypal extends BaseFrontController
              * $response string NVP response of paypal for setExpressCheckout request
              * $req array array cast of NVP response
              */
-            $sender = new PaypalNvpMessageSender($setExpressCheckout,$sandbox);
+            $sender = new PaypalNvpMessageSender($setExpressCheckout, $sandbox);
             $response = $sender->send();
             $logger->logTransaction($response);
             $response = PaypalApiManager::nvpToArray($response);
@@ -159,11 +160,14 @@ class GotoPaypal extends BaseFrontController
             if (isset($response['ACK']) && $response['ACK'] === "Success" &&
                 isset($response['TOKEN']) && !empty($response['TOKEN'])) {
                 $sess = $this->getRequest()->getSession();
-                $sess->set("Paypal.token",$response['TOKEN']);
-                $this->redirect($redirect_api->getExpressCheckoutUrl($response['TOKEN']));
+                $sess->set("Paypal.token", $response['TOKEN']);
+
+                return new RedirectResponse(
+                    $redirect_api->getExpressCheckoutUrl($response['TOKEN'])
+                );
             }
         }
 
-        return $this->render("gotopaypalfail",array(), 500);
+        return $this->render("gotopaypalfail", array(), 500);
     }
 }
