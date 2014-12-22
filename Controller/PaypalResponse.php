@@ -97,7 +97,7 @@ class PaypalResponse extends BasePaymentModuleController
 
                 $doExpressCheckout = new PaypalNvpOperationsDoExpressCheckoutPayment(
                     $api,
-                    $order->getTotalAmount(),
+                    round($order->getTotalAmount(),2),
                     $order->getCurrency()->getCode(),
                     $payerid,
                     PaypalApiManager::PAYMENT_TYPE_SALE,
