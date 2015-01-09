@@ -144,4 +144,14 @@ class Paypal extends BaseModule implements PaymentModuleInterface
         return $search->getId();
     }
 
+    /**
+     * if you want, you can manage stock in your module instead of order process.
+     * Return false to decrease the stock when order status switch to pay
+     *
+     * @return bool
+     */
+    public function manageStockOnCreation()
+    {
+        return false;
+    }
 }
