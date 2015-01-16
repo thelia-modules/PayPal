@@ -23,15 +23,14 @@
 
 namespace Paypal;
 
-use Thelia\Model\AddressQuery;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Model\Cart;
 use Thelia\Module\BaseModule;
 use Thelia\Model\Order;
 use Thelia\Model\ModuleQuery;
 use Thelia\Module\PaymentModuleInterface;
-use Thelia\Model\Base\ModuleImageQuery;
+use Thelia\Model\ModuleImageQuery;
 use Propel\Runtime\Connection\ConnectionInterface;
-use Thelia\Tools\Redirect;
 use Thelia\Tools\URL;
 use Thelia\Install\Database;
 
@@ -49,7 +48,7 @@ class Paypal extends BaseModule implements PaymentModuleInterface
 
     public function pay(Order $order)
     {
-        Redirect::exec(URL::getInstance()->absoluteUrl("/module/paypal/goto/".$order->getId()));
+        return RedirectResponse::create(URL::getInstance()->absoluteUrl("/module/paypal/goto/".$order->getId()));
     }
 
     /**
@@ -85,7 +84,7 @@ class Paypal extends BaseModule implements PaymentModuleInterface
         /** @var Session $session */
         $session = $this->container->get('request')->getSession();
         /** @var Cart $cart */
-        $cart = $session->getCart();
+        $cart = $session->getSessionCart($this->getDispatcher());
         /** @var \Thelia\Model\Order $order */
         $order = $session->getOrder();
         /** @var \Thelia\TaxEngine\TaxEngine $taxEngine */
