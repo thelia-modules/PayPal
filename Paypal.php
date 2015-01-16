@@ -24,6 +24,7 @@
 namespace Paypal;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Thelia\Core\Thelia;
 use Thelia\Model\Cart;
 use Thelia\Module\BaseModule;
 use Thelia\Model\Order;
@@ -97,6 +98,15 @@ class Paypal extends BaseModule implements PaymentModuleInterface
 
         return $item_number <= self::PAYPAL_MAX_PRODUCTS &&
             $price < self::PAYPAL_MAX_PRICE;
+    }
+
+    public function preActivation(ConnectionInterface $con = null)
+    {
+        if (version_compare(Thelia::THELIA_VERSION, '2.1.0', '<')) {
+            return false;
+        }
+
+        return true;
     }
 
     public function postActivation(ConnectionInterface $con = null)
