@@ -92,7 +92,6 @@ class PaypalResponse extends BasePaymentModuleController
 
             if (isset($response['ACK']) && $response['ACK'] === 'Success' &&
                 isset($response['PAYERID']) && $response['PAYERID'] === $payerid &&
-                isset($response['PAYERSTATUS']) && $response['PAYERSTATUS'] === 'verified' &&
                 isset($response['TOKEN']) && $response['TOKEN'] === $token) {
 
                 $doExpressCheckout = new PaypalNvpOperationsDoExpressCheckoutPayment(
