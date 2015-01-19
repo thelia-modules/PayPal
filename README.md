@@ -18,16 +18,17 @@
 ```
 
 
-=== SUMMARY ===
-fr_FR:
-I)   Installation
-II)  Utilisation
-III) Intégration
+# SUMMARY
 
-en_US:
-I)   Install notes
-II)  How to use
-III) Integration
+<a href="#-fr_fr-">fr_FR:</a>
+* I)   <a href="#i--installation">Installation</a>
+* II)  <a href="#ii-utilisation">Utilisation</a>
+* III) <a href="#iii-int%C3%A9gration">Intégration</a>
+
+<a href="#-en_us-">en_US:</a>
+* I)   <a href="#i--installation-1">Install notes</a>
+* II)  <a href="#ii-how-to-use">How to use</a>
+* III) <a href="#iii-integration">Integration</a>
 
 
 # === fr_FR ===
