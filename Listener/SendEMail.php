@@ -70,7 +70,7 @@ class SendEMail extends BaseAction implements EventSubscriberInterface
     public function update_status(OrderEvent $event)
     {
         if ($event->getOrder()->getPaymentModuleId() === Paypal::getModCode()) {
-            if ($event->getOrder()->isPaid() ) {
+            if ($event->getOrder()->isPaid(true) ) {
 
                 $contact_email = ConfigQuery::read('store_email');
 
