@@ -96,8 +96,32 @@ class Paypal extends BaseModule implements PaymentModuleInterface
         $item_number = $cart->countCartItems();
         $price = $cart->getTaxedAmount($country) + $order->getPostage();
 
-        return $item_number <= self::PAYPAL_MAX_PRODUCTS &&
-            $price < self::PAYPAL_MAX_PRICE;
+        $valid = false;
+
+        if ($item_number <= self::PAYPAL_MAX_PRODUCTS) {
+            $valid = $this->checkMinMaxAmount();
+        }
+
+        return $valid;
+    }
+
+    /**
+     * Check if total order amount is in the module's limits
+     *
+     * @return bool true if the current order total is within the min and max limits
+     */
+    protected function checkMinMaxAmount()
+    {
+        // Check if total order amount is in the module's limits
+        $order_total = $this->getCurrentOrderTotalAmount();
+
+        $min_amount = 0;
+        $max_amount = self::PAYPAL_MAX_PRICE;
+
+        return
+            $order_total > 0
+            &&
+            ($min_amount <= 0 || $order_total >= $min_amount) && ($max_amount <= 0 || $order_total <= $max_amount);
     }
 
     public function preActivation(ConnectionInterface $con = null)
