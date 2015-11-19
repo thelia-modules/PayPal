@@ -46,6 +46,8 @@ use Thelia\Model\OrderQuery;
  */
 class GotoPaypal extends BaseFrontController
 {
+    protected $useFallbackTemplate = true;
+
     /*
      * @param $order_id int
      * @return \Thelia\Core\HttpFoundation\Response
