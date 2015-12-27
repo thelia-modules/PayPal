@@ -109,6 +109,15 @@ class PaypalResponse extends BasePaymentModuleController
                 $response = PaypalApiManager::nvpToArray($response);
 
                 /*
+                 * In case of pending status, log the reason to get usefull information (multi-currency problem, ...)
+                 */
+                if (isset($response['ACK']) && $response['ACK'] === "Success" &&
+                  isset($response['PAYMENTINFO_0_PAYMENTSTATUS']) && $response['PAYMENTINFO_0_PAYMENTSTATUS'] === "Pending") {
+
+                    $logger->logText('Paypal transaction is pending. Reason: '.$response['PAYMENTINFO_0_PENDINGREASON'], 'NOTICE');
+                }
+                
+                /*
                  * In case of success, go to success page
                  * In case of error, show it
                  */
