@@ -113,16 +113,6 @@ class PaypalResponse extends BasePaymentModuleController
 
                     $this->logger->logTransaction($response);
 
-                    // In case of pending status, log the reason to get usefull information (multi-currency problem, ...)
-                    if (isset($response['ACK']) && $response['ACK'] === "Success" &&
-                        isset($response['PAYMENTINFO_0_PAYMENTSTATUS']) && $response['PAYMENTINFO_0_PAYMENTSTATUS'] === "Pending") {
-                        $this->getTranslator()->trans(
-                            "Paypal transaction is pending. Reason: %reason",
-                            [ 'reason' => $response['PAYMENTINFO_0_PENDINGREASON'] ],
-                            Paypal::DOMAIN
-                        );
-                    }
-
                     /*
                      * In case of success, go to success page
                      * In case of error, show it
@@ -151,7 +141,7 @@ class PaypalResponse extends BasePaymentModuleController
         } catch (RedirectException $ex) {
             throw $ex;
         } catch (\Exception $ex) {
-            $this->logger->getLogger()->error("Error occured while processing express checkout : " . $ex->getMessage() . '. Trace : ' . $ex->getTraceAsString());
+            $this->logger->getLogger()->error("Error occured while processing express checkout : " . $ex->getMessage());
 
             $message = $this->getTranslator()->trans(
                 "Unexpected error: %mesg",
@@ -180,10 +170,10 @@ class PaypalResponse extends BasePaymentModuleController
             $event = new OrderEvent($order);
             $event->setStatus(OrderStatusQuery::create()->findOneByCode(OrderStatus::CODE_CANCELED)->getId());
             $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS, $event);
-            
+
             $message = $this->getTranslator()->trans("You canceled your payment", [], Paypal::DOMAIN);
         } catch (\Exception $ex) {
-            $this->logger->getLogger()->error("Error occured while canceling express checkout : " . $ex->getMessage() . '. Trace : ' . $ex->getTraceAsString());
+            $this->logger->getLogger()->error("Error occured while canceling express checkout : " . $ex->getMessage());
 
             $message = $this->getTranslator()->trans(
                 "Unexpected error: %mesg",
