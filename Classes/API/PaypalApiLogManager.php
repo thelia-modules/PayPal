@@ -1,12 +1,28 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * User: Quentin Dufour
- * Date: 08/08/13
- * Time: 11:22
- */
+/*************************************************************************************/
+/*                                                                                   */
+/*      Thelia	                                                                     */
+/*                                                                                   */
+/*      Copyright (c) OpenStudio                                                     */
+/*      email : info@thelia.net                                                      */
+/*      web : http://www.thelia.net                                                  */
+/*                                                                                   */
+/*      This program is free software; you can redistribute it and/or modify         */
+/*      it under the terms of the GNU General Public License as published by         */
+/*      the Free Software Foundation; either version 3 of the License                */
+/*                                                                                   */
+/*      This program is distributed in the hope that it will be useful,              */
+/*      but WITHOUT ANY WARRANTY; without even the implied warranty of               */
+/*      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                */
+/*      GNU General Public License for more details.                                 */
+/*                                                                                   */
+/*      You should have received a copy of the GNU General Public License            */
+/*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
+/*                                                                                   */
+/*************************************************************************************/
 
 namespace Paypal\Classes\API;
+
 use Thelia\Log\Tlog;
 
 /**
@@ -16,86 +32,61 @@ use Thelia\Log\Tlog;
  */
 class PaypalApiLogManager
 {
-    const EMERGENCY = 'EMERGENCY';
-    const ALERT     = 'ALERT';
-    const CRITICAL  = 'CRITICAL';
-    const ERROR     = 'ERROR';
-    const WARNING   = 'WARNING';
-    const NOTICE    = 'NOTICE';
-    const INFO      = 'INFO';
-    const DEBUG     = 'DEBUG';
-
-    const LOGCLASS = "\\Thelia\\Log\\Destination\\TlogDestinationFile";
-
     /** @var Tlog $log */
-    protected $log;
+    protected static $logger;
 
     /**
      * Parse and log the return of the Paypal NVP API
      *
      * @param string $transaction A special string returned by the NVP API
      */
-    public function logTransaction($transaction)
+    public function logTransaction($parsedTransaction)
     {
-        $this->setTLogPaypal();
-        /*
-         * Then write
-         */
-        $logLine = '';
-        $parsedTransaction = PaypalApiManager::nvpToArray($transaction);
-        $date = new \DateTime($parsedTransaction['TIMESTAMP']);
+        if ($parsedTransaction) {
+            /*
+             * Then write
+             */
+            $logLine           = '';
+            $date              = new \DateTime($parsedTransaction['TIMESTAMP']);
 
-        $logLine .= $date->format('Y-m-d H:i:s') . ' ';
-        $logLine .= 'Transaction ' . $parsedTransaction['ACK'] . ' ';
-        $logLine .= 'correlationId: ' . $parsedTransaction['CORRELATIONID'] . ' ';
+            $logLine .= $date->format('Y-m-d H:i:s') . ' ';
+            $logLine .= 'Transaction ' . $parsedTransaction['ACK'] . ' ';
+            $logLine .= 'correlationId: ' . $parsedTransaction['CORRELATIONID'] . ' ';
 
-        if ($parsedTransaction !== null && array_key_exists('L_ERRORCODE0', $parsedTransaction)) {
-            $logLine .= 'error: ';
-            $logLine .= '[' . $parsedTransaction['L_ERRORCODE0'] . '] ';
-            $logLine .= '<' . $parsedTransaction['L_SHORTMESSAGE0'] . '> ';
-            $logLine .= $parsedTransaction['L_LONGMESSAGE0'] . ' ';
+            if ($parsedTransaction !== null && array_key_exists('L_ERRORCODE0', $parsedTransaction)) {
+                $logLine .= 'error: ';
+                $logLine .= '[' . $parsedTransaction['L_ERRORCODE0'] . '] ';
+                $logLine .= '<' . $parsedTransaction['L_SHORTMESSAGE0'] . '> ';
+                $logLine .= $parsedTransaction['L_LONGMESSAGE0'] . ' ';
+            }
+
+            $this->getLogger()->info($logLine);
+        } else {
+            $this->getLogger()->info('No transaction was created.');
         }
-
-        $this->log->info($logLine);
-        $this->getBackToPreviousState();
     }
 
-    /**
-     * Log a message
-     *
-     * @param string $message  Message
-     * @param string $severity EMERGENCY|ALERT|CRITICAL|ERROR|WARNING|NOTICE|INFO|DEBUG
-     * @param string $category Category
-     */
-
-    public function logText($message, $severity = 'INFO', $category = 'paypal')
+    public static function getLogFilePath()
     {
-        $this->setTLogPaypal();
-
-        $now = date('Y-m-d h:i:s');
-        $msg = "[$now] $category.$severity: $message.";
-        $this->log->info($msg);
-
-        // Back to previous state
-        $this->getBackToPreviousState();
+        return THELIA_LOG_DIR . DS . "log-paypal.txt";
     }
 
     /**
      * @return Tlog
      */
-    protected function setTLogPaypal()
+    public function getLogger()
     {
-        /*
-         * Write Log
-         */
-        $this->log = Tlog::getInstance();
-        $this->log->setDestinations(self::LOGCLASS);
-        $this->log->setConfig(self::LOGCLASS, 0, THELIA_ROOT . "log" . DS . "log-paypal.txt");
-    }
+        if (self::$logger == null) {
+            self::$logger = Tlog::getNewInstance();
 
-    protected function getBackToPreviousState()
-    {
-        $this->log->setDestinations("\\Thelia\\Log\\Destination\\TlogDestinationRotatingFile");
-    }
+            $logFilePath = self::getLogFilePath();
 
+            self::$logger->setPrefix("#LEVEL: #DATE #HOUR: ");
+            self::$logger->setDestinations("\\Thelia\\Log\\Destination\\TlogDestinationFile");
+            self::$logger->setConfig("\\Thelia\\Log\\Destination\\TlogDestinationFile", 0, $logFilePath);
+            self::$logger->setLevel(Tlog::INFO);
+        }
+
+        return self::$logger;
+    }
 }

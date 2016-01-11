@@ -1,16 +1,30 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * Date: 8/6/13
- * Time: 3:45 PM
- *
- * @author Guillaume MOREL <gmorel@openstudio.fr>
- */
+/*************************************************************************************/
+/*                                                                                   */
+/*      Thelia	                                                                     */
+/*                                                                                   */
+/*      Copyright (c) OpenStudio                                                     */
+/*      email : info@thelia.net                                                      */
+/*      web : http://www.thelia.net                                                  */
+/*                                                                                   */
+/*      This program is free software; you can redistribute it and/or modify         */
+/*      it under the terms of the GNU General Public License as published by         */
+/*      the Free Software Foundation; either version 3 of the License                */
+/*                                                                                   */
+/*      This program is distributed in the hope that it will be useful,              */
+/*      but WITHOUT ANY WARRANTY; without even the implied warranty of               */
+/*      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                */
+/*      GNU General Public License for more details.                                 */
+/*                                                                                   */
+/*      You should have received a copy of the GNU General Public License            */
+/*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
+/*                                                                                   */
+/*************************************************************************************/
+
 namespace Paypal\Classes\NVP;
 
 use Paypal\Classes\NVP\Operations\PaypalNvpOperationInterface;
 use Paypal\Classes\API\PaypalApiManager;
-use Paypal\Model\PaypalConfig;
 
 /**
  * Class PaypalNvpMessageSender
@@ -56,9 +70,7 @@ class PaypalNvpMessageSender
      */
     public function send()
     {
-        $config = new PaypalConfig();
-        $config->pushValues();
-        $paypalApiManager = new PaypalApiManager($config);
+        $paypalApiManager = new PaypalApiManager();
 
         $url = $paypalApiManager->getApiUrl() . '?' . $this->message;
 
@@ -68,5 +80,4 @@ class PaypalNvpMessageSender
 
         return $response;
     }
-
 }

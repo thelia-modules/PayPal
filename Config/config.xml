@@ -5,15 +5,19 @@
         xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-1.0.xsd">
 
     <forms>
-        <form name="paypal.configure" class="Paypal\Form\ConfigurePaypal" />
-        <form name="paypal.configure.sandbox" class="Paypal\Form\ConfigureSandboxPaypal" />
+        <form name="paypal.form.configure" class="Paypal\Form\ConfigurationForm" />
     </forms>
 
     <services>
-        <service id="send.paypal.mail" class="Paypal\Listener\SendEMail" scope="request">
-            <argument type="service" id="thelia.parser" />
+        <service id="paypal.mail.listener" class="Paypal\Listener\SendConfirmationEmail" scope="request">
             <argument type="service" id="mailer"/>
             <tag name="kernel.event_subscriber"/>
         </service>
     </services>
+
+    <hooks>
+        <hook id="paypal.configuration.hook" class="Paypal\Hook\HookManager" scope="request">
+            <tag name="hook.event_listener" event="module.configuration" type="back" method="onModuleConfigure" />
+        </hook>
+    </hooks>
 </config>

@@ -20,25 +20,47 @@
 /*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
 /*                                                                                   */
 /*************************************************************************************/
-
-namespace Paypal\Classes\NVP\Operations;
-
 /**
- * Class NvpOperationInterface
+ * Created by Franck Allimant, CQFDev <franck@cqfdev.fr>
+ * Date: 11/01/2016 11:57
  */
-interface PaypalNvpOperationInterface
-{
-    /**
-     * Generate NVP request message
-     *
-     * @return string
-     */
-    public function getRequest();
 
-    /**
-     * Get Operation Name
-     *
-     * @return string Operation name
-     */
-    public function getOperationName();
+namespace Paypal\Hook;
+
+use Paypal\Classes\API\PaypalApiLogManager;
+use Paypal\Paypal;
+use Thelia\Core\Event\Hook\HookRenderEvent;
+use Thelia\Core\Form\TheliaFormFactoryInterface;
+use Thelia\Core\Hook\BaseHook;
+use Thelia\Core\Template\ParserContext;
+use Thelia\Model\ModuleConfig;
+use Thelia\Model\ModuleConfigQuery;
+
+class HookManager extends BaseHook
+{
+    public function onModuleConfigure(HookRenderEvent $event)
+    {
+        $logFilePath = PaypalApiLogManager::getLogFilePath();
+
+        $traces = @file_get_contents($logFilePath);
+
+        if (false === $traces) {
+            $traces = $this->translator->trans("Le fichier de log n'existe pas encore.", [], Paypal::DOMAIN);
+        } elseif (empty($traces)) {
+            $traces = $this->translator->trans("Le fichier de log est vide.", [], Paypal::DOMAIN);
+        }
+
+        $vars = ['trace_content' => nl2br($traces)  ];
+
+        if (null !== $params = ModuleConfigQuery::create()->findByModuleId(Paypal::getModuleId())) {
+            /** @var ModuleConfig $param */
+            foreach ($params as $param) {
+                $vars[ $param->getName() ] = $param->getValue();
+            }
+        }
+
+        $event->add(
+            $this->render('module-configuration.html', $vars)
+        );
+    }
 }

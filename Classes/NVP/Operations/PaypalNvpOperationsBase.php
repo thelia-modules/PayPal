@@ -9,6 +9,7 @@
 namespace Paypal\Classes\NVP\Operations;
 
 use Paypal\Classes\API\PaypalApiManager;
+
 abstract class PaypalNvpOperationsBase implements PaypalNvpOperationInterface
 {
     /** @var \Paypal\Classes\API\PaypalApiCredentials API Credentials (3T) */
@@ -45,5 +46,4 @@ abstract class PaypalNvpOperationsBase implements PaypalNvpOperationInterface
     {
         return $this->operationName;
     }
-
 }
