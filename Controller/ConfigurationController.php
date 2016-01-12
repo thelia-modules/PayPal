@@ -27,8 +27,10 @@ use Paypal\Paypal;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
+use Thelia\Core\Thelia;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Tools\URL;
+use Thelia\Tools\Version\Version;
 
 /**
  * Class ConfigurePaypal
@@ -90,6 +92,11 @@ class ConfigurationController extends BaseAdminController
             $ex
         );
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Paypal'));
+        // Before 2.2, the errored form is not stored in session
+        if (Version::test(Thelia::THELIA_VERSION, '2.2', false, "<")) {
+            return $this->render('module-configure', [ 'module_code' => 'Paypal' ]);
+        } else {
+            return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Paypal'));
+        }
     }
 }
