@@ -113,6 +113,16 @@ class PaypalResponse extends BasePaymentModuleController
 
                     $this->logger->logTransaction($response);
 
+                    // In case of pending status, log the reason to get usefull information (multi-currency problem, ...)
+                    if (isset($response['ACK']) && $response['ACK'] === "Success" &&
+                        isset($response['PAYMENTINFO_0_PAYMENTSTATUS']) && $response['PAYMENTINFO_0_PAYMENTSTATUS'] === "Pending") {
+                        $this->getTranslator()->trans(
+                            "Paypal transaction is pending. Reason: %reason",
+                            [ 'reason' => $response['PAYMENTINFO_0_PENDINGREASON'] ],
+                            Paypal::DOMAIN
+                        );
+                    }
+
                     /*
                      * In case of success, go to success page
                      * In case of error, show it
