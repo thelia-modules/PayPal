@@ -203,8 +203,22 @@ class ConfigurationForm extends BaseForm
                     ]
                 ]
             )
-
-
+            ->add(
+                'send_payment_confirmation_message',
+                'checkbox',
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Send a payment confirmation e-mail', [], Paypal::DOMAIN),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'If checked, a payment confirmation e-mail is sent to the customer.',
+                            [],
+                            Paypal::DOMAIN
+                        )
+                    ]
+                ]
+            )
         ;
     }
 

@@ -30,9 +30,7 @@ namespace Paypal\Hook;
 use Paypal\Classes\API\PaypalApiLogManager;
 use Paypal\Paypal;
 use Thelia\Core\Event\Hook\HookRenderEvent;
-use Thelia\Core\Form\TheliaFormFactoryInterface;
 use Thelia\Core\Hook\BaseHook;
-use Thelia\Core\Template\ParserContext;
 use Thelia\Model\ModuleConfig;
 use Thelia\Model\ModuleConfigQuery;
 
@@ -45,9 +43,9 @@ class HookManager extends BaseHook
         $traces = @file_get_contents($logFilePath);
 
         if (false === $traces) {
-            $traces = $this->translator->trans("Le fichier de log n'existe pas encore.", [], Paypal::DOMAIN);
+            $traces = $this->translator->trans("The log file doesn't exists yet.", [], Paypal::DOMAIN);
         } elseif (empty($traces)) {
-            $traces = $this->translator->trans("Le fichier de log est vide.", [], Paypal::DOMAIN);
+            $traces = $this->translator->trans("The log file is empty.", [], Paypal::DOMAIN);
         }
 
         $vars = ['trace_content' => nl2br($traces)  ];

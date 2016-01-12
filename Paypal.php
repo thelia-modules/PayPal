@@ -254,10 +254,12 @@ class Paypal extends AbstractPaymentModule
 
     public function postActivation(ConnectionInterface $con = null)
     {
-        // Setup some default values
-        self::setConfigValue('minimum_amount', 0);
-        self::setConfigValue('maximum_amount', 0);
-        self::setConfigValue('cart_item_count', 9);
+        // Setup some default values at first install
+        if (null === self::getConfigValue('minimum_amount', null)) {
+            self::setConfigValue('minimum_amount', 0);
+            self::setConfigValue('maximum_amount', 0);
+            self::setConfigValue('send_payment_confirmation_message', 1);
+        }
 
         if (null === MessageQuery::create()->findOneByName(self::CONFIRMATION_MESSAGE_NAME)) {
             $message = new Message();

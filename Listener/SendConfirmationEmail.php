@@ -72,8 +72,8 @@ class SendConfirmationEmail extends BaseAction implements EventSubscriberInterfa
     {
         $order = $event->getOrder();
 
-        if ($order->getPaymentModuleId() === Paypal::getModuleId()) {
-            if ($order->isPaid()) {
+        if ($order->isPaid() && $order->getPaymentModuleId() === Paypal::getModuleId()) {
+            if (Paypal::getConfigValue('send_payment_confirmation_message')) {
                 $this->mailer->sendEmailToCustomer(
                     Paypal::CONFIRMATION_MESSAGE_NAME,
                     $order->getCustomer(),
@@ -82,11 +82,11 @@ class SendConfirmationEmail extends BaseAction implements EventSubscriberInterfa
                         'order_ref' => $order->getRef()
                     ]
                 );
+            }
 
-                // Send confirmation email if required.
-                if (Paypal::getConfigValue('send_confirmation_message_only_if_paid')) {
-                    $event->getDispatcher()->dispatch(TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL, $event);
-                }
+            // Send confirmation email if required.
+            if (Paypal::getConfigValue('send_confirmation_message_only_if_paid')) {
+                $event->getDispatcher()->dispatch(TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL, $event);
             }
         }
     }

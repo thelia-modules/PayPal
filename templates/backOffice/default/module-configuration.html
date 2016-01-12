@@ -54,15 +54,20 @@
                             <div class="col-md-4">
                                 <p class="title title-without-tabs">{intl d='paypal.bo.default' l="Payment configuration"}</p>
 
-                                <div class="alert alert-info">
-                                    <span class="glyphicon glyphicon-edit"></span>
-                                    {intl d='paypal.bo.default' l='You can also <a href="%url">edit the notification email</a> sent to the customer after a successful payment.' url={url path="/admin/configuration/messages"}}
-                                </div>
-
                                 {custom_render_form_field form=$form field="send_confirmation_message_only_if_paid"}
                                     <input type="checkbox" {form_field_attributes form=$form field="send_confirmation_message_only_if_paid"} {if $send_confirmation_message_only_if_paid}checked{/if}>
                                 {$label}
                                 {/custom_render_form_field}
+
+                                {custom_render_form_field form=$form field="send_payment_confirmation_message"}
+                                    <input type="checkbox" {form_field_attributes form=$form field="send_payment_confirmation_message"} {if $send_payment_confirmation_message}checked{/if}>
+                                    {$label}
+                                {/custom_render_form_field}
+
+                                <div class="well well-sm">
+                                    <span class="glyphicon glyphicon-info-sign"></span>
+                                    {intl d='paypal.bo.default' l='You can <a href="%url">edit the payment confirmation email</a> sent to the customer after a successful payment.' url={url path="/admin/configuration/messages"}}
+                                </div>
 
                                 {custom_render_form_field form=$form field="minimum_amount"}
                                     <div class="input-group">

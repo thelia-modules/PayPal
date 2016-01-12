@@ -6,5 +6,5 @@ return array(
     'Paypal Production parameters' => 'Paramètre de production',
     'Paypal Sandbox parameters' => 'Paramètres sandbox',
     'Paypal responses history' => 'Log des échanges avec la plate-forme Paypal',
-    'You can also <a href="%url">edit the notification email</a> sent to the customer after a successful payment.' => 'Vous pouvez aussi <a href="%url">modifier le mail de notification de paiement</a> envoyé au client après un paiement réussi.',
+    'You can <a href="%url">edit the payment confirmation email</a> sent to the customer after a successful payment.' => 'Vous pouvez <a href="%url">modifier le mail de confirmation de paiement</a> envoyé au client.',
 );
