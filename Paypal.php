@@ -32,6 +32,7 @@ use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Router;
 use Thelia\Core\Translation\Translator;
+use Thelia\Install\Database;
 use Thelia\Model\CountryQuery;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
@@ -284,6 +285,37 @@ class Paypal extends AbstractPaymentModule
         if (ModuleImageQuery::create()->filterByModule($module)->count() == 0) {
             $this->deployImageFolder($module, sprintf('%s/images', __DIR__), $con);
         }
+    }
+
+    public function update($currentVersion, $newVersion, ConnectionInterface $con = null)
+    {
+        if (null === self::getConfigValue('login', null)) {
+            $database = new Database($con);
+
+            $statement = $database->execute('select * from paypal_config');
+
+            while ($statement && $config = $statement->fetchObject()) {
+                switch($config->name) {
+                    case 'login_sandbox':
+                        Paypal::setConfigValue('sandbox_login', $config->value);
+                        break;
+
+                    case 'password_sandbox':
+                        Paypal::setConfigValue('sandbox_password', $config->value);
+                        break;
+
+                    case 'signature_sandbox':
+                        Paypal::setConfigValue('sandbox_signature', $config->value);
+                        break;
+
+                    default:
+                        Paypal::setConfigValue($config->name, $config->value);
+                        break;
+                }
+            }
+        }
+
+        parent::update($currentVersion, $newVersion, $con);
     }
 
     public static function isSandboxMode()
