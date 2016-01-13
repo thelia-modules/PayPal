@@ -82,8 +82,8 @@ class PaypalApiLogManager
             $logFilePath = self::getLogFilePath();
 
             self::$logger->setPrefix("#LEVEL: #DATE #HOUR: ");
-            self::$logger->setDestinations("\\Thelia\\Log\\Destination\\TlogDestinationFile");
-            self::$logger->setConfig("\\Thelia\\Log\\Destination\\TlogDestinationFile", 0, $logFilePath);
+            self::$logger->setDestinations("\\Thelia\\Log\\Destination\\TlogDestinationRotatingFile");
+            self::$logger->setConfig("\\Thelia\\Log\\Destination\\TlogDestinationRotatingFile", 0, $logFilePath);
             self::$logger->setLevel(Tlog::INFO);
         }
 
