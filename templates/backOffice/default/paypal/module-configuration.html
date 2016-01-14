@@ -1,0 +1,115 @@
+<div class="row">
+    <div class="col-md-12 general-block-decorator">
+        <div class="row">
+            <div class="col-md-12 title title-without-tabs">
+                {intl d='paypal.bo.default' l="Paypal Configuration"}
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div class="row">
+                <div class="col-md-12">
+                    {form name="paypal.form.configure"}
+                    <form action="{url path="/admin/module/paypal/configure"}" method="post">
+                        {form_hidden_fields form=$form}
+
+                        {include file = "includes/inner-form-toolbar.html"
+                        hide_flags = true
+                        page_url   = "{url path='/admin/module/Paypal'}"
+                        close_url  = "{url path='/admin/modules'}"
+                        }
+
+                        {if $form_error}
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="alert alert-danger">{$form_error_message}</div>
+                                </div>
+                            </div>
+                        {/if}
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p class="title title-without-tabs">{intl d='paypal.bo.default' l="Paypal Production parameters"}</p>
+
+                                {render_form_field form=$form field="login" value=$login}
+                                {render_form_field form=$form field="password" value=$password}
+                                {render_form_field form=$form field="signature" value=$signature}
+                            </div>
+    
+                            <div class="col-md-4">
+                                <p class="title title-without-tabs">{intl d='paypal.bo.default' l="Paypal Sandbox parameters"}</p>
+
+                                {custom_render_form_field form=$form field="sandbox"}
+                                    <input type="checkbox" {form_field_attributes form=$form field="sandbox"} {if $sandbox}checked{/if}>
+                                    {$label}
+                                {/custom_render_form_field}
+
+                                {render_form_field form=$form field="sandbox_login" value=$sandbox_login}
+                                {render_form_field form=$form field="sandbox_password" value=$sandbox_password}
+                                {render_form_field form=$form field="sandbox_signature" value=$sandbox_signature}
+                                
+                                {render_form_field form=$form field="allowed_ip_list" value=$allowed_ip_list}
+                            </div>
+    
+                            <div class="col-md-4">
+                                <p class="title title-without-tabs">{intl d='paypal.bo.default' l="Payment configuration"}</p>
+
+                                {custom_render_form_field form=$form field="send_confirmation_message_only_if_paid"}
+                                    <input type="checkbox" {form_field_attributes form=$form field="send_confirmation_message_only_if_paid"} {if $send_confirmation_message_only_if_paid}checked{/if}>
+                                {$label}
+                                {/custom_render_form_field}
+
+                                {custom_render_form_field form=$form field="send_payment_confirmation_message"}
+                                    <input type="checkbox" {form_field_attributes form=$form field="send_payment_confirmation_message"} {if $send_payment_confirmation_message}checked{/if}>
+                                    {$label}
+                                {/custom_render_form_field}
+
+                                <div class="well well-sm">
+                                    <span class="glyphicon glyphicon-info-sign"></span>
+                                    {intl d='paypal.bo.default' l='You can <a href="%url">edit the payment confirmation email</a> sent to the customer after a successful payment.' url={url path="/admin/configuration/messages"}}
+                                </div>
+
+                                {custom_render_form_field form=$form field="minimum_amount"}
+                                    <div class="input-group">
+                                        <input type="text" {form_field_attributes form=$form field="minimum_amount" value=$minimum_amount}>
+                                        <span class="input-group-addon">{currency attr='symbol'}</span>
+                                    </div>
+                                {/custom_render_form_field}
+
+                                {custom_render_form_field form=$form field="maximum_amount"}
+                                    <div class="input-group">
+                                        <input type="text" {form_field_attributes form=$form field="maximum_amount" value=$maximum_amount}>
+                                        <span class="input-group-addon">{currency attr='symbol'}</span>
+                                    </div>
+                                {/custom_render_form_field}
+
+                                {render_form_field form=$form field="cart_item_count" value=$cart_item_count}
+                            </div>
+                        </div>
+                    </form>
+                    {/form}
+                </div>
+            </div>
+
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-cog"></span>
+                        {intl d='paypal.bo.default' l="Paypal responses history"}
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div id="log-container" style="font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: scroll">
+                        {$trace_content nofilter}
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <a href="{url path='/admin/module/paypal/log'}" class="btn btn-sm btn-primary">
+                        <span class="glyphicon glyphicon-download-alt"></span>
+                        {intl d='paypal.bo.default' l="Download full log"}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

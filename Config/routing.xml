@@ -3,12 +3,11 @@
         xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
 
 	<route id="paypal.configure" path="/admin/module/paypal/configure" methods="post">
-		<default key="_controller">Paypal\Controller\ConfigurePaypal::configure</default>
+		<default key="_controller">Paypal\Controller\ConfigurationController::configure</default>
 	</route>
 
-    <route id="paypal.goto" path="/module/paypal/goto/{order_id}" methods="get">
-        <default key="_controller">Paypal\Controller\GotoPaypal::go</default>
-        <requirement key="order_id">\d+</requirement>
+    <route id="paypal.download.log" path="/admin/module/paypal/log">
+        <default key="_controller">Paypal\Controller\ConfigurationController::downloadLog</default>
     </route>
 
     <route id="paypal.cancel" path="/module/paypal/cancel/{order_id}" methods="get">

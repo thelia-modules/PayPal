@@ -1,17 +1,32 @@
 <?php
-/**
- * Created by JetBrains PhpStorm.
- * Date: 8/6/13
- * Time: 5:33 PM
- *
- * @author Guillaume MOREL <gmorel@openstudio.fr>
- */
+/*************************************************************************************/
+/*                                                                                   */
+/*      Thelia	                                                                     */
+/*                                                                                   */
+/*      Copyright (c) OpenStudio                                                     */
+/*      email : info@thelia.net                                                      */
+/*      web : http://www.thelia.net                                                  */
+/*                                                                                   */
+/*      This program is free software; you can redistribute it and/or modify         */
+/*      it under the terms of the GNU General Public License as published by         */
+/*      the Free Software Foundation; either version 3 of the License                */
+/*                                                                                   */
+/*      This program is distributed in the hope that it will be useful,              */
+/*      but WITHOUT ANY WARRANTY; without even the implied warranty of               */
+/*      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                */
+/*      GNU General Public License for more details.                                 */
+/*                                                                                   */
+/*      You should have received a copy of the GNU General Public License            */
+/*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
+/*                                                                                   */
+/*************************************************************************************/
 
 namespace Paypal\Classes\API;
 
-use Paypal\Model\ConfigInterface;
 use Paypal\Classes\PaypalResources;
 use Paypal\Classes\vendor\MobileDetect\MobileDetect;
+use Paypal\Paypal;
+
 /**
  * Class PaypalApiManager
  * Assist in helping managing API
@@ -19,42 +34,26 @@ use Paypal\Classes\vendor\MobileDetect\MobileDetect;
 class PaypalApiManager
 {
     /** Live API */
-    CONST DEFAULT_NVP_3T_API_URL_LIVE = 'https://api-3t.paypal.com/nvp';
+    const DEFAULT_NVP_3T_API_URL_LIVE = 'https://api-3t.paypal.com/nvp';
 
     /** SandBox API */
-    CONST DEFAULT_NVP_3T_API_URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
+    const DEFAULT_NVP_3T_API_URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
 
     /** API Version */
-    CONST API_VERSION = '108.0';
+    const API_VERSION = '108.0';
 
-    CONST PAYMENT_TYPE_ORDER = 'Order';
-    CONST PAYMENT_TYPE_SALE = 'Sale';
-    CONST PAYMENT_TYPE_AUTHORIZATION = 'Authorization';
+    const PAYMENT_TYPE_ORDER = 'Order';
+    const PAYMENT_TYPE_SALE = 'Sale';
+    const PAYMENT_TYPE_AUTHORIZATION = 'Authorization';
 
     /** @var bool if SandBox mode is enabled or not */
     protected $isModeSandbox = true;
 
     protected $config=null;
 
-    /**
-     * Constructor
-     *
-     * @param string $link Connection ex: $cnx = new Paypal(); $cnx->link;
-     */
-    public function __construct(ConfigInterface $config)
+    public function __construct()
     {
-        $this->config=$config;
-        $this->isModeSandbox = $this->checkIfSandBoxIsEnabled();
-    }
-
-    /**
-     * Check in File if sandbox is enabled
-     *
-     * @return bool
-     */
-    public function checkIfSandBoxIsEnabled()
-    {
-        return $this->config->getSandbox();
+        $this->isModeSandbox = Paypal::isSandboxMode();
     }
 
     /**
@@ -96,25 +95,27 @@ class PaypalApiManager
     /**
      * Convert array to NVP string
      *
-     * @param array $data parameters
+     * @param $data
+     * @param \stdClass|null $ret
+     * @param null $construct_scheme
      *
-     * @return string NVP string
+     * @return string
      */
-    public static function arrayToNvp($data,\stdClass $ret=null, $construct_scheme=null)
+    public static function arrayToNvp($data, \stdClass $ret = null, $construct_scheme = null)
     {
         if ($ret===null) {
             $ret = new \stdClass();
             $ret->value="";
         }
         if (is_array($data)) {
-            foreach ($data as $key=>$value) {
+            foreach ($data as $key => $value) {
                 self::arrayToNvp($value, $ret, $construct_scheme===null?$key:$construct_scheme."_".$key);
             }
         } else {
             $ret->value .= $construct_scheme."=".$data."&";
         }
 
-        return substr($ret->value,0,strlen($ret->value)-1);
+        return substr($ret->value, 0, strlen($ret->value)-1);
     }
 
     /**
@@ -146,7 +147,7 @@ class PaypalApiManager
             $cmd = PaypalResources::CMD_EXPRESS_CHECKOUT_KEY;
         }
 
-        return $this->getPayPalUrl() .'?cmd=' . $cmd . '&token=' . $token;
+        return $this->getPaypalUrl() .'?cmd=' . $cmd . '&token=' . $token;
     }
 
     /**
@@ -155,9 +156,10 @@ class PaypalApiManager
      *
      * @return string URL
      */
-    public function getPayPalUrl()
+    public function getPaypalUrl()
     {
         $url = PaypalResources::PAYPAL_REDIRECT_SANDBOX_URL;
+
         if (!$this->isModeSandbox()) {
             $url = PaypalResources::PAYPAL_REDIRECT_NORMAL_URL;
         }
@@ -174,10 +176,7 @@ class PaypalApiManager
      */
     public static function convertFloatToNvpFormat($number)
     {
-        return number_format(
-            $number,
-            2, '.', ''
-        );
+        return number_format($number, 2, '.', '');
     }
 
     /**

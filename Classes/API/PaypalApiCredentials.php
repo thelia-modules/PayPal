@@ -1,18 +1,28 @@
 <?php
-/**
- * Class PaypalApiCredentials
- * Store PayPal API Credentials
- *
- * Created by JetBrains PhpStorm.
- * Date: 8/5/13
- * Time: 5:37 PM
- *
- * @author Guillaume MOREL <gmorel@openstudio.fr>
- */
+/*************************************************************************************/
+/*                                                                                   */
+/*      Thelia	                                                                     */
+/*                                                                                   */
+/*      Copyright (c) OpenStudio                                                     */
+/*      email : info@thelia.net                                                      */
+/*      web : http://www.thelia.net                                                  */
+/*                                                                                   */
+/*      This program is free software; you can redistribute it and/or modify         */
+/*      it under the terms of the GNU General Public License as published by         */
+/*      the Free Software Foundation; either version 3 of the License                */
+/*                                                                                   */
+/*      This program is distributed in the hope that it will be useful,              */
+/*      but WITHOUT ANY WARRANTY; without even the implied warranty of               */
+/*      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                */
+/*      GNU General Public License for more details.                                 */
+/*                                                                                   */
+/*      You should have received a copy of the GNU General Public License            */
+/*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
+/*                                                                                   */
+/*************************************************************************************/
 
 namespace Paypal\Classes\API;
 
-use Paypal\Model\ConfigInterface;
 use Paypal\Paypal;
 use Thelia\Core\Translation\Translator;
 
@@ -28,26 +38,19 @@ class PaypalApiCredentials
     /** @var string PayPal API signature (Three Token Authentication) */
     protected $apiSignature = null;
 
-    /*
-     * @var ConfigInterface
-     */
-    protected $config;
-
     /**
      * Create a NVP Credentials
      *
-     * @param ConfigInterface $config    Variable
      * @param string          $user      PayPal API username
      * @param string          $password  PayPal API password
      * @param string          $signature PayPal API signature (3T)
      *
      * @throws \InvalidArgumentException
      */
-    public function __construct(ConfigInterface $config, $user = null, $password = null, $signature = null)
+    public function __construct($user = null, $password = null, $signature = null)
     {
-        $this->config=$config;
         if ($user === null && $password === null && $signature === null) {
-            $this->setDefaultCredentials($config);
+            $this->setDefaultCredentials();
         } else {
             if (empty($user) || empty($password) || empty($signature)) {
                 throw new \InvalidArgumentException(
@@ -62,31 +65,22 @@ class PaypalApiCredentials
     }
 
     /**
-     * @return \Paypal\Model\ConfigInterface
-     */
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
-    /**
      * Set credentials from database according to SandBox Mode
-     *
-     * @param ConfigInterface $config Variable
      *
      * @throws \InvalidArgumentException
      */
-    protected function setDefaultCredentials(ConfigInterface $config)
+    protected function setDefaultCredentials()
     {
-        $paypalApiManager = new PaypalApiManager($config);
+        $paypalApiManager = new PaypalApiManager();
+
         if ($paypalApiManager->isModeSandbox()) {
-            $username  = $config->getLoginSandbox() != null?$config->getLoginSandbox():"";
-            $password  = $config->getPasswordSandbox() != null? $config->getPasswordSandbox():"";
-            $signature = $config->getSignatureSandbox() != null? $config->getSignatureSandbox():"";
+            $username  = Paypal::getConfigValue('sandbox_login', '');
+            $password  = Paypal::getConfigValue('sandbox_password', '');
+            $signature = Paypal::getConfigValue('sandbox_signature', '');
         } else {
-            $username  = $config->getLogin() != null?$config->getLogin():"";
-            $password  = $config->getPassword() != null?$config->getPassword():"";
-            $signature = $config->getSignature() != null?$config->getSignature():"";
+            $username  = Paypal::getConfigValue('login', '');
+            $password  = Paypal::getConfigValue('password', '');
+            $signature = Paypal::getConfigValue('signature', '');
         }
 
         if (empty($username)) {
@@ -133,5 +127,4 @@ class PaypalApiCredentials
     {
         return $this->apiUsername;
     }
-
 }

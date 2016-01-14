@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module>
+<module xmlns="http://thelia.net/schema/dic/module"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://thelia.net/schema/dic/module http://thelia.net/schema/dic/module/module-2_1.xsd">
     <fullnamespace>Paypal\Paypal</fullnamespace>
     <descriptive locale="en_US">
-        <title>Paypal</title>
+        <title>Pay with Paypal</title>
     </descriptive>
     <descriptive locale="fr_FR">
-        <title>Paypal</title>
+        <title>Paiement avec Paypal</title>
     </descriptive>
-    <version>1.0</version>
+    <languages>
+        <language>en_US</language>
+        <language>fr_FR</language>
+    </languages>
+    <version>2.0</version>
     <author>
         <name>Thelia</name>
         <email>info@thelia.net</email>
