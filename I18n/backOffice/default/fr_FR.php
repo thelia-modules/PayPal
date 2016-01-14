@@ -1,6 +1,7 @@
 <?php
 
 return array(
+    'Download full log' => 'Télécharger l\'historique complet',
     'Payment configuration' => 'Configuration du paiement',
     'Paypal Configuration' => 'Configuration Paypal',
     'Paypal Production parameters' => 'Paramètre de production',

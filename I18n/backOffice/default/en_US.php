@@ -1,6 +1,7 @@
 <?php
 
 return array(
+    'Download full log' => 'Download full log',
     'Payment configuration' => 'Payment configuration',
     'Paypal Configuration' => 'Paypal Configuration',
     'Paypal Production parameters' => 'Paypal Production parameters',

@@ -23,8 +23,10 @@
 
 namespace Paypal\Controller;
 
+use Paypal\Classes\API\PaypalApiLogManager;
 use Paypal\Paypal;
 use Thelia\Controller\Admin\BaseAdminController;
+use Thelia\Core\HttpFoundation\Response;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Thelia;
@@ -39,6 +41,25 @@ use Thelia\Tools\Version\Version;
  */
 class ConfigurationController extends BaseAdminController
 {
+
+    public function downloadLog()
+    {
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'atos', AccessManager::UPDATE)) {
+            return $response;
+        }
+
+        $logFilePath = PaypalApiLogManager::getLogFilePath();
+
+        return Response::create(
+            @file_get_contents($logFilePath),
+            200,
+            array(
+                'Content-type' => "text/plain",
+                'Content-Disposition' => sprintf('Attachment;filename=paypal-log.txt')
+            )
+        );
+    }
+
     /*
      * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
      */

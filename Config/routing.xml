@@ -6,6 +6,10 @@
 		<default key="_controller">Paypal\Controller\ConfigurationController::configure</default>
 	</route>
 
+    <route id="paypal.download.log" path="/admin/module/paypal/log">
+        <default key="_controller">Paypal\Controller\ConfigurationController::downloadLog</default>
+    </route>
+
     <route id="paypal.cancel" path="/module/paypal/cancel/{order_id}" methods="get">
         <default key="_controller">Paypal\Controller\PaypalResponse::cancel</default>
         <requirement key="order_id">\d+</requirement>

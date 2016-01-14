@@ -1,6 +1,7 @@
 <?php
 
 return array(
+    '(Previous log is in %file file.)\n' => '(L\'historique précédent est dans %file file.)\n',
     'Activate sandbox mode' => 'Activer la sandbox ( mode de test )',
     'Allowed IPs in test mode' => 'Adresse IP autorisées en mode sandbox',
     'Discount' => 'Remise',

@@ -36,6 +36,8 @@ use Thelia\Model\ModuleConfigQuery;
 
 class HookManager extends BaseHook
 {
+    const MAX_TRACE_SIZE_IN_BYTES = 40000;
+
     public function onModuleConfigure(HookRenderEvent $event)
     {
         $logFilePath = PaypalApiLogManager::getLogFilePath();
@@ -46,6 +48,21 @@ class HookManager extends BaseHook
             $traces = $this->translator->trans("The log file doesn't exists yet.", [], Paypal::DOMAIN);
         } elseif (empty($traces)) {
             $traces = $this->translator->trans("The log file is empty.", [], Paypal::DOMAIN);
+        } else {
+            // Limiter la taille des traces à 1MO
+            if (strlen($traces) > self::MAX_TRACE_SIZE_IN_BYTES) {
+                $traces = substr($traces, strlen($traces) - self::MAX_TRACE_SIZE_IN_BYTES);
+                // Cut a first line break;
+                if (false !== $lineBreakPos = strpos($traces, "\n")) {
+                    $traces = substr($traces, $lineBreakPos+1);
+                }
+
+                $traces = $this->translator->trans(
+                    "(Previous log is in %file file.)\n",
+                    [ '%file' => sprintf("log".DS."%s.log", Paypal::DOMAIN) ],
+                    Paypal::DOMAIN
+                ) . $traces;
+            }
         }
 
         $vars = ['trace_content' => nl2br($traces)  ];
@@ -58,7 +75,7 @@ class HookManager extends BaseHook
         }
 
         $event->add(
-            $this->render('module-configuration.html', $vars)
+            $this->render('paypal/module-configuration.html', $vars)
         );
     }
 }
