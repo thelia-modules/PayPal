@@ -91,9 +91,10 @@ class Paypal extends AbstractPaymentModule
                 foreach ($product->getOrderProductTaxes() as $tax) {
                     $amount += $product->getWasInPromo() ? $tax->getPromoAmount() : $tax->getAmount();
                 }
-                $products_amount += $amount * $product->getQuantity();
+                $rounded_amounts = round($amount, 2);
+                $products_amount += $rounded_amounts * $product->getQuantity();
                 $products[0][ "NAME" . $itemIndex ] = urlencode($product->getTitle());
-                $products[0][ "AMT" . $itemIndex ]  = urlencode(round($amount, 2));
+                $products[0][ "AMT" . $itemIndex ]  = urlencode($rounded_amounts);
                 $products[0][ "QTY" . $itemIndex ]  = urlencode($product->getQuantity());
                 $itemIndex ++;
             }
