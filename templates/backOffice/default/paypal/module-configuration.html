@@ -84,6 +84,11 @@
                                 {/custom_render_form_field}
 
                                 {render_form_field form=$form field="cart_item_count" value=$cart_item_count}
+
+                                {custom_render_form_field form=$form field="send_cart_detail"}
+                                    <input type="checkbox" {form_field_attributes form=$form field="send_cart_detail"} {if $send_cart_detail}checked{/if}>
+                                {$label}
+                                {/custom_render_form_field}
                             </div>
                         </div>
                     </form>
