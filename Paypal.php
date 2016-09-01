@@ -80,36 +80,45 @@ class Paypal extends AbstractPaymentModule
         $itemIndex    = 0;
         $logger       = new PaypalApiLogManager();
 
-        /*
-         * Store products into 2d array $products
-         */
-        $products_amount = 0;
+        $send_cart_detail = Paypal::getConfigValue('send_cart_detail', 0);
 
-        foreach ($order->getOrderProducts() as $product) {
-            if ($product !== null) {
-                $amount = floatval($product->getWasInPromo() ? $product->getPromoPrice() : $product->getPrice());
-                foreach ($product->getOrderProductTaxes() as $tax) {
-                    $amount += $product->getWasInPromo() ? $tax->getPromoAmount() : $tax->getAmount();
+        if ($send_cart_detail == 1) {
+
+            /*
+            * Store products into 2d array $products
+            */
+            $products_amount = 0;
+
+            foreach ($order->getOrderProducts() as $product) {
+                if ($product !== null) {
+                    $amount = floatval($product->getWasInPromo() ? $product->getPromoPrice() : $product->getPrice());
+                    foreach ($product->getOrderProductTaxes() as $tax) {
+                        $amount += $product->getWasInPromo() ? $tax->getPromoAmount() : $tax->getAmount();
+                    }
+                    $rounded_amounts = round($amount, 2);
+                    $products_amount += $rounded_amounts * $product->getQuantity();
+                    $products[0][ "NAME" . $itemIndex ] = urlencode($product->getTitle());
+                    $products[0][ "AMT" . $itemIndex ]  = urlencode($rounded_amounts);
+                    $products[0][ "QTY" . $itemIndex ]  = urlencode($product->getQuantity());
+                    $itemIndex ++;
                 }
-                $rounded_amounts = round($amount, 2);
-                $products_amount += $rounded_amounts * $product->getQuantity();
-                $products[0][ "NAME" . $itemIndex ] = urlencode($product->getTitle());
-                $products[0][ "AMT" . $itemIndex ]  = urlencode($rounded_amounts);
-                $products[0][ "QTY" . $itemIndex ]  = urlencode($product->getQuantity());
-                $itemIndex ++;
             }
-        }
 
-        /*
-         * Compute difference between prodcts total and cart amount
-         * -> get Coupons.
-         */
-        $delta = round($products_amount - $order->getTotalAmount($useless, false), 2);
+            /*
+             * Compute difference between prodcts total and cart amount
+             * -> get Coupons.
+             */
+            $delta = round($products_amount - $order->getTotalAmount($useless, false), 2);
 
-        if ($delta > 0) {
-            $products[0][ "NAME" . $itemIndex ] = Translator::getInstance()->trans("Discount");
-            $products[0][ "AMT" . $itemIndex ]  = - $delta;
-            $products[0][ "QTY" . $itemIndex ]  = 1;
+            if ($delta > 0) {
+                $products[0][ "NAME" . $itemIndex ] = Translator::getInstance()->trans("Discount");
+                $products[0][ "AMT" . $itemIndex ]  = - $delta;
+                $products[0][ "QTY" . $itemIndex ]  = 1;
+            }
+        } else {
+            $products[0]["NAME" . $itemIndex] = urlencode(Translator::getInstance()->trans("Order").' '.$orderId);
+            $products[0]["AMT" . $itemIndex] = round($order->getTotalAmount($useless, false),2);
+            $products[0]["QTY" . $itemIndex] = 1;
         }
 
         /*

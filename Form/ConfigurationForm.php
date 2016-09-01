@@ -219,6 +219,22 @@ class ConfigurationForm extends BaseForm
                     ]
                 ]
             )
+            ->add(
+                'send_cart_detail',
+                'checkbox',
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Send details of all products to Paypal', [], Paypal::DOMAIN),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'If checked, all products will be sent to Paypal.',
+                            [],
+                            Paypal::DOMAIN
+                        )
+                    ]
+                ]
+            )
         ;
     }
 
