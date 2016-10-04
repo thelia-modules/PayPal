@@ -105,7 +105,8 @@ class PaypalResponse extends BasePaymentModuleController
                         $payerid,
                         PaypalApiManager::PAYMENT_TYPE_SALE,
                         $token,
-                        URL::getInstance()->absoluteUrl("/module/paypal/listen")
+                        URL::getInstance()->absoluteUrl("/module/paypal/listen"),
+                        PaypalApiManager::BUTTON_SOURCE
                     );
 
                     $request  = new PaypalNvpMessageSender($doExpressCheckout, $token);
@@ -116,7 +117,7 @@ class PaypalResponse extends BasePaymentModuleController
                     // In case of pending status, log the reason to get usefull information (multi-currency problem, ...)
                     if (isset($response['ACK']) && $response['ACK'] === "Success" &&
                         isset($response['PAYMENTINFO_0_PAYMENTSTATUS']) && $response['PAYMENTINFO_0_PAYMENTSTATUS'] === "Pending") {
-                        $this->getTranslator()->trans(
+                        $message = $this->getTranslator()->trans(
                             "Paypal transaction is pending. Reason: %reason",
                             [ 'reason' => $response['PAYMENTINFO_0_PENDINGREASON'] ],
                             Paypal::DOMAIN
@@ -148,6 +149,8 @@ class PaypalResponse extends BasePaymentModuleController
             } else {
                 $message = $this->getTranslator()->trans("Failed to find PayerID", [], Paypal::DOMAIN);
             }
+
+            $this->logger->getLogger()->info("Order [" . $order_id . "] : " . $message);
         } catch (RedirectException $ex) {
             throw $ex;
         } catch (\Exception $ex) {
