@@ -51,8 +51,9 @@ class PaypalNvpOperationsDoExpressCheckoutPayment extends PaypalNvpOperationsBas
 
     /** @var string URL IPN listener */
     protected $ipnListenerUrl = null;
-    /** @var string Thelia_Cart_ECM|Thelia_Cart_ECS */
-    //protected $buttonSource;
+
+    /** @var string Button Source for Thelia_Cart */
+    protected $buttonSource;
 
     /**
      * Constructor
@@ -73,8 +74,8 @@ class PaypalNvpOperationsDoExpressCheckoutPayment extends PaypalNvpOperationsBas
         $payerId,
         $paymentAction,
         $token,
-        $ipnListenerUrl
-        //$buttonSource
+        $ipnListenerUrl,
+        $buttonSource = null
     ) {
         $this->operationName  = 'DoExpressCheckoutPayment';
         $this->token          = $token;
@@ -84,7 +85,7 @@ class PaypalNvpOperationsDoExpressCheckoutPayment extends PaypalNvpOperationsBas
         $this->currencyId     = $currencyId;
         $this->paymentAction  = $paymentAction;
         $this->ipnListenerUrl = $ipnListenerUrl;
-        //$this->buttonSource = $buttonSource;
+        $this->buttonSource   = $buttonSource;
     }
 
     /**
@@ -98,8 +99,10 @@ class PaypalNvpOperationsDoExpressCheckoutPayment extends PaypalNvpOperationsBas
         $request .= '&PAYMENTREQUEST_0_AMT=' . $this->amount;
         $request .= '&PAYMENTREQUEST_0_CURRENCYCODE=' . $this->currencyId;
         $request .= '&PAYMENTREQUEST_0_PAYMENTACTION=' . $this->paymentAction;
+        if (null !== $this->buttonSource) {
+            $request .='&BUTTONSOURCE=' . $this->buttonSource;
+        }
 
-        //$request .='&BUTTONSOURCE=' . $this->buttonSource;
         return $request;
     }
 }

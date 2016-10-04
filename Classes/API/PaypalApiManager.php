@@ -39,6 +39,9 @@ class PaypalApiManager
     /** SandBox API */
     const DEFAULT_NVP_3T_API_URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
 
+    /** Button Source - Identification code for third-party applications */
+    const BUTTON_SOURCE = 'Thelia_Cart';
+
     /** API Version */
     const API_VERSION = '108.0';
 
