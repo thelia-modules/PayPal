@@ -101,7 +101,8 @@ class PaypalResponse extends BasePaymentModuleController
                     $payerid,
                     PaypalApiManager::PAYMENT_TYPE_SALE,
                     $token,
-                    URL::getInstance()->absoluteUrl("/module/paypal/listen")
+                    URL::getInstance()->absoluteUrl("/module/paypal/listen"),
+                    PaypalApiManager::BUTTON_SOURCE
                 );
                 $request = new PaypalNvpMessageSender($doExpressCheckout, $token);
                 $response = $request->send();

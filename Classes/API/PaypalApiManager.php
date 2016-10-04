@@ -19,17 +19,20 @@ use Paypal\Classes\vendor\MobileDetect\MobileDetect;
 class PaypalApiManager
 {
     /** Live API */
-    CONST DEFAULT_NVP_3T_API_URL_LIVE = 'https://api-3t.paypal.com/nvp';
+    const DEFAULT_NVP_3T_API_URL_LIVE = 'https://api-3t.paypal.com/nvp';
 
     /** SandBox API */
-    CONST DEFAULT_NVP_3T_API_URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
+    const DEFAULT_NVP_3T_API_URL_SANDBOX = 'https://api-3t.sandbox.paypal.com/nvp';
+
+    /** Button Source - Identification code for third-party applications */
+    const BUTTON_SOURCE = 'Thelia_Cart';
 
     /** API Version */
-    CONST API_VERSION = '108.0';
+    const API_VERSION = '108.0';
 
-    CONST PAYMENT_TYPE_ORDER = 'Order';
-    CONST PAYMENT_TYPE_SALE = 'Sale';
-    CONST PAYMENT_TYPE_AUTHORIZATION = 'Authorization';
+    const PAYMENT_TYPE_ORDER = 'Order';
+    const PAYMENT_TYPE_SALE = 'Sale';
+    const PAYMENT_TYPE_AUTHORIZATION = 'Authorization';
 
     /** @var bool if SandBox mode is enabled or not */
     protected $isModeSandbox = true;
