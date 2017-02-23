@@ -1,228 +1,243 @@
 <?php
 /*************************************************************************************/
-/*                                                                                   */
-/*      Thelia	                                                                     */
+/*      This file is part of the Thelia package.                                     */
 /*                                                                                   */
 /*      Copyright (c) OpenStudio                                                     */
-/*      email : info@thelia.net                                                      */
+/*      email : dev@thelia.net                                                       */
 /*      web : http://www.thelia.net                                                  */
 /*                                                                                   */
-/*      This program is free software; you can redistribute it and/or modify         */
-/*      it under the terms of the GNU General Public License as published by         */
-/*      the Free Software Foundation; either version 3 of the License                */
-/*                                                                                   */
-/*      This program is distributed in the hope that it will be useful,              */
-/*      but WITHOUT ANY WARRANTY; without even the implied warranty of               */
-/*      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                */
-/*      GNU General Public License for more details.                                 */
-/*                                                                                   */
-/*      You should have received a copy of the GNU General Public License            */
-/*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
-/*                                                                                   */
+/*      For the full copyright and license information, please view the LICENSE.txt  */
+/*      file that was distributed with this source code.                             */
 /*************************************************************************************/
 
-namespace Paypal;
+namespace PayPal;
 
-use Paypal\Classes\API\PaypalApiCredentials;
-use Paypal\Classes\API\PaypalApiLogManager;
-use Paypal\Classes\API\PaypalApiManager;
-use Paypal\Classes\NVP\Operations\PaypalNvpOperationsSetExpressCheckout;
-use Paypal\Classes\NVP\PaypalNvpMessageSender;
+use Monolog\Logger;
+use PayPal\Exception\PayPalConnectionException;
+use PayPal\Model\PaypalCartQuery;
+use PayPal\Model\PaypalPlanifiedPaymentQuery;
+use PayPal\Service\Base\PayPalBaseService;
+use PayPal\Service\PayPalAgreementService;
+use PayPal\Service\PayPalLoggerService;
+use PayPal\Service\PayPalPaymentService;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Propel\Runtime\Propel;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\Routing\Router;
+use Thelia\Core\Event\Order\OrderEvent;
+use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Translation\Translator;
 use Thelia\Install\Database;
-use Thelia\Model\CountryQuery;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\ModuleImageQuery;
 use Thelia\Model\Order;
-use Thelia\Model\OrderAddressQuery;
-use Thelia\Model\OrderQuery;
+use Thelia\Model\OrderStatusQuery;
 use Thelia\Module\AbstractPaymentModule;
 use Thelia\Tools\URL;
 
-/**
- * Class Paypal
- * @package Paypal
- * @author Thelia <info@thelia.net>
- */
-class Paypal extends AbstractPaymentModule
+class PayPal extends AbstractPaymentModule
 {
-    const DOMAIN = 'paypal';
+    /** @var string */
+    const DOMAIN_NAME = 'paypal';
+    const ROUTER = 'router.paypal';
 
     /**
      * The confirmation message identifier
      */
     const CONFIRMATION_MESSAGE_NAME = 'paypal_payment_confirmation';
+    const RECURSIVE_MESSAGE_NAME = 'paypal_recursive_payment_confirmation';
 
+    const CREDIT_CARD_TYPE_VISA = 'visa';
+    const CREDIT_CARD_TYPE_MASTERCARD = 'mastercard';
+    const CREDIT_CARD_TYPE_DISCOVER = 'discover';
+    const CREDIT_CARD_TYPE_AMEX = 'amex';
+
+    const PAYPAL_METHOD_PAYPAL = 'paypal';
+    const PAYPAL_METHOD_EXPRESS_CHECKOUT = 'express_checkout';
+    const PAYPAL_METHOD_CREDIT_CARD = 'credit_card';
+    const PAYPAL_METHOD_PLANIFIED_PAYMENT = 'planified_payment';
+
+    const PAYPAL_PAYMENT_SERVICE_ID = 'paypal_payment_service';
+    const PAYPAL_CUSTOMER_SERVICE_ID = 'paypal_customer_service';
+    const PAYPAL_AGREEMENT_SERVICE_ID = 'paypal_agreement_service';
+
+    const PAYMENT_STATE_APPROVED = 'approved';
+    const PAYMENT_STATE_CREATED = 'created';
+    const PAYMENT_STATE_REFUSED = 'refused';
+
+    /**
+     *  Method used by payment gateway.
+     *
+     *  If this method return a \Thelia\Core\HttpFoundation\Response instance, this response is send to the
+     *  browser.
+     *
+     *  In many cases, it's necessary to send a form to the payment gateway. On your response you can return this form already
+     *  completed, ready to be sent
+     *
+     * @param Order $order
+     * @return RedirectResponse
+     * @throws \Exception
+     */
     public function pay(Order $order)
     {
-        $orderId = $order->getId();
+        $con = Propel::getConnection();
+        $con->beginTransaction();
 
-        /** @var Router $router */
-        $router = $this->getContainer()->get('router.paypal');
+        try {
+            /** @var PayPalPaymentService $payPalService */
+            $payPalService = $this->getContainer()->get(self::PAYPAL_PAYMENT_SERVICE_ID);
+            /** @var PayPalAgreementService $payPalAgreementService */
+            $payPalAgreementService = $this->getContainer()->get(self::PAYPAL_AGREEMENT_SERVICE_ID);
 
-        $successUrl = URL::getInstance()->absoluteUrl(
-            $router->generate('paypal.ok', ['order_id' => $order->getId()])
-        );
+            if (null !== $payPalCart = PaypalCartQuery::create()->findOneById($order->getCartId())) {
 
-        $cancelUrl = URL::getInstance()->absoluteUrl(
-            $router->generate('paypal.cancel', ['order_id' => $order->getId()])
-        );
+                if (null !== $payPalCart->getCreditCardId()) {
+                    $payment = $payPalService->makePayment($order, $payPalCart->getCreditCardId());
 
-        $order = OrderQuery::create()->findPk($orderId);
-
-        $api          = new PaypalApiCredentials();
-        $redirect_api = new PaypalApiManager();
-        $products     = array(array());
-        $itemIndex    = 0;
-        $logger       = new PaypalApiLogManager();
-
-        $send_cart_detail = Paypal::getConfigValue('send_cart_detail', 0);
-
-        if ($send_cart_detail == 1) {
-
-            /*
-            * Store products into 2d array $products
-            */
-            $products_amount = 0;
-
-            foreach ($order->getOrderProducts() as $product) {
-                if ($product !== null) {
-                    $amount = floatval($product->getWasInPromo() ? $product->getPromoPrice() : $product->getPrice());
-                    foreach ($product->getOrderProductTaxes() as $tax) {
-                        $amount += $product->getWasInPromo() ? $tax->getPromoAmount() : $tax->getAmount();
+                    //This payment method does not have a callback URL... So we have to check the payment status
+                    if ($payment->getState() === PayPal::PAYMENT_STATE_APPROVED) {
+                        $event = new OrderEvent($order);
+                        $event->setStatus(OrderStatusQuery::getPaidStatus()->getId());
+                        $this->getDispatcher()->dispatch(TheliaEvents::ORDER_UPDATE_STATUS, $event);
+                        $response = new RedirectResponse(URL::getInstance()->absoluteUrl('/order/placed/' . $order->getId()));
+                        PayPalLoggerService::log(
+                            Translator::getInstance()->trans(
+                                'Order payed with success with method : %method',
+                                [
+                                    '%method' => self::PAYPAL_METHOD_CREDIT_CARD
+                                ],
+                                self::DOMAIN_NAME
+                            ),
+                            [
+                                'order_id' => $order->getId(),
+                                'customer_id' => $order->getCustomerId()
+                            ],
+                            Logger::INFO
+                        );
+                    } else {
+                        $response = new RedirectResponse(URL::getInstance()->absoluteUrl('/module/paypal/cancel/' . $order->getId()));
+                        PayPalLoggerService::log(
+                            Translator::getInstance()->trans(
+                                'Order failed with method : %method',
+                                [
+                                    '%method' => self::PAYPAL_METHOD_CREDIT_CARD
+                                ],
+                                self::DOMAIN_NAME
+                            ),
+                            [
+                                'order_id' => $order->getId(),
+                                'customer_id' => $order->getCustomerId()
+                            ],
+                            Logger::CRITICAL
+                        );
                     }
-                    $rounded_amounts = round($amount, 2);
-                    $products_amount += $rounded_amounts * $product->getQuantity();
-                    $products[0][ "NAME" . $itemIndex ] = urlencode($product->getTitle());
-                    $products[0][ "AMT" . $itemIndex ]  = urlencode($rounded_amounts);
-                    $products[0][ "QTY" . $itemIndex ]  = urlencode($product->getQuantity());
-                    $itemIndex ++;
-                }
-            }
-
-            /*
-             * Compute difference between prodcts total and cart amount
-             * -> get Coupons.
-             */
-            $delta = round($products_amount - $order->getTotalAmount($useless, false), 2);
-
-            if ($delta > 0) {
-                $products[0][ "NAME" . $itemIndex ] = Translator::getInstance()->trans("Discount");
-                $products[0][ "AMT" . $itemIndex ]  = - $delta;
-                $products[0][ "QTY" . $itemIndex ]  = 1;
-            }
-        } else {
-            $products[0]["NAME" . $itemIndex] = urlencode(Translator::getInstance()->trans("Order").' '.$orderId);
-            $products[0]["AMT" . $itemIndex] = round($order->getTotalAmount($useless, false),2);
-            $products[0]["QTY" . $itemIndex] = 1;
-        }
-
-        /*
-         * Create setExpressCheckout request
-         */
-        $setExpressCheckout = new PaypalNvpOperationsSetExpressCheckout(
-            $api,
-            round($order->getTotalAmount(), 2),
-            $order->getCurrency()->getCode(),
-            $successUrl,
-            $cancelUrl,
-            0,
-            array(
-                "L_PAYMENTREQUEST" => $products,
-                "PAYMENTREQUEST"   => array(
-                    array(
-                        "SHIPPINGAMT" => round($order->getPostage(), 2),
-                        "ITEMAMT"     => round($order->getTotalAmount($useless, false), 2)
-                    )
-                )
-            )
-        );
-
-        /*
-         * Try to get customer's delivery address
-         */
-        if (null !== $address = OrderAddressQuery::create()->findPk($order->getDeliveryOrderAddressId())) {
-            /*
-             * If address is found, set address in setExpressCheckout request
-             */
-            $setExpressCheckout->setCustomerDeliveryAddress(
-                $address->getLastname(),
-                $address->getAddress1(),
-                $address->getAddress2(),
-                $address->getCity(),
-                "", // State
-                $address->getZipcode(),
-                CountryQuery::create()->findPk($address->getCountryId())->getIsoalpha2()
-            );
-
-            /*
-             * $sender PaypalNvpMessageSender Instance of the class that sends requests
-             * $response string NVP response of paypal for setExpressCheckout request
-             * $req array array cast of NVP response
-             */
-            $sender = new PaypalNvpMessageSender($setExpressCheckout, self::isSandboxMode());
-
-            $response = $sender->send();
-
-            if ($response) {
-                $responseData = PaypalApiManager::nvpToArray($response);
-
-                $logger->logTransaction($responseData);
-                /*
-                 * if setExpressCheckout is correct, store values in the session & redirect to paypal checkout page
-                 * else print error. ( return $this->render ... )
-                 */
-                if (isset($responseData['ACK']) && $responseData['ACK'] === "Success"
-                    &&
-                    isset($responseData['TOKEN']) && ! empty($responseData['TOKEN'])
-                ) {
-                    $sess = $this->getRequest()->getSession();
-                    $sess->set("Paypal.token", $responseData['TOKEN']);
-
-                    return new RedirectResponse(
-                        $redirect_api->getExpressCheckoutUrl($responseData['TOKEN'])
+                } elseif (null !== $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findOneById($payPalCart->getPlanifiedPaymentId())) {
+                    //Agreement Payment
+                    $agreement = $payPalAgreementService->makeAgreement($order, $planifiedPayment);
+                    $response = new RedirectResponse($agreement->getApprovalLink());
+                    PayPalLoggerService::log(
+                        Translator::getInstance()->trans(
+                            'Order created with success in PayPal with method : %method',
+                            [
+                                '%method' => self::PAYPAL_METHOD_PLANIFIED_PAYMENT
+                            ],
+                            self::DOMAIN_NAME
+                        ),
+                        [
+                            'order_id' => $order->getId(),
+                            'customer_id' => $order->getCustomerId()
+                        ],
+                        Logger::INFO
+                    );
+                } else {
+                    //Classic Payment
+                    $payment = $payPalService->makePayment($order);
+                    $response = new RedirectResponse($payment->getApprovalLink());
+                    PayPalLoggerService::log(
+                        Translator::getInstance()->trans(
+                            'Order created with success in PayPal with method : %method',
+                            [
+                                '%method' => self::PAYPAL_METHOD_PAYPAL
+                            ],
+                            self::DOMAIN_NAME
+                        ),
+                        [
+                            'order_id' => $order->getId(),
+                            'customer_id' => $order->getCustomerId()
+                        ],
+                        Logger::INFO
                     );
                 }
-            } else {
-                $logger->getLogger()->error(
-                    Translator::getInstance()->trans(
-                        "Failed to get a valid Paypal response. Please try again",
-                        [],
-                        self::DOMAIN
-                    )
-                );
-            }
-        } else {
-            $logger->getLogger()->error(
-                Translator::getInstance()->trans(
-                    "Failed to get customer delivery address",
-                    [],
-                    self::DOMAIN
-                )
-            );
-        }
 
-        // Failure !
-        return new RedirectResponse(
-            $this->getPaymentFailurePageUrl(
-                $orderId,
-                // Pas de point final, sinon 404 !
-                Translator::getInstance()->trans(
-                    "Sorry, something did not worked with Paypal. Please try again, or use another payment type",
-                    [],
-                    self::DOMAIN
-                )
-            )
-        );
+            } else {
+                //Classic Payment
+                $payment = $payPalService->makePayment($order);
+                $response = new RedirectResponse($payment->getApprovalLink());
+                PayPalLoggerService::log(
+                    Translator::getInstance()->trans(
+                        'Order created with success in PayPal with method : %method',
+                        [
+                            '%method' => self::PAYPAL_METHOD_PAYPAL
+                        ],
+                        self::DOMAIN_NAME
+                    ),
+                    [
+                        'order_id' => $order->getId(),
+                        'customer_id' => $order->getCustomerId()
+                    ],
+                    Logger::INFO
+                );
+
+                //Future Payment NOT OPERATIONNEL IN PAYPAL API REST YET !
+                //$payment = $payPalService->makePayment($order, null, null, true);
+                //$response = new RedirectResponse($payment->getApprovalLink());
+            }
+
+            $con->commit();
+
+            return $response;
+        } catch (PayPalConnectionException $e) {
+            $con->rollBack();
+
+            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
+            PayPalLoggerService::log(
+                $message,
+                [
+                    'customer_id' => $order->getCustomerId(),
+                    'order_id' => $order->getId()
+                ],
+                Logger::CRITICAL
+            );
+            throw $e;
+        } catch(\Exception $e) {
+            $con->rollBack();
+
+
+            PayPalLoggerService::log(
+                $e->getMessage(),
+                [
+                    'customer_id' => $order->getCustomerId(),
+                    'order_id' => $order->getId()
+                ],
+                Logger::CRITICAL
+            );
+            throw $e;
+        }
     }
 
+    /**
+     *
+     * This method is call on Payment loop.
+     *
+     * If you return true, the payment method will de display
+     * If you return false, the payment method will not be display
+     *
+     * @return boolean
+     */
     public function isValidPayment()
     {
-        $valid = false;
+        $isValid = false;
 
         // Check if total order amount is within the module's limits
         $order_total = $this->getCurrentOrderTotalAmount();
@@ -241,9 +256,9 @@ class Paypal extends AbstractPaymentModule
             $cartItemCount = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher())->countCartItems();
 
             if ($cartItemCount <= Paypal::getConfigValue('cart_item_count', 9)) {
-                $valid = true;
+                $isValid = true;
 
-                if (Paypal::isSandboxMode()) {
+                if (PayPalBaseService::isSandboxMode()) {
                     // In sandbox mode, check the current IP
                     $raw_ips = explode("\n", Paypal::getConfigValue('allowed_ip_list', ''));
 
@@ -255,16 +270,33 @@ class Paypal extends AbstractPaymentModule
 
                     $client_ip = $this->getRequest()->getClientIp();
 
-                    $valid = in_array($client_ip, $allowed_client_ips);
+                    $isValid = in_array($client_ip, $allowed_client_ips);
                 }
             }
         }
 
-        return $valid;
+        return $isValid;
     }
 
+    /**
+     * if you want, you can manage stock in your module instead of order process.
+     * Return false to decrease the stock when order status switch to pay
+     *
+     * @return bool
+     */
+    public function manageStockOnCreation()
+    {
+        return false;
+    }
+
+    /**
+     * @param \Propel\Runtime\Connection\ConnectionInterface $con
+     */
     public function postActivation(ConnectionInterface $con = null)
     {
+        $database = new Database($con);
+        $database->insertSql(null, array(__DIR__ . "/Config/create.sql"));
+
         // Setup some default values at first install
         if (null === self::getConfigValue('minimum_amount', null)) {
             self::setConfigValue('minimum_amount', 0);
@@ -289,6 +321,23 @@ class Paypal extends AbstractPaymentModule
             ;
         }
 
+        if (null === MessageQuery::create()->findOneByName(self::RECURSIVE_MESSAGE_NAME)) {
+            $message = new Message();
+
+            $message
+                ->setName(self::RECURSIVE_MESSAGE_NAME)
+                ->setHtmlTemplateFileName('paypal-recursive-payment-confirmation.html')
+                ->setTextTemplateFileName('paypal-recursive-payment-confirmation.txt')
+                ->setLocale('en_US')
+                ->setTitle('Paypal payment confirmation')
+                ->setSubject('Payment of order {$order_ref}')
+                ->setLocale('fr_FR')
+                ->setTitle('Confirmation de paiement par Paypal')
+                ->setSubject('Confirmation du paiement de votre commande {$order_ref}')
+                ->save()
+            ;
+        }
+
         /* Deploy the module's image */
         $module = $this->getModuleModel();
 
@@ -299,55 +348,25 @@ class Paypal extends AbstractPaymentModule
 
     public function update($currentVersion, $newVersion, ConnectionInterface $con = null)
     {
-        if (null === self::getConfigValue('login', null)) {
-            $database = new Database($con);
+        $finder = (new Finder())
+            ->files()
+            ->name('#.*?\.sql#')
+            ->sortByName()
+            ->in(__DIR__ . DS . 'Config' . DS . 'Update')
+        ;
 
-            $statement = $database->execute('select * from paypal_config');
+        $database = new Database($con);
 
-            while ($statement && $config = $statement->fetchObject()) {
-                switch($config->name) {
-                    case 'login_sandbox':
-                        Paypal::setConfigValue('sandbox_login', $config->value);
-                        break;
-
-                    case 'password_sandbox':
-                        Paypal::setConfigValue('sandbox_password', $config->value);
-                        break;
-
-                    case 'signature_sandbox':
-                        Paypal::setConfigValue('sandbox_signature', $config->value);
-                        break;
-
-                    default:
-                        Paypal::setConfigValue($config->name, $config->value);
-                        break;
-                }
+        /** @var \Symfony\Component\Finder\SplFileInfo $updateSQLFile */
+        foreach ($finder as $updateSQLFile) {
+            if (version_compare($currentVersion, str_replace('.sql', '', $updateSQLFile->getFilename()), '<')) {
+                $database->insertSql(
+                    null,
+                    [
+                        $updateSQLFile->getPathname()
+                    ]
+                );
             }
         }
-
-        parent::update($currentVersion, $newVersion, $con);
-    }
-
-    public static function isSandboxMode()
-    {
-        return 1 == intval(self::getConfigValue('sandbox'));
-    }
-
-    public function destroy(ConnectionInterface $con = null, $deleteModuleData = false)
-    {
-        if ($deleteModuleData) {
-            MessageQuery::create()->findOneByName(self::CONFIRMATION_MESSAGE_NAME)->delete();
-        }
-    }
-
-    /**
-     * if you want, you can manage stock in your module instead of order process.
-     * Return false to decrease the stock when order status switch to pay
-     *
-     * @return bool
-     */
-    public function manageStockOnCreation()
-    {
-        return false;
     }
 }

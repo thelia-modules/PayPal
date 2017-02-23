@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database defaultIdMethod="native" name="thelia"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="../../../../vendor/propel/propel/resources/xsd/database.xsd" >
+
+    <table name="paypal_customer" namespace="PayPal\Model">
+        <column name="id" primaryKey="true" required="true" type="INTEGER" />
+        <column name="paypal_user_id" primaryKey="true" required="true" type="INTEGER" />
+        <column name="credit_card_id" size="40" type="VARCHAR" />
+        <column name="name" size="255" type="VARCHAR" />
+        <column name="given_name" size="255" type="VARCHAR" />
+        <column name="family_name" size="255" type="VARCHAR" />
+        <column name="middle_name" size="255" type="VARCHAR" />
+        <column name="picture" size="255" type="VARCHAR" />
+        <column name="email_verified" type="TINYINT" />
+        <column name="gender" size="255" type="VARCHAR" />
+        <column name="birthday" size="255" type="VARCHAR" />
+        <column name="zoneinfo" size="255" type="VARCHAR" />
+        <column name="locale" size="255" type="VARCHAR" />
+        <column name="language" size="255" type="VARCHAR" />
+        <column name="verified" type="TINYINT" />
+        <column name="phone_number" size="255" type="VARCHAR" />
+        <column name="verified_account" size="255" type="VARCHAR" />
+        <column name="account_type" size="255" type="VARCHAR" />
+        <column name="age_range" size="255" type="VARCHAR" />
+        <column name="payer_id" size="255" type="VARCHAR" />
+        <column name="postal_code" size="255" type="VARCHAR" />
+        <column name="locality" size="255" type="VARCHAR" />
+        <column name="region" size="255" type="VARCHAR" />
+        <column name="country" size="255" type="VARCHAR" />
+        <column name="street_address" size="255" type="VARCHAR" />
+
+        <foreign-key foreignTable="customer" name="fk_paypal_payer_customer_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="id" />
+        </foreign-key>
+        <behavior name="timestampable" />
+    </table>
+
+    <table name="paypal_planified_payment" namespace="PayPal\Model">
+        <column name="id" autoIncrement="true" primaryKey="true" required="true" type="INTEGER" />
+        <column name="title" size="255" type="VARCHAR" required="true" />
+        <column name="description" type="CLOB" />
+        <column name="frequency" size="255" type="VARCHAR" required="true" />
+        <column name="frequency_interval" type="INTEGER" required="true" />
+        <column name="cycle" type="INTEGER" required="true" />
+        <column name="min_amount" type="DECIMAL" scale="6" size="16" defaultValue="0.000000" />
+        <column name="max_amount" type="DECIMAL" scale="6" size="16" defaultValue="0.000000" />
+        <column name="position" type="INTEGER" required="true" defaultValue="0" />
+
+        <behavior name="i18n">
+            <parameter name="i18n_columns" value="title, description" />
+        </behavior>
+        <behavior name="timestampable" />
+    </table>
+
+    <table name="paypal_cart" namespace="PayPal\Model">
+        <column name="id" primaryKey="true" required="true" type="INTEGER" />
+        <column name="credit_card_id" size="40" type="VARCHAR" />
+        <column name="planified_payment_id" type="INTEGER" />
+
+        <column name="express_payment_id" size="255" type="VARCHAR" />
+        <column name="express_payer_id" size="255" type="VARCHAR" />
+        <column name="express_token" size="255" type="VARCHAR" />
+
+        <foreign-key foreignTable="cart" name="fk_paypal_cart_cart_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="id" />
+        </foreign-key>
+        <foreign-key foreignTable="paypal_planified_payment" name="fk_paypal_cart_planified_payment_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="planified_payment_id" />
+        </foreign-key>
+        <behavior name="timestampable" />
+    </table>
+
+    <table name="paypal_order" namespace="PayPal\Model">
+        <column name="id" primaryKey="true" required="true" type="INTEGER" />
+        <column name="payment_id" size="50" type="VARCHAR" />
+        <column name="agreement_id" size="255" type="VARCHAR" />
+        <column name="credit_card_id" size="40" type="VARCHAR" />
+        <column name="state" size="20" type="VARCHAR" />
+        <column name="amount" type="DECIMAL" scale="6" size="16" defaultValue="0.000000" />
+        <column name="description" type="CLOB" />
+        <column name="payer_id" size="255" type="VARCHAR" />
+        <column name="token" size="255" type="VARCHAR" />
+
+        <column name="planified_title" size="255" type="VARCHAR" required="true" />
+        <column name="planified_description" type="CLOB" />
+        <column name="planified_frequency" size="255" type="VARCHAR" required="true" />
+        <column name="planified_frequency_interval" type="INTEGER" required="true" />
+        <column name="planified_cycle" type="INTEGER" required="true" />
+        <column name="planified_actual_cycle" type="INTEGER" required="true" defaultValue="0" />
+        <column name="planified_min_amount" type="DECIMAL" scale="6" size="16" defaultValue="0.000000" />
+        <column name="planified_max_amount" type="DECIMAL" scale="6" size="16" defaultValue="0.000000" />
+
+        <foreign-key foreignTable="order" name="fk_paypal_order_order_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="id" />
+        </foreign-key>
+        <behavior name="timestampable" />
+        <behavior name="versionable">
+            <parameter name="log_created_at" value="true" />
+            <parameter name="log_created_by" value="true" />
+        </behavior>
+    </table>
+
+    <table name="paypal_plan" namespace="PayPal\Model">
+        <column name="id" autoIncrement="true" primaryKey="true" required="true" type="INTEGER" />
+        <column name="paypal_order_id" required="true" type="INTEGER" />
+        <column name="plan_id" size="255" type="VARCHAR" />
+        <column name="state" size="255" type="VARCHAR" />
+
+        <foreign-key foreignTable="paypal_order" name="fk_paypal_plan_paypal_order_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="paypal_order_id" />
+        </foreign-key>
+        <behavior name="timestampable" />
+    </table>
+
+    <table name="paypal_log" namespace="PayPal\Model">
+        <column name="id" autoIncrement="true" primaryKey="true" required="true" type="INTEGER" />
+        <column name="customer_id" type="INTEGER" />
+        <column name="order_id" type="INTEGER" />
+        <column name="hook" size="255" type="VARCHAR" />
+        <column name="channel" size="255" type="VARCHAR" />
+        <column name="level" type="INTEGER" />
+        <column name="message" type="CLOB" />
+        <column name="time" type="INTEGER" />
+
+        <foreign-key foreignTable="customer" name="fk_paypal_log_customer_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="customer_id" />
+        </foreign-key>
+        <foreign-key foreignTable="order" name="fk_paypal_log_order_id" onDelete="CASCADE" onUpdate="RESTRICT">
+            <reference foreign="id" local="order_id" />
+        </foreign-key>
+
+        <behavior name="timestampable" />
+    </table>
+
+    <external-schema filename="local/config/schema.xml" referenceOnly="true" />
+</database>

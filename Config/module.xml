@@ -1,24 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="http://thelia.net/schema/dic/module"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://thelia.net/schema/dic/module http://thelia.net/schema/dic/module/module-2_1.xsd">
-    <fullnamespace>Paypal\Paypal</fullnamespace>
+        xsi:schemaLocation="http://thelia.net/schema/dic/module http://thelia.net/schema/dic/module/module-2_2.xsd">
+    <fullnamespace>PayPal\PayPal</fullnamespace>
     <descriptive locale="en_US">
-        <title>Pay with Paypal</title>
+        <title>PayPal</title>
+        <!--
+        <subtitle></subtitle>
+        <description></description>
+        <postscriptum></postscriptum>
+        -->
     </descriptive>
     <descriptive locale="fr_FR">
-        <title>Paiement avec Paypal</title>
+        <title>PayPal</title>
     </descriptive>
+    <!-- <logo></logo> -->
+    <!--<images-folder>images</images-folder>-->
     <languages>
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>2.1.2</version>
-    <author>
-        <name>Thelia</name>
-        <email>info@thelia.net</email>
-    </author>
-    <type>payment</type>
-    <thelia>2.1.0</thelia>
-    <stability>prod</stability>
+    <version>3.0</version>
+    <authors>
+        <author>
+            <name>gbarral</name>
+            <email>gbarral@openstudio.fr</email>
+        </author>
+    </authors>
+    <type>classic</type>
+    <!--
+    module dependencies
+    <required>
+        <module version="&gt;=0.1">Front</module>
+        <module version="~1.0">HookCart</module>
+        <module version="&gt;0.2">HookSearch</module>
+    </required>
+    -->
+    <thelia>2.2.0</thelia>
+    <stability>other</stability>
 </module>

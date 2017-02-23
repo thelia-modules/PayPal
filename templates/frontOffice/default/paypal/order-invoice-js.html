@@ -1,0 +1,58 @@
+<script type="text/javascript">
+  var payPalModuleId = '{$module_id}';
+
+  (function ($) {
+
+    {literal}
+    $(document).ready(function () {
+      var $payPal = $('#payment_' + payPalModuleId)
+        , $payPalMethod = $('input:radio[class=paypal-method]')
+        , hasSelection = false
+      ;
+
+      if ($payPal.prop('checked')) {
+        $('#paypal-methods').removeClass('hidden');
+      }
+
+      $('#payment-method input:radio').on('change', function() {
+        if ($(this).attr('name') === 'thelia_order_payment[payment-module]') {
+          if ($(this).attr('id') === $payPal.attr('id')) {
+            $('#paypal-methods').removeClass('hidden');
+          } else {
+            $('#paypal-methods').addClass('hidden');
+          }
+        }
+      });
+
+      $payPalMethod.on('change', function() {
+        //$payPalMethod.prop('checked', true);
+        $($(this).data('content')).removeClass('hidden');
+
+        $('input:radio').each(function(){
+          if ($(this).attr('name') == "thelia_order_payment[paypal_method]" && $(this).prop('checked')) {
+            hasSelection = true;
+            $($(this).data('content')).removeClass('hidden');
+          } else {
+            $($(this).data('content')).addClass('hidden');
+          }
+        });
+      });
+
+      $('input:radio').each(function(){
+
+        if ($(this).attr('name') == "thelia_order_payment[paypal_method]" && $(this).prop('checked')) {
+          hasSelection = true;
+          $($(this).data('content')).removeClass('hidden');
+        }
+      });
+
+      $('.paypal-express-method').on('click', function(){
+        $('#paypal-express-checkout button').each(function(){
+          $(this).trigger('click');
+        });
+      });
+
+    });
+    {/literal}
+  })(jQuery);
+</script>

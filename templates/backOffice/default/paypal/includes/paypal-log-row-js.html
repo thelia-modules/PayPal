@@ -1,0 +1,11 @@
+<script>
+    $('.paypal-log').on('click', function(){
+        var details = $($(this).data('details'));
+
+        if (details.hasClass('hidden')) {
+            details.removeClass('hidden');
+        } else {
+            details.addClass('hidden');
+        }
+    });
+</script>

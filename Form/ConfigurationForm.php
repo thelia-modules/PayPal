@@ -20,9 +20,10 @@
 /*	    along with this program. If not, see <http://www.gnu.org/licenses/>.         */
 /*                                                                                   */
 /*************************************************************************************/
-namespace Paypal\Form;
 
-use Paypal\Paypal;
+namespace PayPal\Form;
+
+use PayPal\PayPal;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Form\BaseForm;
@@ -42,9 +43,9 @@ class ConfigurationForm extends BaseForm
                 'text',
                 [
                     'constraints' =>  [ new NotBlank() ],
-                    'label' => $this->translator->trans('login', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('login', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
-                        'help' =>  $this->translator->trans('Your Paypal login', [], Paypal::DOMAIN)
+                        'help' =>  $this->translator->trans('Your Paypal login', [], PayPal::DOMAIN_NAME)
                     ]
                 ]
             )
@@ -53,20 +54,19 @@ class ConfigurationForm extends BaseForm
                 'text',
                 [
                     'constraints' =>  [ new NotBlank() ],
-                    'label' => $this->translator->trans('password', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('password', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
-                        'help' => $this->translator->trans('Your Paypal password', [], Paypal::DOMAIN)
+                        'help' => $this->translator->trans('Your Paypal password', [], PayPal::DOMAIN_NAME)
                     ]
                 ]
             )
             ->add(
-                'signature',
+                'merchant_id',
                 'text',
                 [
-                    'constraints' =>  [ new NotBlank() ],
-                    'label' => $this->translator->trans('signature', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Merchant ID', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
-                        'help' => $this->translator->trans('The Paypal signature', [], Paypal::DOMAIN)
+                        'help' => $this->translator->trans('The Paypal <a target="_blank" href="%url">identity merchant account</a>', ['%url' => 'https://www.paypal.com/businessprofile/settings/'], PayPal::DOMAIN_NAME)
                     ]
                 ]
             )
@@ -76,7 +76,7 @@ class ConfigurationForm extends BaseForm
                 [
                     'value' => 1,
                     'required' => false,
-                    'label' => $this->translator->trans('Activate sandbox mode', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Activate sandbox mode', [], PayPal::DOMAIN_NAME),
                 ]
             )
             ->add(
@@ -84,9 +84,9 @@ class ConfigurationForm extends BaseForm
                 'text',
                 [
                     'required' => false,
-                    'label' => $this->translator->trans('login', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('login', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
-                        'help' =>  $this->translator->trans('Your Paypal sandbox login', [], Paypal::DOMAIN)
+                        'help' =>  $this->translator->trans('Your Paypal sandbox login', [], PayPal::DOMAIN_NAME)
                     ]
                 ]
             )
@@ -95,20 +95,20 @@ class ConfigurationForm extends BaseForm
                 'text',
                 [
                     'required' => false,
-                    'label' => $this->translator->trans('password', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('password', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
-                        'help' => $this->translator->trans('Your Paypal sandbox password', [], Paypal::DOMAIN)
+                        'help' => $this->translator->trans('Your Paypal sandbox password', [], PayPal::DOMAIN_NAME)
                     ]
                 ]
             )
             ->add(
-                'sandbox_signature',
+                'sandbox_merchant_id',
                 'text',
                 [
                     'required' => false,
-                    'label' => $this->translator->trans('signature', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Merchant ID', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
-                        'help' => $this->translator->trans('The Paypal sandbox signature', [], Paypal::DOMAIN)
+                        'help' => $this->translator->trans('The Paypal <a target="_blank" href="%url">identity merchant account</a>', ['%url' => 'https://www.paypal.com/businessprofile/settings/'], PayPal::DOMAIN_NAME)
                     ]
                 ]
             )
@@ -117,12 +117,12 @@ class ConfigurationForm extends BaseForm
                 'textarea',
                 [
                     'required' => false,
-                    'label' => $this->translator->trans('Allowed IPs in test mode', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Allowed IPs in test mode', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
                             'List of IP addresses allowed to use this payment on the front-office when in test mode (your current IP is %ip). One address per line',
                             [ '%ip' => $this->getRequest()->getClientIp() ],
-                            Paypal::DOMAIN
+                            PayPal::DOMAIN_NAME
                         )
                     ],
                     'attr' => [
@@ -139,12 +139,12 @@ class ConfigurationForm extends BaseForm
                         new GreaterThanOrEqual(array('value' => 0))
                     ],
                     'required' => false,
-                    'label' => $this->translator->trans('Minimum order total', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Minimum order total', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
                             'Minimum order total in the default currency for which this payment method is available. Enter 0 for no minimum',
                             [],
-                            Paypal::DOMAIN
+                            PayPal::DOMAIN_NAME
                         )
                     ]
                 ]
@@ -158,12 +158,12 @@ class ConfigurationForm extends BaseForm
                         new GreaterThanOrEqual(array('value' => 0))
                     ],
                     'required' => false,
-                    'label' => $this->translator->trans('Maximum order total', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Maximum order total', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
                             'Maximum order total in the default currency for which this payment method is available. Enter 0 for no maximum',
                             [],
-                            Paypal::DOMAIN
+                            PayPal::DOMAIN_NAME
                         )
                     ]
                 ]
@@ -177,12 +177,92 @@ class ConfigurationForm extends BaseForm
                         new GreaterThanOrEqual(array('value' => 0))
                     ],
                     'required' => false,
-                    'label' => $this->translator->trans('Maximum items in cart', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Maximum items in cart', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
                             'Maximum number of items in the customer cart for which this payment method is available.',
                             [],
-                            Paypal::DOMAIN
+                            PayPal::DOMAIN_NAME
+                        )
+                    ]
+                ]
+            )
+            ->add(
+                'method_paypal',
+                'checkbox',
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Activate payment with PayPal account', [], PayPal::DOMAIN_NAME),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'If checked, the order can be paid by PayPal account.',
+                            [],
+                            PayPal::DOMAIN_NAME
+                        )
+                    ]
+                ]
+            )
+            ->add(
+                'method_paypal_with_in_context',
+                'checkbox',
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Use InContext mode for classic PayPal payment', [], PayPal::DOMAIN_NAME),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'If checked, a PayPal popup will be used to execute the payment.',
+                            [],
+                            PayPal::DOMAIN_NAME
+                        )
+                    ]
+                ]
+            )
+            ->add(
+                'method_express_checkout',
+                'checkbox',
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Activate Express Checkout payment with PayPal', [], PayPal::DOMAIN_NAME),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'If checked, the order can be paid directly from cart.',
+                            [],
+                            PayPal::DOMAIN_NAME
+                        )
+                    ]
+                ]
+            )
+            ->add(
+                'method_credit_card',
+                'checkbox',
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Activate payment with credit card', [], PayPal::DOMAIN_NAME),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'If checked, the order can be paid by credit card.',
+                            [],
+                            PayPal::DOMAIN_NAME
+                        )
+                    ]
+                ]
+            )
+            ->add(
+                'method_planified_payment',
+                'checkbox',
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Activate payment with planified payment', [], PayPal::DOMAIN_NAME),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'If checked, the order can be paid by planified payement.',
+                            [],
+                            PayPal::DOMAIN_NAME
                         )
                     ]
                 ]
@@ -193,12 +273,12 @@ class ConfigurationForm extends BaseForm
                 [
                     'value' => 1,
                     'required' => false,
-                    'label' => $this->translator->trans('Send order confirmation on payment success', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Send order confirmation on payment success', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
                             'If checked, the order confirmation message is sent to the customer only when the payment is successful. The order notification is always sent to the shop administrator',
                             [],
-                            Paypal::DOMAIN
+                            PayPal::DOMAIN_NAME
                         )
                     ]
                 ]
@@ -209,28 +289,28 @@ class ConfigurationForm extends BaseForm
                 [
                     'value' => 1,
                     'required' => false,
-                    'label' => $this->translator->trans('Send a payment confirmation e-mail', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Send a payment confirmation e-mail', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
                             'If checked, a payment confirmation e-mail is sent to the customer.',
                             [],
-                            Paypal::DOMAIN
+                            PayPal::DOMAIN_NAME
                         )
                     ]
                 ]
             )
             ->add(
-                'send_cart_detail',
+                'send_recursive_message',
                 'checkbox',
                 [
                     'value' => 1,
                     'required' => false,
-                    'label' => $this->translator->trans('Send details of all products to Paypal', [], Paypal::DOMAIN),
+                    'label' => $this->translator->trans('Send a recursive payment confirmation e-mail', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
-                            'If checked, all products will be sent to Paypal.',
+                            'If checked, a payment confirmation e-mail is sent to the customer after each PayPal transaction.',
                             [],
-                            Paypal::DOMAIN
+                            PayPal::DOMAIN_NAME
                         )
                     ]
                 ]

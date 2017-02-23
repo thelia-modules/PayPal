@@ -1,22 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
 <routes xmlns="http://symfony.com/schema/routing"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
 
-	<route id="paypal.configure" path="/admin/module/paypal/configure" methods="post">
-		<default key="_controller">Paypal\Controller\ConfigurationController::configure</default>
-	</route>
-
-    <route id="paypal.download.log" path="/admin/module/paypal/log">
-        <default key="_controller">Paypal\Controller\ConfigurationController::downloadLog</default>
+    <route id="paypal.configure" path="/admin/module/paypal/configure" methods="post">
+        <default key="_controller">PayPal:Configuration:configure</default>
     </route>
 
-    <route id="paypal.cancel" path="/module/paypal/cancel/{order_id}" methods="get">
-        <default key="_controller">Paypal\Controller\PaypalResponse::cancel</default>
-        <requirement key="order_id">\d+</requirement>
+    <route id="paypal.admin.configuration.log" path="/admin/module/paypal/configure/log" methods="get">
+        <default key="_controller">PayPal:Configuration:log</default>
     </route>
 
-    <route id="paypal.ok" path="/module/paypal/ok/{order_id}" methods="get">
-        <default key="_controller">Paypal\Controller\PaypalResponse::ok</default>
-        <requirement key="order_id">\d+</requirement>
+    <route id="paypal.admin.configuration.general" path="/admin/module/paypal/configure" methods="post">
+        <default key="_controller">PayPal:Configuration:configure</default>
     </route>
+
+    <route id="paypal.admin.configuration.planified" path="/admin/module/paypal/configure/planified" methods="get">
+        <default key="_controller">PayPal:PayPalPlanifiedPayment:default</default>
+    </route>
+
+    <route id="paypal.admin.configuration.planified.create" path="/admin/module/paypal/configure/planified/create" methods="post">
+        <default key="_controller">PayPal:PayPalPlanifiedPayment:create</default>
+    </route>
+
+    <route id="paypal.admin.configuration.planified.delete" path="/admin/module/paypal/configure/planified/create/delete" methods="post">
+        <default key="_controller">PayPal:PayPalPlanifiedPayment:delete</default>
+    </route>
+
+    <route id="paypal.admin.configuration.planified.update" path="/admin/module/paypal/configure/planified/{planifiedPaymentId}" methods="get">
+        <default key="_controller">PayPal:PayPalPlanifiedPayment:update</default>
+        <requirement key="planifiedPaymentId">\d+</requirement>
+    </route>
+
+    <route id="paypal.admin.configuration.planified.save" path="/admin/module/paypal/configure/planified/{planifiedPaymentId}" methods="post">
+        <default key="_controller">PayPal:PayPalPlanifiedPayment:processUpdate</default>
+        <requirement key="planifiedPaymentId">\d+</requirement>
+    </route>
+
+    <route id="paypal.cancel" path="/module/paypal/cancel/{orderId}" methods="get">
+        <default key="_controller">PayPal:PayPalResponse:cancel</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
+    <route id="paypal.ok" path="/module/paypal/ok/{orderId}" methods="get">
+        <default key="_controller">PayPal:PayPalResponse:ok</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
+    <route id="paypal.express.checkout" path="/module/paypal/express/checkout">
+        <default key="_controller">PayPal:PayPalResponse:expressCheckout</default>
+    </route>
+
+    <route id="paypal.express.checkout.ok" path="/module/paypal/express/checkout/ok/{cartId}">
+        <default key="_controller">PayPal:PayPalResponse:expressCheckoutOk</default>
+        <requirement key="cartId">\d+</requirement>
+    </route>
+
+    <route id="paypal.express.checkout.ko" path="/module/paypal/express/checkout/ko/{cartId}">
+        <default key="_controller">PayPal:PayPalResponse:expressCheckoutKo</default>
+        <requirement key="cartId">\d+</requirement>
+    </route>
+
+    <route id="paypal.invoice.express.checkout" path="/module/paypal/invoice/express/checkout">
+        <default key="_controller">PayPal:PayPalResponse:invoiceExpressCheckout</default>
+    </route>
+
+    <route id="paypal.invoice.express.checkout.ok" path="/module/paypal/invoice/express/checkout/ok/{cartId}">
+        <default key="_controller">PayPal:PayPalResponse:invoiceExpressCheckoutOk</default>
+        <requirement key="cartId">\d+</requirement>
+    </route>
+
+    <route id="paypal.invoice.express.checkout.ko" path="/module/paypal/invoice/express/checkout/ko/{cartId}">
+        <default key="_controller">PayPal:PayPalResponse:invoiceExpressCheckoutKo</default>
+        <requirement key="cartId">\d+</requirement>
+    </route>
+
+    <!-- OVERLOAD order management process -->
+    <route id="order.delivery.process" path="/order/delivery" methods="post">
+        <default key="_controller">PayPal:PayPalResponse:executeExpressCheckout</default>
+        <default key="_view">order-delivery</default>
+    </route>
+
+    <route id="paypal.login.ok" path="/module/paypal/login/ok" methods="get">
+        <default key="_controller">PayPal:PayPalResponse:loginOk</default>
+    </route>
+
+    <route id="paypal.agreement.ok" path="/module/paypal/agreement/ok/{orderId}" methods="get">
+        <default key="_controller">PayPal:PayPalResponse:agreementOk</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
+    <route id="paypal.agreement.ko" path="/module/paypal/agreement/ko/{orderId}" methods="get">
+        <default key="_controller">PayPal:PayPalResponse:agreementKo</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
+    <route id="paypal.ipn" path="/module/paypal/ipn/{orderId}">
+        <default key="_controller">PayPal:PayPalResponse:ipn</default>
+        <requirement key="orderId">\d+</requirement>
+    </route>
+
+    <route id="paypal.webhook.all" path="/module/paypal/webhook/all/events">
+        <default key="_controller">PayPal:PayPalWebHook:all</default>
+    </route>
+
 </routes>

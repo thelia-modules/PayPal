@@ -1,0 +1,38 @@
+{render_form_field field="locale"}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        {intl l="Global informations of this planified payment" d="paypal.bo.default"}
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-4">
+                {render_form_field field="title"}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {render_form_field field="description"}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                {render_form_field field="frequency_interval"}
+            </div>
+            <div class="col-md-4">
+                {render_form_field field="frequency"}
+            </div>
+            <div class="col-md-4">
+                {render_form_field field="cycle"}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                {render_form_field field="min_amount"}
+            </div>
+            <div class="col-md-4">
+                {render_form_field field="max_amount"}
+            </div>
+        </div>
+    </div>
+</div>

@@ -21,12 +21,10 @@
 /*                                                                                   */
 /*************************************************************************************/
 
-namespace Paypal\Controller;
+namespace PayPal\Controller;
 
-use Paypal\Classes\API\PaypalApiLogManager;
-use Paypal\Paypal;
+use PayPal\PayPal;
 use Thelia\Controller\Admin\BaseAdminController;
-use Thelia\Core\HttpFoundation\Response;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Thelia;
@@ -37,39 +35,22 @@ use Thelia\Tools\Version\Version;
 /**
  * Class ConfigurePaypal
  * @package Paypal\Controller
- * @author Thelia <info@thelia.net>
  */
 class ConfigurationController extends BaseAdminController
 {
-
-    public function downloadLog()
-    {
-        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'atos', AccessManager::UPDATE)) {
-            return $response;
-        }
-
-        $logFilePath = PaypalApiLogManager::getLogFilePath();
-
-        return Response::create(
-            @file_get_contents($logFilePath),
-            200,
-            array(
-                'Content-type' => "text/plain",
-                'Content-Disposition' => sprintf('Attachment;filename=paypal-log.txt')
-            )
-        );
-    }
-
     /*
      * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
      */
-    public function configure()
+    /**
+     * @return mixed|\Symfony\Component\HttpFoundation\Response|\Thelia\Core\HttpFoundation\Response
+     */
+    public function configureAction()
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Paypal', AccessManager::UPDATE)) {
             return $response;
         }
 
-        $configurationForm = $this->createForm('paypal.form.configure');
+        $configurationForm = $this->createForm('paypal_form_configure');
 
         try {
             $form = $this->validateForm($configurationForm, "POST");
@@ -107,7 +88,7 @@ class ConfigurationController extends BaseAdminController
         }
 
         $this->setupFormErrorContext(
-            $this->getTranslator()->trans("Paypal configuration", [], Paypal::DOMAIN),
+            $this->getTranslator()->trans("Paypal configuration", [], PayPal::DOMAIN_NAME),
             $error_msg,
             $configurationForm,
             $ex
@@ -115,9 +96,17 @@ class ConfigurationController extends BaseAdminController
 
         // Before 2.2, the errored form is not stored in session
         if (Version::test(Thelia::THELIA_VERSION, '2.2', false, "<")) {
-            return $this->render('module-configure', [ 'module_code' => 'Paypal' ]);
+            return $this->render('module-configure', [ 'module_code' => PayPal::getModuleCode()]);
         } else {
-            return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/Paypal'));
+            return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/PayPal'));
         }
+    }
+
+    /**
+     * @return \Thelia\Core\HttpFoundation\Response
+     */
+    public function logAction()
+    {
+        return $this->render('paypal/paypal-log');
     }
 }

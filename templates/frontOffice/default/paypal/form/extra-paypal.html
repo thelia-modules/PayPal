@@ -1,0 +1,17 @@
+<fieldset class="col-xs-11 col-xs-offset-1">
+    {if $method_paypal_with_in_context}
+    <input type="radio" id="{$label_attr.for}{$choice->label}-express" class="paypal-method paypal-express-method" name="{$name}" value="{$choice->label}" {if $value == $choice->label}checked{/if}/>
+    <label class="control-label" for="{$label_attr.for}{$choice->label}-express">
+        <strong>{intl l=$choice->label d="paypal.fo.default"}</strong>&nbsp;:
+        <img src="{image file='assets/paypal-logo.png' source="PayPal"}" border="0" alt="PayPal account" />
+    </label>
+    {else}
+    <input type="radio" id="{$label_attr.for}{$choice->label}" class="paypal-method" name="{$name}" value="{$choice->label}" {if $value == $choice->label}checked{/if}/>
+    <label class="control-label" for="{$label_attr.for}{$choice->label}">
+        <strong>{intl l=$choice->label d="paypal.fo.default"}</strong>&nbsp;:
+        <img src="{image file='assets/paypal-logo.png' source="PayPal"}" border="0" alt="PayPal account" />
+    </label>
+    {/if}
+
+
+</fieldset>

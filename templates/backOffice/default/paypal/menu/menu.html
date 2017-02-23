@@ -1,0 +1,6 @@
+<!-- Tab menu -->
+<ul id="tabbed-menu" class="nav nav-tabs">
+    <li {if $selectedMenu eq 'general'}class="active"{/if}><a href="{if $selectedMenu eq 'general'}#{else}{url path='/admin/module/paypal'}{/if}">{intl l="General configuration" d='paypal.bo.default'}</a></li>
+    <li {if $selectedMenu eq 'planifiedPayment'}class="active"{/if}><a href="{if $selectedMenu eq 'planifiedPayment'}#{else}{url path='/admin/module/paypal/configure/planified'}{/if}">{intl l='Planified payment' d="paypal.bo.default"}</a></li>
+    <li {if $selectedMenu eq 'log'}class="active"{/if}><a href="{if $selectedMenu eq 'log'}#{else}{url path='/admin/module/paypal/configure/log'}{/if}">{intl l='Log' d="paypal.bo.default"}</a></li>
+</ul>

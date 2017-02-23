@@ -1,19 +1,13 @@
 {
-    "name": "thelia/paypal-module",
-    "type": "thelia-module",
-    "license": "LGPL V3",
-    "description": "Paypal module for Thelia ecommerce solution",
-    "authors": [
-        {
-            "name": "Thelia",
-            "email": "info@thelia.net",
-            "homepage": "https://github.com/thelia-modules"
-        }
-    ],
-    "require": {
-        "thelia/installer": "~1.0"
-    },
-    "extra": {
-        "installer-name": "Paypal"
-    }
+  "name": "your-vendor/pay-pal-module",
+  "license": "LGPL-3.0+",
+  "type": "thelia-module",
+  "require": {
+    "thelia/installer": "~1.1",
+    "paypal/rest-api-sdk-php": "~1.7.0",
+    "wazaari/monolog-mysql": "^1.0"
+  },
+  "extra": {
+    "installer-name": "PayPal"
+  }
 }

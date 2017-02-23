@@ -4,20 +4,142 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-1.0.xsd">
 
+    <loops>
+        <loop name="paypal_order" class="PayPal\Loop\PayPalOrderLoop" />
+        <loop name="paypal_order_version" class="PayPal\Loop\PayPalOrderVersionLoop" />
+        <loop name="paypal_planified_payment" class="PayPal\Loop\PayPalPlanifiedPaymentLoop" />
+        <loop name="paypal_log" class="PayPal\Loop\PayPalLogLoop" />
+    </loops>
+
     <forms>
-        <form name="paypal.form.configure" class="Paypal\Form\ConfigurationForm" />
+        <form name="paypal_form_configure" class="PayPal\Form\ConfigurationForm" />
+        <form name="paypal_planified_payment_create_form" class="PayPal\Form\PayPalPlanifiedPaymentCreateForm" />
+        <form name="paypal_planified_payment_update_form" class="PayPal\Form\PayPalPlanifiedPaymentUpdateForm" />
     </forms>
 
+    <commands>
+        <!--
+        <command class="PayPal\Command\MySuperCommand" />
+        -->
+    </commands>
+
     <services>
-        <service id="paypal.mail.listener" class="Paypal\Listener\SendConfirmationEmail" scope="request">
+        <!-- **************** -->
+        <!-- *** Services *** -->
+        <!-- **************** -->
+        <service id="paypal_base_service" class="PayPal\Service\Base\PayPalBaseService">
+            <argument type="service" id="event_dispatcher" />
+            <argument type="service" id="request_stack" />
+            <argument type="service" id="router.paypal" />
+        </service>
+
+        <service id="paypal_payment_service" class="PayPal\Service\PayPalPaymentService">
+            <argument type="service" id="event_dispatcher" />
+            <argument type="service" id="request_stack" />
+            <argument type="service" id="router.paypal" />
+        </service>
+
+        <service id="paypal_agreement_service" class="PayPal\Service\PayPalAgreementService">
+            <argument type="service" id="event_dispatcher" />
+            <argument type="service" id="request_stack" />
+            <argument type="service" id="router.paypal" />
+        </service>
+
+        <service id="paypal_customer_service" class="PayPal\Service\PayPalCustomerService">
+            <argument type="service" id="thelia.securityContext" />
+        </service>
+
+
+
+        <service id="paypal_logger_service" class="PayPal\Service\PayPalLoggerService">
+        </service>
+
+        <!-- ********************** -->
+        <!-- *** EventListeners *** -->
+        <!-- ********************** -->
+
+        <!-- ***** -->
+        <!-- Order -->
+        <!-- ***** -->
+        <service id="paypal.order.order.listener" class="PayPal\EventListeners\PayPalOrderListener">
+            <tag name="kernel.event_subscriber"/>
+        </service>
+        <service id="paypal.cart.listener" class="PayPal\EventListeners\PayPalCartListener">
+            <tag name="kernel.event_subscriber"/>
+        </service>
+        <service id="paypal.order.listener" class="PayPal\EventListeners\OrderListener">
             <argument type="service" id="mailer"/>
+            <argument type="service" id="event_dispatcher"/>
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="paypal_payment_service"/>
+            <argument type="service" id="paypal_agreement_service"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+        <service id="paypal.plan.listener" class="PayPal\EventListeners\PayPalPlanListener">
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <!-- ******** -->
+        <!-- Customer -->
+        <!-- ******** -->
+        <service id="paypal.customer.customer.listener" class="PayPal\EventListeners\PayPalCustomerListener">
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="event_dispatcher"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <!-- ********************** -->
+        <!-- *** Form extension *** -->
+        <!-- ********************** -->
+        <service id="paypal.thelia.order.payment.form" class="PayPal\EventListeners\Form\TheliaOrderPaymentForm">
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="event_dispatcher"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <!-- ************************* -->
+        <!-- *** Planified Payment *** -->
+        <!-- ************************* -->
+        <service id="paypal.planified.payment.listener" class="PayPal\EventListeners\PayPalPlanifiedPaymentListener">
             <tag name="kernel.event_subscriber"/>
         </service>
     </services>
 
     <hooks>
-        <hook id="paypal.configuration.hook" class="Paypal\Hook\HookManager" scope="request">
+        <!-- backOffice -->
+        <hook id="paypal.back.hook" class="PayPal\Hook\BackHookManager">
             <tag name="hook.event_listener" event="module.configuration" type="back" method="onModuleConfigure" />
+            <tag name="hook.event_listener" event="order-edit.payment-module-bottom" type="back" method="onOrderEditPaymentModuleBottom"/>
+            <tag name="hook.event_listener" event="order.edit-js" type="back" method="onOrderEditJs"/>
+        </hook>
+        <!-- frontOffice -->
+        <hook id="paypal.front.hook" class="PayPal\Hook\FrontHookManager">
+            <argument type="service" id="request_stack"/>
+            <argument type="service" id="service_container" />
+            <tag name="hook.event_listener" event="login.main-bottom" type="front" method="onLoginMainBottom"/>
+            <tag name="hook.event_listener" event="order-invoice.payment-extra" type="front" method="onOrderInvoicePaymentExtra"/>
+            <tag name="hook.event_listener" event="order-invoice.bottom" type="front" method="onOrderInvoiceBottom"/>
+            <tag name="hook.event_listener" event="order-invoice.javascript-initialization" type="front" method="onOrderInvoiceJavascriptInitialization"/>
+            <tag name="hook.event_listener" event="order-placed.additional-payment-info" type="front" method="onOrderPlacedAdditionalPaymentInfo"/>
+            <tag name="hook.event_listener" event="cart.bottom" type="front" method="onCartBottom"/>
+            <tag name="hook.event_listener" event="order-delivery.form-bottom" type="front" method="onOrderDeliveryFormBottom"/>
+            <tag name="hook.event_listener" event="order-delivery.after-javascript-include" type="front" method="onOrderAfterJavascriptInclude"/>
+        </hook>
+        <!-- pdf -->
+        <hook id="paypal.pdf.hook" class="PayPal\Hook\PdfHookManager">
+            <tag name="hook.event_listener" event="invoice.after-payment-module" type="pdf" method="onAfterPaymentModule"/>
         </hook>
     </hooks>
+
+    <!--
+    <exports>
+
+    </exports>
+    -->
+
+    <!--
+    <imports>
+
+    </imports>
+    -->
 </config>

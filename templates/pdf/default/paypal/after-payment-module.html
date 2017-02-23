@@ -1,0 +1,6 @@
+{loop type="paypal_order" name="paypal_order" id=$order limit=1}
+    {if $paypal_order->getPlanifiedCycle() > 0}
+    <strong>{intl l="Planified payment" d="paypal.pdf.default"}</strong>&nbsp;:&nbsp;
+    {intl l="Payment in %x times every %frequency_interval %frequency" x=$paypal_order->getPlanifiedCycle() frequency_interval=$paypal_order->getPlanifiedFrequencyInterval() frequency="{intl l=$paypal_order->getPlanifiedFrequency() d="paypal.pdf.default"}" d="paypal.pdf.default"}
+    {/if}
+{/loop}
