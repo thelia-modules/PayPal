@@ -44,6 +44,24 @@ CREATE TABLE IF NOT EXISTS `paypal_customer`
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
+-- paypal_planified_payment
+-- ---------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `paypal_planified_payment`
+(
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `frequency` VARCHAR(255) NOT NULL,
+    `frequency_interval` INTEGER NOT NULL,
+    `cycle` INTEGER NOT NULL,
+    `min_amount` DECIMAL(16,6) DEFAULT 0.000000,
+    `max_amount` DECIMAL(16,6) DEFAULT 0.000000,
+    `position` INTEGER DEFAULT 0 NOT NULL,
+    `created_at` DATETIME,
+    `updated_at` DATETIME,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------
 -- paypal_cart
 -- ---------------------------------------------------------------------
 
@@ -51,12 +69,22 @@ CREATE TABLE IF NOT EXISTS `paypal_cart`
 (
     `id` INTEGER NOT NULL,
     `credit_card_id` VARCHAR(40),
+    `planified_payment_id` INTEGER,
+    `express_payment_id` VARCHAR(255),
+    `express_payer_id` VARCHAR(255),
+    `express_token` VARCHAR(255),
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
+    INDEX `FI_paypal_cart_planified_payment_id` (`planified_payment_id`),
     CONSTRAINT `fk_paypal_cart_cart_id`
         FOREIGN KEY (`id`)
         REFERENCES `cart` (`id`)
+        ON UPDATE RESTRICT
+        ON DELETE CASCADE,
+    CONSTRAINT `fk_paypal_cart_planified_payment_id`
+        FOREIGN KEY (`planified_payment_id`)
+        REFERENCES `paypal_planified_payment` (`id`)
         ON UPDATE RESTRICT
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -76,6 +104,14 @@ CREATE TABLE IF NOT EXISTS `paypal_order`
     `description` LONGTEXT,
     `payer_id` VARCHAR(255),
     `token` VARCHAR(255),
+    `planified_title` VARCHAR(255) NOT NULL,
+    `planified_description` LONGTEXT,
+    `planified_frequency` VARCHAR(255) NOT NULL,
+    `planified_frequency_interval` INTEGER NOT NULL,
+    `planified_cycle` INTEGER NOT NULL,
+    `planified_actual_cycle` INTEGER DEFAULT 0 NOT NULL,
+    `planified_min_amount` DECIMAL(16,6) DEFAULT 0.000000,
+    `planified_max_amount` DECIMAL(16,6) DEFAULT 0.000000,
     `created_at` DATETIME,
     `updated_at` DATETIME,
     `version` INTEGER DEFAULT 0,
@@ -98,6 +134,7 @@ CREATE TABLE IF NOT EXISTS `paypal_plan`
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `paypal_order_id` INTEGER NOT NULL,
     `plan_id` VARCHAR(255),
+    `state` VARCHAR(255),
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
@@ -115,9 +152,10 @@ CREATE TABLE IF NOT EXISTS `paypal_plan`
 
 CREATE TABLE IF NOT EXISTS `paypal_log`
 (
-    `id` INTEGER NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `customer_id` INTEGER,
     `order_id` INTEGER,
+    `hook` VARCHAR(255),
     `channel` VARCHAR(255),
     `level` INTEGER,
     `message` LONGTEXT,
@@ -140,6 +178,23 @@ CREATE TABLE IF NOT EXISTS `paypal_log`
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
+-- paypal_planified_payment_i18n
+-- ---------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `paypal_planified_payment_i18n`
+(
+    `id` INTEGER NOT NULL,
+    `locale` VARCHAR(5) DEFAULT 'en_US' NOT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `description` LONGTEXT,
+    PRIMARY KEY (`id`,`locale`),
+    CONSTRAINT `paypal_planified_payment_i18n_FK_1`
+        FOREIGN KEY (`id`)
+        REFERENCES `paypal_planified_payment` (`id`)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------
 -- paypal_order_version
 -- ---------------------------------------------------------------------
 
@@ -154,6 +209,14 @@ CREATE TABLE IF NOT EXISTS `paypal_order_version`
     `description` LONGTEXT,
     `payer_id` VARCHAR(255),
     `token` VARCHAR(255),
+    `planified_title` VARCHAR(255) NOT NULL,
+    `planified_description` LONGTEXT,
+    `planified_frequency` VARCHAR(255) NOT NULL,
+    `planified_frequency_interval` INTEGER NOT NULL,
+    `planified_cycle` INTEGER NOT NULL,
+    `planified_actual_cycle` INTEGER DEFAULT 0 NOT NULL,
+    `planified_min_amount` DECIMAL(16,6) DEFAULT 0.000000,
+    `planified_max_amount` DECIMAL(16,6) DEFAULT 0.000000,
     `created_at` DATETIME,
     `updated_at` DATETIME,
     `version` INTEGER DEFAULT 0 NOT NULL,
