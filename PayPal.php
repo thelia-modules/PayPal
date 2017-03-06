@@ -302,6 +302,7 @@ class PayPal extends AbstractPaymentModule
             self::setConfigValue('minimum_amount', 0);
             self::setConfigValue('maximum_amount', 0);
             self::setConfigValue('send_payment_confirmation_message', 1);
+            self::setConfigValue('cart_item_count', 999);
         }
 
         if (null === MessageQuery::create()->findOneByName(self::CONFIRMATION_MESSAGE_NAME)) {

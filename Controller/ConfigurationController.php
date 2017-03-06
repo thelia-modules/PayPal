@@ -23,6 +23,7 @@
 
 namespace PayPal\Controller;
 
+use PayPal\Form\ConfigurationForm;
 use PayPal\PayPal;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
@@ -50,7 +51,7 @@ class ConfigurationController extends BaseAdminController
             return $response;
         }
 
-        $configurationForm = $this->createForm('paypal_form_configure');
+        $configurationForm = $this->createForm(ConfigurationForm::FORM_NAME);
 
         try {
             $form = $this->validateForm($configurationForm, "POST");

@@ -35,6 +35,8 @@ use Thelia\Form\BaseForm;
  */
 class ConfigurationForm extends BaseForm
 {
+    const FORM_NAME = 'paypal_form_configure';
+
     protected function buildForm()
     {
         $this->formBuilder
@@ -323,6 +325,6 @@ class ConfigurationForm extends BaseForm
      */
     public function getName()
     {
-        return "configurepaypalform";
+        return self::FORM_NAME;
     }
 }

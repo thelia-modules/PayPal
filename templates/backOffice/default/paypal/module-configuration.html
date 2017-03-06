@@ -9,6 +9,15 @@
                 <div class="tab-pane active form-container">
 
                     {form name="paypal_form_configure"}
+
+                    {if $form_error}
+                    <div class="alert alert-danger">{$form_error_message}</div>
+                    {elseif $general_error}
+                    <div class="alert alert-danger">
+                        {$general_error}
+                    </div>
+                    {/if}
+
                     <form action="{url path="/admin/module/paypal/configure"}" method="post">
                         {form_hidden_fields form=$form}
                         <div class="row">
