@@ -8,7 +8,9 @@
 
 ### Composer
 
-Add it in your main thelia composer.json file
+> **WARNING** : A console access is required to update dependencies. If you don't have a console access, please get the latest 2.x version of the module here : https://github.com/thelia-modules/Paypal/tree/2.x
+
+To install the module with Composer, open a console, navigate to the Thelia diorectory and type the following command to add the dependency to Thelia composer.json file.
 
 ```
 composer require thelia/paypal-module:~3.0.0
