@@ -125,7 +125,7 @@ class TheliaOrderPaymentForm implements EventSubscriberInterface
         $session = $this->requestStack->getCurrentRequest()->getSession();
 
         /** @var \Thelia\Model\Lang $lang */
-        $lang = $session->get('thelia.current.lang');
+        $lang = $session->getLang();
 
         /** @var Cart $cart */
         $cart = $session->getSessionCart($this->dispatcher);
