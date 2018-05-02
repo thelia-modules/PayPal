@@ -105,6 +105,7 @@ class PaypalResponse extends BasePaymentModuleController
                         $payerid,
                         PaypalApiManager::PAYMENT_TYPE_SALE,
                         $token,
+                        // FIXME This URL is not used in PaypalNvpOperationsDoExpressCheckoutPayment, and has no defined route
                         URL::getInstance()->absoluteUrl("/module/paypal/listen"),
                         PaypalApiManager::BUTTON_SOURCE
                     );
