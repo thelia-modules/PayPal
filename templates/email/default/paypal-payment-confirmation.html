@@ -15,7 +15,7 @@
 {block name="email-content"}
     <p>
         <a href="{url path="/account"}">
-            {intl l="View this order in your account at %shop_name" shop_name={config key="store_name"}}
+            {intl d='paypal.email.default' l="View this order in your account at %shop_name" shop_name={config key="store_name"}}
         </a>
     </p>
     <p>{intl d='paypal.email.default' l='Thank you again for your purchase.'}</p>

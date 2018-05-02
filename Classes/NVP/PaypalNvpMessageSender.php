@@ -23,8 +23,8 @@
 
 namespace Paypal\Classes\NVP;
 
-use Paypal\Classes\NVP\Operations\PaypalNvpOperationInterface;
 use Paypal\Classes\API\PaypalApiManager;
+use Paypal\Classes\NVP\Operations\PaypalNvpOperationInterface;
 
 /**
  * Class PaypalNvpMessageSender
@@ -72,10 +72,19 @@ class PaypalNvpMessageSender
     {
         $paypalApiManager = new PaypalApiManager();
 
-        $url = $paypalApiManager->getApiUrl() . '?' . $this->message;
+        $url = $paypalApiManager->getApiUrl();
 
         $ch = curl_init($url);
+
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $this->message);
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         $response = curl_exec($ch);
 
         return $response;
