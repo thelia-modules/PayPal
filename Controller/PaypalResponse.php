@@ -115,6 +115,14 @@ class PaypalResponse extends BasePaymentModuleController
 
                     $this->logger->logTransaction($response);
 
+                    // Store correlation ID in the order
+                    if (isset($response['CORRELATIONID'])) {
+                        $order
+                            ->setTransactionRef($response['CORRELATIONID'])
+                            ->save();
+                        ;
+                    }
+
                     // In case of pending status, log the reason to get usefull information (multi-currency problem, ...)
                     if (isset($response['ACK']) && $response['ACK'] === "Success" &&
                         isset($response['PAYMENTINFO_0_PAYMENTSTATUS']) && $response['PAYMENTINFO_0_PAYMENTSTATUS'] === "Pending") {
