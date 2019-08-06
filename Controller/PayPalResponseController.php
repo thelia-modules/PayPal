@@ -23,6 +23,7 @@
 
 namespace PayPal\Controller;
 
+use ApyMyBox\Helper\OrderHelper;
 use Front\Controller\OrderController;
 use Monolog\Logger;
 use PayPal\Api\Details;
@@ -459,7 +460,7 @@ class PayPalResponseController extends OrderController
                 $payPalPaymentService->createDetails(
                     $order->getPostage(),
                     $order->getPostageTax(),
-                    $order->getTotalAmount($tax, false)
+                    OrderHelper::getTotalAmount($order, $tax, false)
                 )
             );
 

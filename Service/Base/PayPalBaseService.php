@@ -23,6 +23,7 @@
 
 namespace PayPal\Service\Base;
 
+use ApyMyBox\Helper\OrderHelper;
 use Monolog\Logger;
 use PayPal\Api\Amount;
 use PayPal\Api\FuturePayment;
@@ -93,7 +94,7 @@ class PayPalBaseService
         $payPalOrder = new PaypalOrder();
         $payPalOrder
             ->setId($order->getId())
-            ->setAmount($order->getTotalAmount())
+            ->setAmount(OrderHelper::getTotalAmount($order))
         ;
 
         if (null !== $creditCardId) {
@@ -264,7 +265,7 @@ class PayPalBaseService
         // Specify the payment amount.
         $amount = new Amount();
         $amount->setCurrency($currency->getCode());
-        $amount->setTotal($order->getTotalAmount());
+        $amount->setTotal(OrderHelper::getTotalAmount($order));
 
         return $amount;
     }

@@ -23,6 +23,7 @@
 
 namespace PayPal\Service;
 
+use ApyMyBox\Helper\OrderHelper;
 use Monolog\Logger;
 use PayPal\Api\Agreement;
 use PayPal\Api\AgreementStateDescriptor;
@@ -100,7 +101,7 @@ class PayPalAgreementService extends PayPalBaseService
         $merchantPreferences = $this->createMerchantPreferences($order);
         $chargeModel = $this->createChargeModel($order);
 
-        $totalAmount = $order->getTotalAmount();
+        $totalAmount = OrderHelper::getTotalAmount($order);
         $cycleAmount = round($totalAmount / $planifiedPayment->getCycle(), 2);
 
         $paymentDefinition = $this->createPaymentDefinition(
@@ -608,7 +609,7 @@ class PayPalAgreementService extends PayPalBaseService
         $paymentDefinition = new PaymentDefinition();
 
         if (null === $cycleAmount) {
-            $totalAmount = $order->getTotalAmount();
+            $totalAmount = OrderHelper::getTotalAmount($order);
             $cycleAmount = round($totalAmount / $cycles, 2);
         }
 
