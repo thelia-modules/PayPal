@@ -1,21 +1,12 @@
 {form name="thelia.order.payment"}
-<div id="paypal-methods" class="row hidden">
-    <hr>
     {form_field field='paypal_method'}
-        {foreach from=$choices item=choice}
+        {if $method_paypal_with_in_context}
+        <input type="hidden" id="{$label_attr.for}{$choice->label}-express" class="paypal-method paypal-express-method" name="{$name}" value="{$choice->label}" {if $value == $choice->label}checked{/if}/>
 
-            {if $choice->label == 'paypal' && {module_config key="method_paypal" module="PayPal" locale="en_US"} == 1}
-                {include file="paypal/form/extra-paypal.html"}
-            {/if}
-
-            {if $choice->label == 'credit_card' && {module_config key="method_credit_card" module="PayPal" locale="en_US"} == 1}
-                {include file="paypal/form/extra-credit-card.html"}
-            {/if}
-
-            {if $choice->label == 'planified_payment' && {module_config key="method_planified_payment" module="PayPal" locale="en_US"} == 1}
-                {include file="paypal/form/extra-planified-payment.html"}
-            {/if}
-        {/foreach}
+        <img src="{image file='assets/paypal-logo.png' source="PayPal"}" border="0" alt="PayPal account" />
+        {else}
+        <input type="hidden" id="{$label_attr.for}{$choice->label}" class="paypal-method" name="{$name}" value="{$choice->label}" {if $value == $choice->label}checked{/if}/>
+        <img src="{image file='assets/paypal-logo.png' source="PayPal"}" border="0" alt="PayPal account" />
+        {/if}
     {/form_field}
-</div>
 {/form}
