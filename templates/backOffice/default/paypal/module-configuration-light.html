@@ -1,0 +1,212 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="general-block-decorator">
+
+            <H2>test</H2>
+            {include file="paypal/menu/menu.html" selectedMenu="general"}
+
+            <div class="tab-content">
+                <!-- Countries managing tab -->
+                <div class="tab-pane active form-container">
+
+                    {form name="paypal_form_configure"}
+
+                    {if $form_error}
+                    <div class="alert alert-danger">{$form_error_message}</div>
+                    {elseif $general_error}
+                    <div class="alert alert-danger">
+                        {$general_error}
+                    </div>
+                    {/if}
+
+                    <form action="{url path="/admin/module/paypal/configure"}" method="post">
+                        {form_hidden_fields form=$form}
+                        <div class="row">
+                            <div class="col-md-12">
+                                {include file = "includes/inner-form-toolbar.html"
+                                    hide_flags = true
+                                    page_url   = "{url path='/admin/module/Paypal'}"
+                                    close_url  = "{url path='/admin/modules'}"
+                                }
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="col-md-8">
+                                    <h3>
+                                        <span class="label label-primary">1</span>
+                                        {intl l="SandBox configuration" d="paypal.bo.default"}
+                                        <span class="glyphicon glyphicon-info-sign"></span>
+                                    </h3>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tips__img">
+                                        <img src="{image file='assets/paypal_conf1.png' source="PayPal"}" alt="Payment configuration" class="img-responsive" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+
+                                        {custom_render_form_field form=$form field="sandbox"}
+                                        <input type="checkbox" {form_field_attributes form=$form field="sandbox"} {if $sandbox}checked{/if}>
+                                        {$label}
+                                        {/custom_render_form_field}
+
+                                        {render_form_field form=$form field="sandbox_login" value=$sandbox_login}
+                                        {render_form_field form=$form field="sandbox_password" value=$sandbox_password}
+                                        {render_form_field form=$form field="sandbox_merchant_id" value=$sandbox_merchant_id}
+
+                                        {render_form_field form=$form field="allowed_ip_list" value=$allowed_ip_list}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 alert alert-info">
+                                        <h4 class="text-uppercase">
+                                            <span class="glyphicon glyphicon-info-sign"></span>&nbsp;{intl l="Help" d="paypal.bo.default"}&nbsp;:&nbsp;{intl l="Configuration" d="paypal.bo.default"}
+                                        </h4>
+                                        - {intl l="Log In on <a target='_blank' href='https://developer.paypal.com'>developer.paypal.com</a>" d="paypal.bo.default"}<br />
+                                        - {intl l="Create REST API apps <a target='_blank' href='https://developer.paypal.com/developer/applications/'>here</a>" d="paypal.bo.default"}<br />
+                                        - {intl l="Click on Create App" d="paypal.bo.default"}<br />
+                                        - {intl l="Fill the fields : App Name & Sandbox developer account" d="paypal.bo.default"}<br />
+                                        - {intl l="Click on Create App" d="paypal.bo.default"}<br />
+                                        - {intl l="Copy & Paste the Client ID in the form below" d="paypal.bo.default"}<br />
+                                        - {intl l="Copy & Paste the Client SECRET in the form below" d="paypal.bo.default"}<br />
+                                        - <strong>{intl l="In SANDBOX WEBHOOKS" d="paypal.bo.default"}&nbsp;:</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Add Webhook" d="paypal.bo.default"}<br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{url path="/module/paypal/webhook/all/events"}<br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check 'All events'" d="paypal.bo.default"}<br />
+                                        - <strong>{intl l="In SANDBOX APP SETTINGS" d="paypal.bo.default"}&nbsp;:</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Return URL" d="paypal.bo.default"}<br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{navigate to="index"}<br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{url path="/module/paypal/login/ok"}<br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{url path="/module/paypal/agreement/ok"}<br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{url path="/module/paypal/agreement/ko"}<br />
+                                        - <label class="alert alert-danger">{intl l="This urls can take 3 hours to be taken in consideration" d="paypal.bo.default"}</label><br />
+                                        - {intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Accept payments" d="paypal.bo.default"}&nbsp;</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Future Payments" d="paypal.bo.default"}</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Billing agreements" d="paypal.bo.default"}</strong><br />
+                                        - {intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Invoicing" d="paypal.bo.default"}&nbsp;</strong><br />
+                                        - {intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Payouts" d="paypal.bo.default"}&nbsp;</strong><br />
+                                        - {intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="PayPal Here" d="paypal.bo.default"}&nbsp;</strong><br />
+                                        - {intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Log In with PayPal" d="paypal.bo.default"}&nbsp;</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Personal Information" d="paypal.bo.default"}</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Address Information" d="paypal.bo.default"}</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Account Information" d="paypal.bo.default"}</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Use Seamless Checkout" d="paypal.bo.default"}</strong><br />
+                                        - &nbsp;&nbsp;&nbsp;&nbsp;{intl l="Check" d="paypal.bo.default"}&nbsp;<strong>{intl l="Allow the customers who haven't yet confirmed their email address with PayPal, to log in to your app" d="paypal.bo.default"}</strong><br />
+                                        - <strong>{intl l="That's it !" d="paypal.bo.default"}</strong><br />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="col-md-8">
+                                    <h3>
+                                        <span class="label label-primary">2</span>
+                                        {intl l="Production configuration" d="paypal.bo.default"}
+                                    </h3>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="tips__img">
+                                        <img src="{image file='assets/paypal_conf2.png' source="PayPal"}" alt="Payment configuration" class="img-responsive" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        {render_form_field form=$form field="login" value=$login}
+                                        {render_form_field form=$form field="password" value=$password}
+                                        {render_form_field form=$form field="merchant_id" value=$merchant_id}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 alert alert-info">
+                                        <h4 class="text-uppercase">
+                                            <span class="glyphicon glyphicon-info-sign"></span>&nbsp;{intl l="Help" d="paypal.bo.default"}&nbsp;:&nbsp;{intl l="Configuration" d="paypal.bo.default"}
+                                        </h4>
+                                        - {intl l="In your PayPal page API configuration" d="paypal.bo.default"}<br />
+                                        - {intl l="Click on the Live Button" d="paypal.bo.default"}<br />
+                                        <img src="{image file='assets/paypal_live_button.png' source="PayPal"}" alt="Payment configuration" class="img-responsive" /><br />
+                                        - {intl l="And configure it like the SandBox" d="paypal.bo.default"}<br />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h3>
+                                    <span class="label label-primary">3</span>
+                                    {intl l="Payment configuration" d="paypal.bo.default"}
+                                </h3>
+
+                                <div class="row">
+                                    <div class="tips__img">
+                                        <img src="{image file='assets/paypal_conf3.png' source="PayPal"}" alt="Payment configuration" class="img-responsive" />
+                                    </div>
+                                    <div class="col-md-12">
+                                        {custom_render_form_field form=$form field="method_paypal"}
+                                            <input type="checkbox" {form_field_attributes form=$form field="method_paypal"} {if $method_paypal}checked{/if}>
+                                        {$label}
+                                        {/custom_render_form_field}
+
+                                        {form_field form=$form field="method_paypal_with_in_context"}
+                                            <input type="hidden" {form_field_attributes form=$form field="method_paypal_with_in_context"} value="false">
+                                        {/form_field}
+
+                                        {form_field form=$form field="method_express_checkout"}
+                                            <input type="hidden" {form_field_attributes form=$form field="method_express_checkout"} value="false">
+                                        {/form_field}
+
+                                        {form_field form=$form field="method_credit_card"}
+                                            <input type="hidden" {form_field_attributes form=$form field="method_credit_card"} value="false">
+                                        {/form_field}
+                                        {form_field form=$form field="method_planified_payment"}
+                                            <input type="hidden" {form_field_attributes form=$form field="method_planified_payment"} value="false">
+                                        {/form_field}
+
+
+                                        {form_field form=$form field="send_confirmation_message_only_if_paid"}
+                                            <input type="hidden" {form_field_attributes form=$form field="send_confirmation_message_only_if_paid"} value="false">
+                                        {/form_field}
+
+                                        {form_field form=$form field="send_payment_confirmation_message"}
+                                            <input type="hidden" {form_field_attributes form=$form field="send_payment_confirmation_message"} value="false">
+                                        {/form_field}
+
+
+                                        {form_field form=$form field="send_recursive_message"}
+                                            <input type="hidden" {form_field_attributes form=$form field="send_recursive_message"} value="false">
+                                        {/form_field}
+
+
+                                        {custom_render_form_field form=$form field="minimum_amount"}
+                                        <div class="input-group">
+                                            <input type="text" {form_field_attributes form=$form field="minimum_amount" value=$minimum_amount}>
+                                            <span class="input-group-addon">{currency attr='symbol'}</span>
+                                        </div>
+                                        {/custom_render_form_field}
+
+                                        {custom_render_form_field form=$form field="maximum_amount"}
+                                        <div class="input-group">
+                                            <input type="text" {form_field_attributes form=$form field="maximum_amount" value=$maximum_amount}>
+                                            <span class="input-group-addon">{currency attr='symbol'}</span>
+                                        </div>
+                                        {/custom_render_form_field}
+
+                                        {render_form_field form=$form field="cart_item_count" value=$cart_item_count}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                {include file = "includes/inner-form-toolbar.html"
+                                    hide_flags = true
+                                    page_url   = "{url path='/admin/module/Paypal'}"
+                                    close_url  = "{url path='/admin/modules'}"
+                                }
+                            </div>
+                        </div>
+                    </form>
+                    {/form}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

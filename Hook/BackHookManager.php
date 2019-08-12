@@ -55,7 +55,7 @@ class BackHookManager extends BaseHook
         $vars['paypal_authend'] = PayPalBaseService::getMode();
 
         $event->add(
-            $this->render('paypal/module-configuration.html', $vars)
+            $this->render('paypal/module-configuration-light.html', $vars)
         );
     }
 
