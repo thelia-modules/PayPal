@@ -12,6 +12,7 @@
 
 namespace PayPal;
 
+use ApyMyBox\Helper\CartHelper;
 use ApyMyBox\Helper\OrderHelper;
 use ApyMyBox\Model\ApyOrderQuery;
 use ApyUtilities\ApyUtilities;
@@ -33,6 +34,8 @@ use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Translation\Translator;
 use Thelia\Install\Database;
+use Thelia\Model\Cart;
+use Thelia\Model\Lang;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\ModuleImageQuery;
@@ -231,13 +234,14 @@ class PayPal extends AbstractPaymentModule
     }
 
     /**
-     *
      * This method is call on Payment loop.
      *
      * If you return true, the payment method will de display
      * If you return false, the payment method will not be display
      *
      * @return boolean
+     * @return bool
+     * @throws \Propel\Runtime\Exception\PropelException
      */
     public function isValidPayment()
     {
@@ -253,10 +257,14 @@ class PayPal extends AbstractPaymentModule
             }
             $cartItemCount = OrderProductQuery::create()->findByOrderId($apyOrder->getOrderId())->count();
         } else {
+            /** @var Cart $cart */
+            $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
             // Check if total order amount is within the module's limits
-            $order_total = $this->getCurrentOrderTotalAmount();
+            /** @var CartHelper $cartHelper */
+            $cartHelper = $this->container->get('apymybox.helper.cart');
+            $order_total = $cartHelper->getCartTotalAmount($cart, Lang::getDefaultLanguage());
             // Check cart item count
-            $cartItemCount = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher())->countCartItems();
+            $cartItemCount = $cart->countCartItems();
         }
         $min_amount = Paypal::getConfigValue('minimum_amount', 0);
         $max_amount = Paypal::getConfigValue('maximum_amount', 0);
