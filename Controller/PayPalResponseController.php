@@ -24,6 +24,7 @@
 namespace PayPal\Controller;
 
 use ApyMyBox\Helper\OrderHelper;
+use ApyUtilities\Event\PaymentEventInterface;
 use Front\Controller\OrderController;
 use Monolog\Logger;
 use PayPal\Api\Details;
@@ -147,7 +148,18 @@ class PayPalResponseController extends OrderController
             $response = $this->getPaymentFailurePageUrl($orderId, $e->getMessage());
         }
 
+
         $con->commit();
+
+
+        $order = OrderQuery::create()
+            ->findOneById($orderId);
+        if ($order instanceof Order) {
+            // Event pour signaler qu'on a finit les traitements
+            $event = new OrderEvent($order);
+            $this->dispatch(PaymentEventInterface::ORDER_FINISH_PAID_PROCESS_EVENT, $event);
+        }
+
         return $response;
     }
 
