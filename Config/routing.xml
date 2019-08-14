@@ -7,6 +7,9 @@
     <route id="paypal.configure" path="/admin/module/paypal/configure" methods="post">
         <default key="_controller">PayPal:Configuration:configure</default>
     </route>
+    <route id="paypal.module.configure" path="/admin/module/paypal/configure" methods="get">
+        <default key="_controller">PayPal:Configuration:renderConfigure</default>
+    </route>
 
     <route id="paypal.admin.configuration.log" path="/admin/module/paypal/configure/log" methods="get">
         <default key="_controller">PayPal:Configuration:log</default>

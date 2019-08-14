@@ -23,9 +23,11 @@
 
 namespace PayPal\Controller;
 
+use Exception;
 use PayPal\Form\ConfigurationForm;
 use PayPal\PayPal;
 use Thelia\Controller\Admin\BaseAdminController;
+use Thelia\Core\HttpFoundation\Response;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Thelia;
@@ -43,7 +45,7 @@ class ConfigurationController extends BaseAdminController
      * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
      */
     /**
-     * @return mixed|\Symfony\Component\HttpFoundation\Response|\Thelia\Core\HttpFoundation\Response
+     * @return mixed|\Symfony\Component\HttpFoundation\Response|Response
      */
     public function configureAction()
     {
@@ -84,7 +86,7 @@ class ConfigurationController extends BaseAdminController
             return $this->generateRedirect(URL::getInstance()->absoluteUrl($url));
         } catch (FormValidationException $ex) {
             $error_msg = $this->createStandardFormValidationErrorMessage($ex);
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             $error_msg = $ex->getMessage();
         }
 
@@ -97,14 +99,22 @@ class ConfigurationController extends BaseAdminController
 
         // Before 2.2, the errored form is not stored in session
         if (Version::test(Thelia::THELIA_VERSION, '2.2', false, "<")) {
-            return $this->render('module-configure', [ 'module_code' => PayPal::getModuleCode()]);
+            return $this->render('module-configure', ['module_code' => PayPal::getModuleCode()]);
         } else {
             return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/PayPal'));
         }
     }
 
     /**
-     * @return \Thelia\Core\HttpFoundation\Response
+     * @return Response
+     */
+    public function renderConfigureAction()
+    {
+        return $this->render('module-configure', ['module_code' => PayPal::getModuleCode()]);
+    }
+
+    /**
+     * @return Response
      */
     public function logAction()
     {
