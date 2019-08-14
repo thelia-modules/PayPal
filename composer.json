@@ -1,5 +1,5 @@
 {
-  "name": "your-vendor/pay-pal-module",
+  "name": "thelia/pay-pal-module",
   "license": "LGPL-3.0+",
   "type": "thelia-module",
   "require": {
