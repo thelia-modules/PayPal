@@ -61,16 +61,16 @@ class FrontHookManager extends BaseHook
      */
     public function onLoginMainBottom(HookRenderEvent $event)
     {
-        $templateData = $event->getArguments();
-        $templateData['paypal_appid'] = PayPalBaseService::getLogin();
-        $templateData['paypal_authend'] = PayPalBaseService::getMode();
-
-        $event->add(
-            $this->render(
-                'paypal/login-bottom.html',
-                $templateData
-            )
-        );
+//        $templateData = $event->getArguments();
+//        $templateData['paypal_appid'] = PayPalBaseService::getLogin();
+//        $templateData['paypal_authend'] = PayPalBaseService::getMode();
+//
+//        $event->add(
+//            $this->render(
+//                'paypal/login-bottom.html',
+//                $templateData
+//            )
+//        );
     }
 
     /**
@@ -136,20 +136,20 @@ class FrontHookManager extends BaseHook
      */
     public function onCartBottom(HookRenderEvent $event)
     {
-        $payPal = new PayPal();
-        $payPal->setContainer($this->container);
-
-        if (PayPal::getConfigValue('method_express_checkout') == 1 && $payPal->isValidPayment()) {
-            $templateData = $event->getArguments();
-            $templateData['paypal_mode'] = PayPalBaseService::getMode();
-            $templateData['paypal_merchantid'] = PayPalBaseService::getMerchantId();
-            $event->add(
-                $this->render(
-                    'paypal/cart-bottom.html',
-                    $templateData
-                )
-            );
-        }
+//        $payPal = new PayPal();
+//        $payPal->setContainer($this->container);
+//
+//        if (PayPal::getConfigValue('method_express_checkout') == 1 && $payPal->isValidPayment()) {
+//            $templateData = $event->getArguments();
+//            $templateData['paypal_mode'] = PayPalBaseService::getMode();
+//            $templateData['paypal_merchantid'] = PayPalBaseService::getMerchantId();
+//            $event->add(
+//                $this->render(
+//                    'paypal/cart-bottom.html',
+//                    $templateData
+//                )
+//            );
+//        }
     }
 
     /**
