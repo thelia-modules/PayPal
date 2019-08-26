@@ -69,6 +69,14 @@ class ConfigurationController extends BaseAdminController
                 Paypal::setConfigValue($name, $value);
             }
 
+            // Forcé certains valeurs
+            PayPal::setConfigValue('send_payment_confirmation_message', false);
+            PayPal::setConfigValue('method_express_checkout', false);
+            PayPal::setConfigValue('method_credit_card', false);
+            PayPal::setConfigValue('method_planified_payment', false);
+            PayPal::setConfigValue('send_payment_confirmation_message', false);
+            PayPal::setConfigValue('send_recursive_message', false);
+
             $this->adminLogAppend(
                 "paypal.configuration.message",
                 AccessManager::UPDATE,
