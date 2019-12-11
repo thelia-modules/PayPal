@@ -384,7 +384,11 @@ class PayPalResponseController extends OrderController
             $deliveryAddress = $cart->getCustomer()->getDefaultAddress();
 
             /** @var \Thelia\Model\Module $deliveryModule */
-            $deliveryModule = ModuleQuery::create()->filterByActivate(1)->findOne();
+            $order = $this->getSession()->getOrder();
+            if (null !== $order) {
+                $deliveryModule = $order->getModuleRelatedByDeliveryModuleId();
+            }
+            
             /** @var \Thelia\Model\Module $paymentModule */
             $paymentModule = ModuleQuery::create()->findPk(PayPal::getModuleId());
 
