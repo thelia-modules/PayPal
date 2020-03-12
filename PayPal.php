@@ -15,6 +15,7 @@ namespace PayPal;
 use ApyMyBox\Helper\CartHelper;
 use ApyMyBox\Helper\OrderHelper;
 use ApyMyBox\Model\ApyOrderQuery;
+use ApySecurity\Model\Role\RoleInterface;
 use ApyUtilities\ApyUtilities;
 use Exception;
 use Monolog\Logger;
@@ -26,6 +27,7 @@ use PayPal\Service\PayPalAgreementService;
 use PayPal\Service\PayPalLoggerService;
 use PayPal\Service\PayPalPaymentService;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Propel;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -42,6 +44,10 @@ use Thelia\Model\ModuleImageQuery;
 use Thelia\Model\Order;
 use Thelia\Model\OrderProductQuery;
 use Thelia\Model\OrderStatusQuery;
+use Thelia\Model\Profile;
+use Thelia\Model\ProfileModule;
+use Thelia\Model\ProfileModuleQuery;
+use Thelia\Model\ProfileQuery;
 use Thelia\Module\AbstractPaymentModule;
 use Thelia\Tools\URL;
 
@@ -241,7 +247,7 @@ class PayPal extends AbstractPaymentModule
      *
      * @return boolean
      * @return bool
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @throws PropelException
      */
     public function isValidPayment()
     {
@@ -261,7 +267,7 @@ class PayPal extends AbstractPaymentModule
             $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
             // Check if total order amount is within the module's limits
             /** @var CartHelper $cartHelper */
-            $cartHelper = $this->container->get('apymybox.helper.cart');
+            $cartHelper  = $this->container->get('apymybox.helper.cart');
             $order_total = $cartHelper->getCartTotalAmount($cart, Lang::getDefaultLanguage());
             // Check cart item count
             $cartItemCount = $cart->countCartItems();
@@ -312,7 +318,9 @@ class PayPal extends AbstractPaymentModule
     }
 
     /**
-     * @param ConnectionInterface $con
+     * @param ConnectionInterface      $con
+     * @param ConnectionInterface|null $con
+     * @throws PropelException
      */
     public function postActivation(ConnectionInterface $con = null)
     {
@@ -364,6 +372,23 @@ class PayPal extends AbstractPaymentModule
 
         if (ModuleImageQuery::create()->filterByModule($module)->count() == 0) {
             $this->deployImageFolder($module, sprintf('%s/images', __DIR__), $con);
+        }
+
+        // Authorisé les utilisateurs ApyAndYou à modifier le module
+        $profile = ProfileQuery::create()->findOneByCode('ApyDeveloper');
+        if ($profile instanceof Profile) {
+            $profileModule = ProfileModuleQuery::create()
+                ->filterByProfileId($profile->getId())
+                ->findOneByModuleId($this->getModuleModel()->getId());
+
+            if (!$profileModule instanceof ProfileModule) {
+                $profileModule = new ProfileModule();
+
+                $profileModule
+                    ->setProfileId($profile->getId())
+                    ->setModuleId($this->getModuleModel()->getId());
+            }
+            $profileModule->setAccess(RoleInterface::ACCESS_VIEW_CREATE_UPDATE_DELETE)->save();
         }
     }
 
