@@ -23,8 +23,8 @@
 
 namespace PayPal\Controller;
 
-use ApyMyBox\Helper\OrderHelper;
 use ApyUtilities\Event\PaymentEventInterface;
+use ApyUtilities\Interfaces\OrderHelperInterface;
 use Front\Controller\OrderController;
 use Monolog\Logger;
 use PayPal\Api\Details;
@@ -462,6 +462,7 @@ class PayPalResponseController extends OrderController
 
             $payPalOrderEvent = $payPalPaymentService->generatePayPalOrder($order);
             $payPalPaymentService->updatePayPalOrder($payPalOrderEvent->getPayPalOrder(), $payment->getState(), $payment->getId());
+            $orderHelper = $this->getContainer()->get(OrderHelperInterface::ORDER_HELPER_SERVICE_ID);
 
             $response = $this->executePayment(
                 $payPalOrderEvent->getPayPalOrder(),
@@ -472,7 +473,7 @@ class PayPalResponseController extends OrderController
                 $payPalPaymentService->createDetails(
                     $order->getPostage(),
                     $order->getPostageTax(),
-                    OrderHelper::getTotalAmount($order, $tax, false)
+                    $orderHelper::getTotalAmount($order, $tax, false)
                 )
             );
 
