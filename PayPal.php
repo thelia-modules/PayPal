@@ -12,11 +12,10 @@
 
 namespace PayPal;
 
-use ApyMyBox\Helper\CartHelper;
-use ApyMyBox\Helper\OrderHelper;
-use ApyMyBox\Model\ApyOrderQuery;
 use ApySecurity\Model\Role\RoleInterface;
 use ApyUtilities\ApyUtilities;
+use ApyUtilities\Interfaces\CartHelperInterface;
+use ApyUtilities\Interfaces\OrderHelperInterface;
 use Exception;
 use Monolog\Logger;
 use PayPal\Exception\PayPalConnectionException;
@@ -36,7 +35,6 @@ use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Translation\Translator;
 use Thelia\Install\Database;
-use Thelia\Model\Cart;
 use Thelia\Model\Lang;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
@@ -256,18 +254,21 @@ class PayPal extends AbstractPaymentModule
         $order_total = 0;
         if ($this->getRequest()->query->has('token')) {
             $tokenLink = $this->getRequest()->get('token');
-            $apyOrder  = ApyOrderQuery::create()->findOneByLinkToken($tokenLink);
+            /** @var OrderHelperInterface $orderHelper */
+            $orderHelper = $this->getContainer()->get(OrderHelperInterface::ORDER_HELPER_SERVICE_ID);
+            $apyOrderQueryClass = $orderHelper->getApyOrderQueryClassName();
+            $apyOrder  = $apyOrderQueryClass::create()->findOneByLinkToken($tokenLink);
 
             if ($this->getRequest()->getSession()->get(ApyUtilities::ORDER_TO_PAY_ID) == $apyOrder->getOrderId()) {
-                $order_total = OrderHelper::getTotalAmount($apyOrder->getOrder());
+                $orderHelper = $this->getContainer()->get(OrderHelperInterface::ORDER_HELPER_SERVICE_ID);
+                $order_total = $orderHelper::getTotalAmount($apyOrder->getOrder());
             }
             $cartItemCount = OrderProductQuery::create()->findByOrderId($apyOrder->getOrderId())->count();
         } else {
-            /** @var Cart $cart */
             $cart = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher());
             // Check if total order amount is within the module's limits
-            /** @var CartHelper $cartHelper */
-            $cartHelper  = $this->container->get('apymybox.helper.cart');
+            /** @var CartHelperInterface $cartHelper */
+            $cartHelper  = $this->container->get(CartHelperInterface::SERVICE_ID);
             $order_total = $cartHelper->getCartTotalAmount($cart, Lang::getDefaultLanguage());
             // Check cart item count
             $cartItemCount = $cart->countCartItems();

@@ -31,18 +31,21 @@
             <argument type="service" id="event_dispatcher" />
             <argument type="service" id="request_stack" />
             <argument type="service" id="router.paypal" />
+            <argument type="service" id="core.helper.order" />
         </service>
 
         <service id="paypal_payment_service" class="PayPal\Service\PayPalPaymentService">
             <argument type="service" id="event_dispatcher" />
             <argument type="service" id="request_stack" />
             <argument type="service" id="router.paypal" />
+            <argument type="service" id="core.helper.order" />
         </service>
 
         <service id="paypal_agreement_service" class="PayPal\Service\PayPalAgreementService">
             <argument type="service" id="event_dispatcher" />
             <argument type="service" id="request_stack" />
             <argument type="service" id="router.paypal" />
+            <argument type="service" id="core.helper.order" />
         </service>
 
         <service id="paypal_customer_service" class="PayPal\Service\PayPalCustomerService">

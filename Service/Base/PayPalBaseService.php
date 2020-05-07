@@ -23,7 +23,7 @@
 
 namespace PayPal\Service\Base;
 
-use ApyMyBox\Helper\OrderHelper;
+use ApyUtilities\Interfaces\OrderHelperInterface;
 use Monolog\Logger;
 use PayPal\Api\Amount;
 use PayPal\Api\FuturePayment;
@@ -68,17 +68,26 @@ class PayPalBaseService
     /** @var OAuthTokenCredential */
     protected $authTokenCredential;
 
+    /** @var OrderHelperInterface */
+    protected $orderHelper;
+
     /**
      * PayPalBaseService constructor.
      * @param EventDispatcherInterface $dispatcher
-     * @param RequestStack $requestStack
-     * @param RouterInterface $router
+     * @param RequestStack             $requestStack
+     * @param RouterInterface          $router
+     * @param OrderHelperInterface     $orderHelper
      */
-    public function __construct(EventDispatcherInterface $dispatcher, RequestStack $requestStack, RouterInterface $router)
-    {
-        $this->dispatcher = $dispatcher;
+    public function __construct(
+        EventDispatcherInterface $dispatcher,
+        RequestStack $requestStack,
+        RouterInterface $router,
+        OrderHelperInterface $orderHelper
+    ) {
+        $this->dispatcher   = $dispatcher;
         $this->requestStack = $requestStack;
-        $this->router = $router;
+        $this->router       = $router;
+        $this->orderHelper  = $orderHelper;
 
         $this->authTokenCredential = new OAuthTokenCredential(self::getLogin(), self::getPassword());
     }
@@ -94,7 +103,7 @@ class PayPalBaseService
         $payPalOrder = new PaypalOrder();
         $payPalOrder
             ->setId($order->getId())
-            ->setAmount(OrderHelper::getTotalAmount($order))
+            ->setAmount($this->orderHelper::getTotalAmount($order))
         ;
 
         if (null !== $creditCardId) {
@@ -265,7 +274,7 @@ class PayPalBaseService
         // Specify the payment amount.
         $amount = new Amount();
         $amount->setCurrency($currency->getCode());
-        $amount->setTotal(OrderHelper::getTotalAmount($order));
+        $amount->setTotal($this->orderHelper::getTotalAmount($order));
 
         return $amount;
     }
