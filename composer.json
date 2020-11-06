@@ -1,5 +1,5 @@
 {
-  "name": "thelia/pay-pal-module",
+  "name": "thelia/paypal-module",
   "description": "PayPal module for Thelia ecommerce solution ",
   "license": "LGPL-3.0+",
   "type": "thelia-module",
