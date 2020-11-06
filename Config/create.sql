@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `paypal_cart`
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
-    INDEX `FI_paypal_cart_planified_payment_id` (`planified_payment_id`),
+    INDEX `fi_paypal_cart_planified_payment_id` (`planified_payment_id`),
     CONSTRAINT `fk_paypal_cart_cart_id`
         FOREIGN KEY (`id`)
         REFERENCES `cart` (`id`)
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `paypal_order`
     `planified_min_amount` DECIMAL(16,6) DEFAULT 0.000000,
     `planified_max_amount` DECIMAL(16,6) DEFAULT 0.000000,
     `created_at` DATETIME,
-    `updated_at` DATETIME
+    `updated_at` DATETIME,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_paypal_order_order_id`
         FOREIGN KEY (`id`)
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS `paypal_plan`
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
-    INDEX `FI_paypal_plan_paypal_order_id` (`paypal_order_id`),
+    INDEX `fi_paypal_plan_paypal_order_id` (`paypal_order_id`),
     CONSTRAINT `fk_paypal_plan_paypal_order_id`
         FOREIGN KEY (`paypal_order_id`)
         REFERENCES `paypal_order` (`id`)
@@ -160,8 +160,8 @@ CREATE TABLE IF NOT EXISTS `paypal_log`
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
-    INDEX `FI_paypal_log_customer_id` (`customer_id`),
-    INDEX `FI_paypal_log_order_id` (`order_id`),
+    INDEX `fi_paypal_log_customer_id` (`customer_id`),
+    INDEX `fi_paypal_log_order_id` (`order_id`),
     CONSTRAINT `fk_paypal_log_customer_id`
         FOREIGN KEY (`customer_id`)
         REFERENCES `customer` (`id`)
@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS `paypal_planified_payment_i18n`
     `title` VARCHAR(255) NOT NULL,
     `description` LONGTEXT,
     PRIMARY KEY (`id`,`locale`),
-    CONSTRAINT `paypal_planified_payment_i18n_FK_1`
+    CONSTRAINT `paypal_planified_payment_i18n_fk_c9dfe7`
         FOREIGN KEY (`id`)
         REFERENCES `paypal_planified_payment` (`id`)
         ON DELETE CASCADE
