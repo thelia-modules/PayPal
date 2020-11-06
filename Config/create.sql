@@ -113,10 +113,7 @@ CREATE TABLE IF NOT EXISTS `paypal_order`
     `planified_min_amount` DECIMAL(16,6) DEFAULT 0.000000,
     `planified_max_amount` DECIMAL(16,6) DEFAULT 0.000000,
     `created_at` DATETIME,
-    `updated_at` DATETIME,
-    `version` INTEGER DEFAULT 0,
-    `version_created_at` DATETIME,
-    `version_created_by` VARCHAR(100),
+    `updated_at` DATETIME
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_paypal_order_order_id`
         FOREIGN KEY (`id`)
@@ -191,42 +188,6 @@ CREATE TABLE IF NOT EXISTS `paypal_planified_payment_i18n`
     CONSTRAINT `paypal_planified_payment_i18n_FK_1`
         FOREIGN KEY (`id`)
         REFERENCES `paypal_planified_payment` (`id`)
-        ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- ---------------------------------------------------------------------
--- paypal_order_version
--- ---------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `paypal_order_version`
-(
-    `id` INTEGER NOT NULL,
-    `payment_id` VARCHAR(50),
-    `agreement_id` VARCHAR(255),
-    `credit_card_id` VARCHAR(40),
-    `state` VARCHAR(20),
-    `amount` DECIMAL(16,6) DEFAULT 0.000000,
-    `description` LONGTEXT,
-    `payer_id` VARCHAR(255),
-    `token` VARCHAR(255),
-    `planified_title` VARCHAR(255) NOT NULL,
-    `planified_description` LONGTEXT,
-    `planified_frequency` VARCHAR(255) NOT NULL,
-    `planified_frequency_interval` INTEGER NOT NULL,
-    `planified_cycle` INTEGER NOT NULL,
-    `planified_actual_cycle` INTEGER DEFAULT 0 NOT NULL,
-    `planified_min_amount` DECIMAL(16,6) DEFAULT 0.000000,
-    `planified_max_amount` DECIMAL(16,6) DEFAULT 0.000000,
-    `created_at` DATETIME,
-    `updated_at` DATETIME,
-    `version` INTEGER DEFAULT 0 NOT NULL,
-    `version_created_at` DATETIME,
-    `version_created_by` VARCHAR(100),
-    `id_version` INTEGER DEFAULT 0,
-    PRIMARY KEY (`id`,`version`),
-    CONSTRAINT `paypal_order_version_FK_1`
-        FOREIGN KEY (`id`)
-        REFERENCES `paypal_order` (`id`)
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
