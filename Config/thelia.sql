@@ -83,7 +83,7 @@ CREATE TABLE `paypal_cart`
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
-    INDEX `FI_paypal_cart_planified_payment_id` (`planified_payment_id`),
+    INDEX `fi_paypal_cart_planified_payment_id` (`planified_payment_id`),
     CONSTRAINT `fk_paypal_cart_cart_id`
         FOREIGN KEY (`id`)
         REFERENCES `cart` (`id`)
@@ -123,9 +123,6 @@ CREATE TABLE `paypal_order`
     `planified_max_amount` DECIMAL(16,6) DEFAULT 0.000000,
     `created_at` DATETIME,
     `updated_at` DATETIME,
-    `version` INTEGER DEFAULT 0,
-    `version_created_at` DATETIME,
-    `version_created_by` VARCHAR(100),
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_paypal_order_order_id`
         FOREIGN KEY (`id`)
@@ -149,7 +146,7 @@ CREATE TABLE `paypal_plan`
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
-    INDEX `FI_paypal_plan_paypal_order_id` (`paypal_order_id`),
+    INDEX `fi_paypal_plan_paypal_order_id` (`paypal_order_id`),
     CONSTRAINT `fk_paypal_plan_paypal_order_id`
         FOREIGN KEY (`paypal_order_id`)
         REFERENCES `paypal_order` (`id`)
@@ -176,8 +173,8 @@ CREATE TABLE `paypal_log`
     `created_at` DATETIME,
     `updated_at` DATETIME,
     PRIMARY KEY (`id`),
-    INDEX `FI_paypal_log_customer_id` (`customer_id`),
-    INDEX `FI_paypal_log_order_id` (`order_id`),
+    INDEX `fi_paypal_log_customer_id` (`customer_id`),
+    INDEX `fi_paypal_log_order_id` (`order_id`),
     CONSTRAINT `fk_paypal_log_customer_id`
         FOREIGN KEY (`customer_id`)
         REFERENCES `customer` (`id`)
@@ -203,47 +200,9 @@ CREATE TABLE `paypal_planified_payment_i18n`
     `title` VARCHAR(255) NOT NULL,
     `description` LONGTEXT,
     PRIMARY KEY (`id`,`locale`),
-    CONSTRAINT `paypal_planified_payment_i18n_FK_1`
+    CONSTRAINT `paypal_planified_payment_i18n_fk_c9dfe7`
         FOREIGN KEY (`id`)
         REFERENCES `paypal_planified_payment` (`id`)
-        ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- ---------------------------------------------------------------------
--- paypal_order_version
--- ---------------------------------------------------------------------
-
-DROP TABLE IF EXISTS `paypal_order_version`;
-
-CREATE TABLE `paypal_order_version`
-(
-    `id` INTEGER NOT NULL,
-    `payment_id` VARCHAR(50),
-    `agreement_id` VARCHAR(255),
-    `credit_card_id` VARCHAR(40),
-    `state` VARCHAR(20),
-    `amount` DECIMAL(16,6) DEFAULT 0.000000,
-    `description` LONGTEXT,
-    `payer_id` VARCHAR(255),
-    `token` VARCHAR(255),
-    `planified_title` VARCHAR(255) NOT NULL,
-    `planified_description` LONGTEXT,
-    `planified_frequency` VARCHAR(255) NOT NULL,
-    `planified_frequency_interval` INTEGER NOT NULL,
-    `planified_cycle` INTEGER NOT NULL,
-    `planified_actual_cycle` INTEGER DEFAULT 0 NOT NULL,
-    `planified_min_amount` DECIMAL(16,6) DEFAULT 0.000000,
-    `planified_max_amount` DECIMAL(16,6) DEFAULT 0.000000,
-    `created_at` DATETIME,
-    `updated_at` DATETIME,
-    `version` INTEGER DEFAULT 0 NOT NULL,
-    `version_created_at` DATETIME,
-    `version_created_by` VARCHAR(100),
-    `id_version` INTEGER DEFAULT 0,
-    PRIMARY KEY (`id`,`version`),
-    CONSTRAINT `paypal_order_version_FK_1`
-        FOREIGN KEY (`id`)
-        REFERENCES `paypal_order` (`id`)
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
 

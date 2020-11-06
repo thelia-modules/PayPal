@@ -6,7 +6,6 @@
 
     <loops>
         <loop name="paypal_order" class="PayPal\Loop\PayPalOrderLoop" />
-        <loop name="paypal_order_version" class="PayPal\Loop\PayPalOrderVersionLoop" />
         <loop name="paypal_planified_payment" class="PayPal\Loop\PayPalPlanifiedPaymentLoop" />
         <loop name="paypal_log" class="PayPal\Loop\PayPalLogLoop" />
     </loops>

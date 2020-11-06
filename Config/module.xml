@@ -20,7 +20,7 @@
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>3.0.5</version>
+    <version>4.0.0</version>
     <authors>
         <author>
             <name>gbarral</name>
@@ -36,6 +36,6 @@
         <module version="&gt;0.2">HookSearch</module>
     </required>
     -->
-    <thelia>2.2.0</thelia>
+    <thelia>2.4.0</thelia>
     <stability>other</stability>
 </module>
