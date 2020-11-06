@@ -13,7 +13,7 @@
 To install the module with Composer, open a console, navigate to the Thelia diorectory and type the following command to add the dependency to Thelia composer.json file.
 
 ```
-composer require thelia/paypal-module:~3.0.0
+composer require thelia/paypal-module:~4.0.0
 ```
 
 ## II) Configure your PayPal account
