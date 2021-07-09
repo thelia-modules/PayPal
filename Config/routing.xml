@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
 
-    <route id="paypal.configure" path="/admin/module/paypal/configure" methods="post">
+    <!--<route id="paypal.configure" path="/admin/module/paypal/configure" methods="post">
         <default key="_controller">PayPal:Configuration:configure</default>
     </route>
 
@@ -76,7 +76,7 @@
         <requirement key="cartId">\d+</requirement>
     </route>
 
-    <!-- OVERLOAD order management process -->
+     OVERLOAD order management process
     <route id="order.delivery.process" path="/order/delivery" methods="post">
         <default key="_controller">PayPal:PayPalResponse:executeExpressCheckout</default>
         <default key="_view">order-delivery</default>
@@ -103,6 +103,6 @@
 
     <route id="paypal.webhook.all" path="/module/paypal/webhook/all/events">
         <default key="_controller">PayPal:PayPalWebHook:all</default>
-    </route>
+    </route>-->
 
 </routes>

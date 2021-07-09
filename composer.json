@@ -5,8 +5,8 @@
   "type": "thelia-module",
   "require": {
     "thelia/installer": "~1.1",
-    "paypal/rest-api-sdk-php": "1.7.1",
-    "wazaari/monolog-mysql": "1.0.3"
+    "paypal/rest-api-sdk-php": "1.14.0",
+    "wazaari/monolog-mysql": "1.0.5"
   },
   "extra": {
     "installer-name": "PayPal"

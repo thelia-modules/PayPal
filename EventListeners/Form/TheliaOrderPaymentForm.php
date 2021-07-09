@@ -30,6 +30,7 @@ use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Event\TheliaFormEvent;
@@ -69,7 +70,7 @@ class TheliaOrderPaymentForm implements EventSubscriberInterface
         $event->getForm()->getFormBuilder()
             ->add(
                 PayPalFormFields::FIELD_PAYPAL_METHOD,
-                'choice',
+                ChoiceType::class,
                 [
                     'choices' => [
                         PayPal::PAYPAL_METHOD_PAYPAL => PayPal::PAYPAL_METHOD_PAYPAL,
@@ -84,7 +85,7 @@ class TheliaOrderPaymentForm implements EventSubscriberInterface
             )
             ->add(
                 PayPalCreditCardType::TYPE_NAME,
-                new PayPalCreditCardType(),
+                PayPalCreditCardType::class,
                 [
                     'label_attr' => [
                         'for' => PayPalCreditCardType::TYPE_NAME
@@ -93,10 +94,9 @@ class TheliaOrderPaymentForm implements EventSubscriberInterface
             )
             ->add(
                 PayPalFormFields::FIELD_PAYPAL_PLANIFIED_PAYMENT,
-                'choice',
+                ChoiceType::class,
                 [
                     'choices' => $this->getAllowedPlanifiedPayments(),
-                    'choices_as_values' => true,
                     'choice_label' => function ($value, $key, $index) {
                         return $value->getTitle();
                     },

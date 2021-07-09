@@ -122,7 +122,7 @@ class OrderListener implements EventSubscriberInterface
 
             // Send confirmation email if required.
             if (Paypal::getConfigValue('send_confirmation_message_only_if_paid')) {
-                $this->dispatcher->dispatch(TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL, $event);
+                $this->dispatcher->dispatch($event, TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL);
             }
         }
     }
@@ -135,7 +135,7 @@ class OrderListener implements EventSubscriberInterface
     {
         //First be sure that there is no OLD CREDIT card saved in paypal_cart because of fatal error
         $payPalCartEvent = new PayPalCartEvent($this->payPalPaymentService->getCurrentPayPalCart());
-        $this->dispatcher->dispatch(PayPalEvents::PAYPAL_CART_DELETE, $payPalCartEvent);
+        $this->dispatcher->dispatch($payPalCartEvent, PayPalEvents::PAYPAL_CART_DELETE);
 
         $postedData = $this->requestStack->getCurrentRequest()->request->get('thelia_order_payment');
 
@@ -203,7 +203,7 @@ class OrderListener implements EventSubscriberInterface
             $payPalCart = $this->payPalPaymentService->getCurrentPayPalCart();
             $payPalCart->setCreditCardId($creditCardId);
             $payPalCartEvent = new PayPalCartEvent($payPalCart);
-            $this->dispatcher->dispatch(PayPalEvents::PAYPAL_CART_UPDATE, $payPalCartEvent);
+            $this->dispatcher->dispatch($payPalCartEvent, PayPalEvents::PAYPAL_CART_UPDATE);
         }
     }
 
@@ -237,7 +237,7 @@ class OrderListener implements EventSubscriberInterface
             $payPalCart = $this->payPalPaymentService->getCurrentPayPalCart();
             $payPalCart->setPlanifiedPaymentId($postedData[PayPalFormFields::FIELD_PAYPAL_PLANIFIED_PAYMENT]);
             $payPalCartEvent = new PayPalCartEvent($payPalCart);
-            $this->dispatcher->dispatch(PayPalEvents::PAYPAL_CART_UPDATE, $payPalCartEvent);
+            $this->dispatcher->dispatch($payPalCartEvent, PayPalEvents::PAYPAL_CART_UPDATE);
 
         }
     }

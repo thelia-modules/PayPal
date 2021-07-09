@@ -10,9 +10,9 @@
 
                     {form name="paypal_form_configure"}
 
-                    {if $form_error}
+                    {if $form_error|default:null}
                     <div class="alert alert-danger">{$form_error_message}</div>
-                    {elseif $general_error}
+                    {elseif $general_error|default:null}
                     <div class="alert alert-danger">
                         {$general_error}
                     </div>
@@ -47,15 +47,15 @@
                                     <div class="col-md-12">
 
                                         {custom_render_form_field form=$form field="sandbox"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="sandbox"} {if $sandbox}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="sandbox"} {if $sandbox|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
-                                        {render_form_field form=$form field="sandbox_login" value=$sandbox_login}
-                                        {render_form_field form=$form field="sandbox_password" value=$sandbox_password}
-                                        {render_form_field form=$form field="sandbox_merchant_id" value=$sandbox_merchant_id}
+                                        {render_form_field form=$form field="sandbox_login" value=$sandbox_login|default:null}
+                                        {render_form_field form=$form field="sandbox_password" value=$sandbox_password|default:null}
+                                        {render_form_field form=$form field="sandbox_merchant_id" value=$sandbox_merchant_id|default:null}
 
-                                        {render_form_field form=$form field="allowed_ip_list" value=$allowed_ip_list}
+                                        {render_form_field form=$form field="allowed_ip_list" value={$allowed_ip_list|default:null}}
                                     </div>
                                 </div>
                                 <div class="row">
@@ -111,9 +111,9 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        {render_form_field form=$form field="login" value=$login}
-                                        {render_form_field form=$form field="password" value=$password}
-                                        {render_form_field form=$form field="merchant_id" value=$merchant_id}
+                                        {render_form_field form=$form field="login" value=$login|default:null}
+                                        {render_form_field form=$form field="password" value=$password|default:null}
+                                        {render_form_field form=$form field="merchant_id" value=$merchant_id|default:null}
                                     </div>
                                 </div>
                                 <div class="row">
@@ -140,22 +140,22 @@
                                     </div>
                                     <div class="col-md-12">
                                         {custom_render_form_field form=$form field="method_paypal"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="method_paypal"} {if $method_paypal}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="method_paypal"} {if $method_paypal|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
                                         {custom_render_form_field form=$form field="method_paypal_with_in_context"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="method_paypal_with_in_context"} {if $method_paypal_with_in_context}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="method_paypal_with_in_context"} {if {$method_paypal_with_in_context|default:null}}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
                                         {custom_render_form_field form=$form field="method_express_checkout"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="method_express_checkout"} {if $method_express_checkout}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="method_express_checkout"} {if $method_express_checkout|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
                                         {custom_render_form_field form=$form field="method_credit_card"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="method_credit_card"} {if $method_credit_card}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="method_credit_card"} {if $method_credit_card|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
@@ -165,7 +165,7 @@
                                         </div>
 
                                         {custom_render_form_field form=$form field="method_planified_payment"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="method_planified_payment"} {if $method_planified_payment}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="method_planified_payment"} {if $method_planified_payment|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
@@ -180,17 +180,17 @@
                                         </div>
 
                                         {custom_render_form_field form=$form field="send_confirmation_message_only_if_paid"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="send_confirmation_message_only_if_paid"} {if $send_confirmation_message_only_if_paid}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="send_confirmation_message_only_if_paid"} {if $send_confirmation_message_only_if_paid|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
                                         {custom_render_form_field form=$form field="send_payment_confirmation_message"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="send_payment_confirmation_message"} {if $send_payment_confirmation_message}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="send_payment_confirmation_message"} {if $send_payment_confirmation_message|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 
                                         {custom_render_form_field form=$form field="send_recursive_message"}
-                                        <input type="checkbox" {form_field_attributes form=$form field="send_recursive_message"} {if $send_recursive_message}checked{/if}>
+                                        <input type="checkbox" {form_field_attributes form=$form field="send_recursive_message"} {if $send_recursive_message|default:null}checked{/if}>
                                         {$label}
                                         {/custom_render_form_field}
 

@@ -26,6 +26,7 @@ namespace PayPal\EventListeners;
 use PayPal\Event\PayPalCustomerEvent;
 use PayPal\Event\PayPalEvents;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -46,7 +47,7 @@ class PayPalCustomerListener implements EventSubscriberInterface
      * @param RequestStack $requestStack
      * @param EventDispatcher $dispatcher
      */
-    public function __construct(RequestStack $requestStack, EventDispatcher $dispatcher)
+    public function __construct(RequestStack $requestStack, EventDispatcherInterface $dispatcher)
     {
         $this->requestStack = $requestStack;
         $this->dispatcher = $dispatcher;

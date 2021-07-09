@@ -117,7 +117,7 @@ class PayPalBaseService
         }
 
         $payPalOrderEvent = new PayPalOrderEvent($payPalOrder);
-        $this->dispatcher->dispatch(PayPalEvents::PAYPAL_ORDER_CREATE, $payPalOrderEvent);
+        $this->dispatcher->dispatch($payPalOrderEvent, PayPalEvents::PAYPAL_ORDER_CREATE);
 
         return $payPalOrderEvent;
     }
@@ -142,7 +142,7 @@ class PayPalBaseService
         }
 
         $payPalOrderEvent = new PayPalOrderEvent($payPalOrder);
-        $this->dispatcher->dispatch(PayPalEvents::PAYPAL_ORDER_UPDATE, $payPalOrderEvent);
+        $this->dispatcher->dispatch($payPalOrderEvent, PayPalEvents::PAYPAL_ORDER_UPDATE);
 
         return $payPalOrderEvent;
     }
@@ -158,7 +158,7 @@ class PayPalBaseService
 
         if (null === $cart) {
             $cartEvent = new CartRestoreEvent();
-            $this->dispatcher->dispatch(TheliaEvents::CART_RESTORE_CURRENT, $cartEvent);
+            $this->dispatcher->dispatch($cartEvent, TheliaEvents::CART_RESTORE_CURRENT);
 
             $cart = $cartEvent->getCart();
         }
@@ -337,10 +337,10 @@ class PayPalBaseService
             'http.Retry' => 1,
             'mode' => self::getMode(),
             'log.LogEnabled' => true,
-            'log.FileName' => '../log/PayPal.log',
+            'log.FileName' => '../var/log/PayPal.log',
             'log.LogLevel' => 'INFO',
             'cache.enabled' => true,
-            'cache.FileName' => '../cache/prod/PayPal.cache',
+            'cache.FileName' => '../var/cache/prod/PayPal.cache',
             'http.headers.PayPal-Partner-Attribution-Id' => 'Thelia_Cart',
         ]);
 
