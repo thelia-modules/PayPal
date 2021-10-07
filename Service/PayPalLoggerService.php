@@ -51,7 +51,7 @@ class PayPalLoggerService
         //Create MysqlHandler
         $database = new Database(Propel::getConnection());
         $mySQLHandler = new MySQLHandler(
-            $database->getConnection(),
+            null,
             PaypalLogTableMap::TABLE_NAME,
             array_keys($staticParams),
             $level
@@ -61,40 +61,36 @@ class PayPalLoggerService
 
         //Now you can use the logger, and further attach additional information
         switch ($level) {
-            case Logger::DEBUG:
-                $logger->addDebug($message, array_merge($staticParams, $params));
-                break;
-
             case Logger::INFO:
-                $logger->addInfo($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_INFO,$message, array_merge($staticParams, $params));
                 break;
 
             case Logger::NOTICE:
-                $logger->addNotice($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_NOTICE,$message, array_merge($staticParams, $params));
                 break;
 
             case Logger::WARNING:
-                $logger->addWarning($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_WARNING,$message, array_merge($staticParams, $params));
                 break;
 
             case Logger::ERROR:
-                $logger->addError($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_ERR,$message, array_merge($staticParams, $params));
                 break;
 
             case Logger::CRITICAL:
-                $logger->addCritical($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_CRIT,$message, array_merge($staticParams, $params));
                 break;
 
             case Logger::ALERT:
-                $logger->addAlert($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_ALERT,$message, array_merge($staticParams, $params));
                 break;
 
             case Logger::EMERGENCY:
-                $logger->addEmergency($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_EMERG,$message, array_merge($staticParams, $params));
                 break;
 
             default:
-                $logger->addDebug($message, array_merge($staticParams, $params));
+                $logger->addRecord(LOG_DEBUG,$message, array_merge($staticParams, $params));
                 break;
         }
 

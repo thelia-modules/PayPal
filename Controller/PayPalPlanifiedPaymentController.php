@@ -32,10 +32,17 @@ use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Thelia\Controller\Admin\AbstractCrudController;
+use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Security\AccessManager;
+use Thelia\Core\Template\ParserContext;
+use Symfony\Component\Routing\Annotation\Route;
+use Thelia\Tools\TokenProvider;
 
 /**
+ * @Route("/admin/module/paypal/configure/planified", name="configure_planified")
  * Class PayPalPlanifiedPaymentController
  * @package PayPal\Controller
  */
@@ -64,6 +71,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * The default action is displaying the list.
      *
      * @return Response
+     * @Route("", name="_render", methods="GET")
      */
     public function defaultAction()
     {
@@ -76,12 +84,45 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     }
 
     /**
+    * @Route("/create", name="_create", methods="POST")
+    */
+    public function createAction(EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator)
+    {
+        return parent::createAction($eventDispatcher, $translator);
+    }
+
+    /**
+     * @Route("/create/delete", name="_delete", methods="POST")
+     */
+    public function deleteAction(Request $request, TokenProvider $tokenProvider, EventDispatcherInterface $eventDispatcher, ParserContext $parserContext)
+    {
+        return parent::deleteAction($request, $tokenProvider, $eventDispatcher, $parserContext);
+    }
+
+    /**
+     * @Route("/{planifiedPaymentId}", name="_update", methods="GET")
+     */
+    public function updateAction(ParserContext $parserContext)
+    {
+        return parent::updateAction($parserContext);
+    }
+
+    /**
+     * @Route("/{planifiedPaymentId}", name="_process_update", methods="POST")
+     */
+    public function processUpdateAction(Request $request, EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator)
+    {
+        return parent::processUpdateAction($request, $eventDispatcher, $translator);
+    }
+
+
+    /**
      * Return the creation form for this object
      * @return PayPalPlanifiedPaymentCreateForm
      */
     protected function getCreationForm()
     {
-        return $this->createForm(PayPalPlanifiedPaymentCreateForm::FORM_NAME);
+        return $this->createForm(PayPalPlanifiedPaymentCreateForm::getName());
     }
 
     /**
@@ -90,7 +131,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      */
     protected function getUpdateForm()
     {
-        return $this->createForm(PayPalPlanifiedPaymentUpdateForm::FORM_NAME);
+        return $this->createForm(PayPalPlanifiedPaymentUpdateForm::getName());
     }
 
     /**
@@ -99,10 +140,10 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param PaypalPlanifiedPayment $object
      * @return PayPalPlanifiedPaymentUpdateForm
      */
-    protected function hydrateObjectForm($object)
+    protected function hydrateObjectForm(ParserContext $parserContext, $object)
     {
         /** @var \Thelia\Model\Lang $lang */
-        $lang = $this->getRequest()->getSession()->get('thelia.current.lang');
+        $parserContext->getSession()->get('thelia.current.lang');
         $object->getTranslation($lang->getLocale());
 
         $data = [
@@ -117,7 +158,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
             PayPalFormFields::FIELD_PP_POSITION => $object->getPosition()
         ];
 
-        return $this->createForm(PayPalPlanifiedPaymentUpdateForm::FORM_NAME, 'form', $data);
+        return $this->createForm(PayPalPlanifiedPaymentUpdateForm::getName(), 'form', $data);
     }
 
     /**

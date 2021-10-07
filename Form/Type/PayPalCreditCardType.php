@@ -25,6 +25,8 @@ namespace PayPal\Form\Type;
 
 use PayPal\Form\PayPalFormFields;
 use PayPal\PayPal;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -49,7 +51,7 @@ class PayPalCreditCardType extends AbstractTheliaType
         $builder
             ->add(
                 PayPalFormFields::FIELD_CARD_TYPE,
-                'choice',
+                ChoiceType::class,
                 [
                     'choices' => $this->getTypes(),
                     'label' => Translator::getInstance()->trans('Card type', [], PayPal::DOMAIN_NAME),
@@ -57,36 +59,28 @@ class PayPalCreditCardType extends AbstractTheliaType
                     'required' => false,
                     'constraints' => [
                         new Callback(
-                            [
-                                'methods' => [
-                                    [$this, 'verifyCardType']
-                                ],
-                            ]
+                            [$this, 'verifyCardType']
                         )
                     ]
                 ]
             )
             ->add(
                 PayPalFormFields::FIELD_CARD_NUMBER,
-                'text',
+                TextType::class,
                 [
                     'label' => Translator::getInstance()->trans('Card number', [], PayPal::DOMAIN_NAME),
                     'label_attr' => ['for' => PayPalFormFields::FIELD_CARD_NUMBER],
                     'required' => false,
                     'constraints' => [
                         new Callback(
-                            [
-                                'methods' => [
-                                    [$this, 'verifyCardNumber']
-                                ],
-                            ]
+                            [$this, 'verifyCardNumber']
                         )
                     ]
                 ]
             )
             ->add(
                 PayPalFormFields::FIELD_CARD_EXPIRE_MONTH,
-                'choice',
+                ChoiceType::class,
                 [
                     'choices' => $this->getMonths(),
                     'label' => Translator::getInstance()->trans('Expire month', [], PayPal::DOMAIN_NAME),
@@ -94,18 +88,14 @@ class PayPalCreditCardType extends AbstractTheliaType
                     'required' => false,
                     'constraints' => [
                         new Callback(
-                            [
-                                'methods' => [
-                                    [$this, 'verifyCardExpireMonth']
-                                ],
-                            ]
+                            [$this, 'verifyCardExpireMonth']
                         )
                     ]
                 ]
             )
             ->add(
                 PayPalFormFields::FIELD_CARD_EXPIRE_YEAR,
-                'choice',
+                ChoiceType::class,
                 [
                     'choices' => $this->getYears(),
                     'label' => Translator::getInstance()->trans('Expire year', [], PayPal::DOMAIN_NAME),
@@ -113,29 +103,21 @@ class PayPalCreditCardType extends AbstractTheliaType
                     'required' => false,
                     'constraints' => [
                         new Callback(
-                            [
-                                'methods' => [
-                                    [$this, 'verifyCardExpireYear']
-                                ],
-                            ]
+                            [$this, 'verifyCardExpireYear']
                         )
                     ]
                 ]
             )
             ->add(
                 PayPalFormFields::FIELD_CARD_CVV,
-                'text',
+                TextType::class,
                 [
                     'label' => Translator::getInstance()->trans('CVV', [], PayPal::DOMAIN_NAME),
                     'label_attr' => ['for' => PayPalFormFields::FIELD_CARD_CVV],
                     'required' => false,
                     'constraints' => [
                         new Callback(
-                            [
-                                'methods' => [
-                                    [$this, 'verifyCardCVV']
-                                ],
-                            ]
+                            [$this, 'verifyCardCVV']
                         )
                     ]
                 ]
@@ -209,7 +191,7 @@ class PayPalCreditCardType extends AbstractTheliaType
     /**
      * @inheritDoc
      */
-    public function getName()
+    public static function getName()
     {
         return self::TYPE_NAME;
     }
@@ -220,10 +202,10 @@ class PayPalCreditCardType extends AbstractTheliaType
     protected function getTypes()
     {
         return [
-            PayPal::CREDIT_CARD_TYPE_VISA => 'Visa',
-            PayPal::CREDIT_CARD_TYPE_MASTERCARD => 'MasterCard',
-            PayPal::CREDIT_CARD_TYPE_DISCOVER => 'Discover',
-            PayPal::CREDIT_CARD_TYPE_AMEX => 'Amex'
+            'Visa' => PayPal::CREDIT_CARD_TYPE_VISA,
+            'MasterCard' => PayPal::CREDIT_CARD_TYPE_MASTERCARD,
+            'Discover' => PayPal::CREDIT_CARD_TYPE_DISCOVER,
+            'Amex' => PayPal::CREDIT_CARD_TYPE_AMEX
         ];
     }
 
@@ -233,18 +215,18 @@ class PayPalCreditCardType extends AbstractTheliaType
     protected function getMonths()
     {
         return [
-            1 => '01',
-            2 => '02',
-            3 => '03',
-            4 => '04',
-            5 => '05',
-            6 => '06',
-            7 => '07',
-            8 => '08',
-            9 => '09',
-            10 => '10',
-            11 => '11',
-            12 => '12'
+            '01' => 1,
+            '02' => 2,
+            '03' => 3,
+            '04' => 4,
+            '05' => 5,
+            '06' => 6,
+            '07' => 7,
+            '08' => 8,
+            '09' => 9,
+            '10' => 10,
+            '11' => 11,
+            '12' => 12
         ];
     }
 
@@ -258,7 +240,7 @@ class PayPalCreditCardType extends AbstractTheliaType
         $years = [];
         $years[(int)$actualYear] = $actualYear;
         for ($i = 1; $i <= 10; $i++) {
-            $years[(int)($actualYear + $i)] = $actualYear + $i;
+            $years[$actualYear + $i] = (int)($actualYear + $i);
         }
         return $years;
     }

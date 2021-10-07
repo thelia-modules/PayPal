@@ -22,6 +22,7 @@ use PayPal\Service\PayPalLoggerService;
 use PayPal\Service\PayPalPaymentService;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Propel;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Core\Event\Order\OrderEvent;
@@ -99,7 +100,7 @@ class PayPal extends AbstractPaymentModule
                     if ($payment->getState() === PayPal::PAYMENT_STATE_APPROVED) {
                         $event = new OrderEvent($order);
                         $event->setStatus(OrderStatusQuery::getPaidStatus()->getId());
-                        $this->getDispatcher()->dispatch(TheliaEvents::ORDER_UPDATE_STATUS, $event);
+                        $this->getDispatcher()->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
                         $response = new RedirectResponse(URL::getInstance()->absoluteUrl('/order/placed/' . $order->getId()));
                         PayPalLoggerService::log(
                             Translator::getInstance()->trans(
@@ -292,7 +293,7 @@ class PayPal extends AbstractPaymentModule
     /**
      * @param \Propel\Runtime\Connection\ConnectionInterface $con
      */
-    public function postActivation(ConnectionInterface $con = null)
+    public function postActivation(ConnectionInterface $con = null): void
     {
         $database = new Database($con);
         $database->insertSql(null, array(__DIR__ . "/Config/create.sql"));
@@ -347,7 +348,7 @@ class PayPal extends AbstractPaymentModule
         }
     }
 
-    public function update($currentVersion, $newVersion, ConnectionInterface $con = null)
+    public function update($currentVersion, $newVersion, ConnectionInterface $con = null): void
     {
         $finder = (new Finder())
             ->files()
@@ -369,5 +370,13 @@ class PayPal extends AbstractPaymentModule
                 );
             }
         }
+    }
+
+    public static function configureServices(ServicesConfigurator $servicesConfigurator): void
+    {
+        $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
+            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
+            ->autowire(true)
+            ->autoconfigure(true);
     }
 }

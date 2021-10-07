@@ -25,15 +25,19 @@ namespace PayPal\Controller;
 
 use PayPal\Form\ConfigurationForm;
 use PayPal\PayPal;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Thelia;
+use Thelia\Core\Translation\Translator;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Tools\URL;
 use Thelia\Tools\Version\Version;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
+ * @Route("/admin/module/paypal/configure", name="paypal_configure")
  * Class ConfigurePaypal
  * @package Paypal\Controller
  */
@@ -44,14 +48,15 @@ class ConfigurationController extends BaseAdminController
      */
     /**
      * @return mixed|\Symfony\Component\HttpFoundation\Response|\Thelia\Core\HttpFoundation\Response
+     * @Route("", name="_save", methods="POSt")
      */
-    public function configureAction()
+    public function configureAction(RequestStack $requestStack, Translator $translator)
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Paypal', AccessManager::UPDATE)) {
             return $response;
         }
 
-        $configurationForm = $this->createForm(ConfigurationForm::FORM_NAME);
+        $configurationForm = $this->createForm(ConfigurationForm::getName());
 
         try {
             $form = $this->validateForm($configurationForm, "POST");
@@ -73,7 +78,7 @@ class ConfigurationController extends BaseAdminController
                 sprintf("Paypal configuration updated")
             );
 
-            if ($this->getRequest()->get('save_mode') == 'stay') {
+            if ($requestStack->getCurrentRequest()->get('save_mode') === 'stay') {
                 // If we have to stay on the same page, redisplay the configuration page/
                 $url = '/admin/module/Paypal';
             } else {
@@ -89,7 +94,7 @@ class ConfigurationController extends BaseAdminController
         }
 
         $this->setupFormErrorContext(
-            $this->getTranslator()->trans("Paypal configuration", [], PayPal::DOMAIN_NAME),
+            $translator->trans("Paypal configuration", [], PayPal::DOMAIN_NAME),
             $error_msg,
             $configurationForm,
             $ex
@@ -105,6 +110,7 @@ class ConfigurationController extends BaseAdminController
 
     /**
      * @return \Thelia\Core\HttpFoundation\Response
+     * @Route("/log", name="_log", methods="GET")
      */
     public function logAction()
     {

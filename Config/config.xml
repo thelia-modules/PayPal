@@ -22,36 +22,15 @@
         -->
     </commands>
 
-    <services>
+   <services>
         <!-- **************** -->
         <!-- *** Services *** -->
         <!-- **************** -->
-        <service id="paypal_base_service" class="PayPal\Service\Base\PayPalBaseService">
-            <argument type="service" id="event_dispatcher" />
-            <argument type="service" id="request_stack" />
-            <argument type="service" id="router.paypal" />
-        </service>
-
-        <service id="paypal_payment_service" class="PayPal\Service\PayPalPaymentService">
-            <argument type="service" id="event_dispatcher" />
-            <argument type="service" id="request_stack" />
-            <argument type="service" id="router.paypal" />
-        </service>
-
-        <service id="paypal_agreement_service" class="PayPal\Service\PayPalAgreementService">
-            <argument type="service" id="event_dispatcher" />
-            <argument type="service" id="request_stack" />
-            <argument type="service" id="router.paypal" />
-        </service>
-
-        <service id="paypal_customer_service" class="PayPal\Service\PayPalCustomerService">
-            <argument type="service" id="thelia.securityContext" />
-        </service>
-
-
-
-        <service id="paypal_logger_service" class="PayPal\Service\PayPalLoggerService">
-        </service>
+       <service id="paypal_base_service" alias="PayPal\Service\Base\PayPalBaseService" public="true"/>
+       <service id="paypal_payment_service" alias="PayPal\Service\PayPalPaymentService" public="true"/>
+       <service id="paypal_agreement_service" alias="PayPal\Service\PayPalAgreementService" public="true"/>
+       <service id="paypal_customer_service" alias="PayPal\Service\PayPalCustomerService" public="true"/>
+       <service id="paypal_logger_service" alias="PayPal\Service\PayPalLoggerService" public="true"/>
 
         <!-- ********************** -->
         <!-- *** EventListeners *** -->
@@ -60,7 +39,7 @@
         <!-- ***** -->
         <!-- Order -->
         <!-- ***** -->
-        <service id="paypal.order.order.listener" class="PayPal\EventListeners\PayPalOrderListener">
+        <!--<service id="paypal.order.order.listener" class="PayPal\EventListeners\PayPalOrderListener">
             <tag name="kernel.event_subscriber"/>
         </service>
         <service id="paypal.cart.listener" class="PayPal\EventListeners\PayPalCartListener">
@@ -76,32 +55,32 @@
         </service>
         <service id="paypal.plan.listener" class="PayPal\EventListeners\PayPalPlanListener">
             <tag name="kernel.event_subscriber"/>
-        </service>
+        </service>-->
 
         <!-- ******** -->
         <!-- Customer -->
         <!-- ******** -->
-        <service id="paypal.customer.customer.listener" class="PayPal\EventListeners\PayPalCustomerListener">
+        <!--<service id="paypal.customer.customer.listener" class="PayPal\EventListeners\PayPalCustomerListener">
             <argument type="service" id="request_stack"/>
             <argument type="service" id="event_dispatcher"/>
             <tag name="kernel.event_subscriber"/>
-        </service>
+        </service>-->
 
         <!-- ********************** -->
         <!-- *** Form extension *** -->
         <!-- ********************** -->
-        <service id="paypal.thelia.order.payment.form" class="PayPal\EventListeners\Form\TheliaOrderPaymentForm">
+        <!--<service id="paypal.thelia.order.payment.form" class="PayPal\EventListeners\Form\TheliaOrderPaymentForm">
             <argument type="service" id="request_stack"/>
             <argument type="service" id="event_dispatcher"/>
             <tag name="kernel.event_subscriber"/>
-        </service>
+        </service>-->
 
         <!-- ************************* -->
         <!-- *** Planified Payment *** -->
         <!-- ************************* -->
-        <service id="paypal.planified.payment.listener" class="PayPal\EventListeners\PayPalPlanifiedPaymentListener">
+        <!--<service id="paypal.planified.payment.listener" class="PayPal\EventListeners\PayPalPlanifiedPaymentListener">
             <tag name="kernel.event_subscriber"/>
-        </service>
+        </service>-->
     </services>
 
     <hooks>

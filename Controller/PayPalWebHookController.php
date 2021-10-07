@@ -33,14 +33,19 @@ use PayPal\PayPal;
 use PayPal\Service\PayPalAgreementService;
 use PayPal\Service\PayPalLoggerService;
 use Propel\Runtime\Propel;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\OrderStatusQuery;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
+ * @Route("/module/paypal/webhook/all/events", name="paypal_webhook_events")
  * Class PayPalWebHookController
  * @package PayPal\Controller
  */
@@ -135,12 +140,15 @@ class PayPalWebHookController extends BaseFrontController
      *           )
      *       )
      *   );
+     *
+     * @Route("", name="_all", methods="GET")
      */
-    public function allAction()
+    public function allAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
     {
-        $eventType = $this->getRequest()->request->get('event_type');
-        $resource = $this->getRequest()->request->get('resource');
-        $resourceType = $this->getRequest()->request->get('resource_type');
+        $request = $requestStack->getCurrentRequest();
+        $eventType = $request->request->get('event_type');
+        $resource = $request->request->get('resource');
+        $resourceType = $request->request->get('resource_type');
 
         $details = [
             'request' => $this->getRequest()->request->all()
@@ -155,7 +163,7 @@ class PayPalWebHookController extends BaseFrontController
 
         try {
 
-            $title = $this->getTitle($this->getRequest());
+            $title = $this->getTitle($request);
 
             if (is_array($resource)) {
 
@@ -166,7 +174,7 @@ class PayPalWebHookController extends BaseFrontController
                             $params = $this->getParamsForSale($resource['parent_payment'], $params, $eventType);
                         }
                         if (isset($resource['billing_agreement_id'])) {
-                            $params = $this->getParamsForAgreement($resource['billing_agreement_id'], $params);
+                            $params = $this->getParamsForAgreement($eventDispatcher, $resource['billing_agreement_id'], $params);
                         }
                         break;
 
@@ -178,7 +186,7 @@ class PayPalWebHookController extends BaseFrontController
 
                     case self::RESOURCE_TYPE_AGREEMENT:
                         if (isset($resource['id'])) {
-                            $params = $this->getParamsForAgreement($resource['id'], $params);
+                            $params = $this->getParamsForAgreement($eventDispatcher, $resource['id'], $params);
                         }
                         break;
 
@@ -271,7 +279,7 @@ class PayPalWebHookController extends BaseFrontController
      * @param array $params
      * @return array
      */
-    protected function getParamsForAgreement($agreementId = null, $params = [])
+    protected function getParamsForAgreement(EventDispatcherInterface $eventDispatcher, $agreementId = null, $params = [])
     {
         if (null !== $payPalOrder = PaypalOrderQuery::create()->filterByAgreementId($agreementId)->orderById()->findOne()) {
 
@@ -303,7 +311,7 @@ class PayPalWebHookController extends BaseFrontController
 
             $payPalOrder->setPlanifiedActualCycle($payPalOrder->getPlanifiedActualCycle() + 1);
             $payPalOrderEvent = new PayPalOrderEvent($payPalOrder);
-            $this->getDispatcher()->dispatch(PayPalEvents::PAYPAL_ORDER_UPDATE, $payPalOrderEvent);
+            $eventDispatcher->dispatch($payPalOrderEvent, PayPalEvents::PAYPAL_ORDER_UPDATE);
         }
 
         return $params;

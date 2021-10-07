@@ -25,7 +25,10 @@ namespace PayPal\Form;
 
 use PayPal\PayPal;
 use PayPal\Service\PayPalAgreementService;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\GreaterThan;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
@@ -82,7 +85,7 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
             )
             ->add(
                 PayPalFormFields::FIELD_PP_FREQUENCY_INTERVAL,
-                'integer',
+                IntegerType::class,
                 [
                     'label' => $this->trans('Frequency interval'),
                     'label_attr' => ['for' => PayPalFormFields::FIELD_PP_FREQUENCY_INTERVAL],
@@ -95,9 +98,9 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
             )
             ->add(
                 PayPalFormFields::FIELD_PP_FREQUENCY,
-                'choice',
+                ChoiceType::class,
                 [
-                    'choices' => PayPalAgreementService::getAllowedPaymentFrequency(),
+                    'choices' => array_flip(PayPalAgreementService::getAllowedPaymentFrequency()),
                     'label' => $this->trans('Frequency'),
                     'label_attr' => ['for' => PayPalFormFields::FIELD_PP_FREQUENCY],
                     'required' => true,
@@ -108,7 +111,7 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
             )
             ->add(
                 PayPalFormFields::FIELD_PP_CYCLE,
-                'integer',
+                IntegerType::class,
                 [
                     'label' => $this->trans('Cycle'),
                     'label_attr' => ['for' => PayPalFormFields::FIELD_PP_CYCLE],
@@ -121,7 +124,7 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
             )
             ->add(
                 PayPalFormFields::FIELD_PP_MIN_AMOUNT,
-                'number',
+                NumberType::class,
                 [
                     'label' => $this->trans('Min amount'),
                     'label_attr' => [
@@ -136,7 +139,7 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
             )
             ->add(
                 PayPalFormFields::FIELD_PP_MAX_AMOUNT,
-                'number',
+                NumberType::class,
                 [
                     'label' => $this->trans('Max amount'),
                     'label_attr' => [
@@ -151,7 +154,7 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
             )
             ->add(
                 PayPalFormFields::FIELD_PP_POSITION,
-                'integer',
+                IntegerType::class,
                 [
                     'label' => $this->trans('Position'),
                     'label_attr' => ['for' => PayPalFormFields::FIELD_PP_POSITION],
@@ -164,7 +167,7 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
     /**
      * @return string the name of your form. This name must be unique
      */
-    public function getName()
+    public static function getName()
     {
         return self::FORM_NAME;
     }
