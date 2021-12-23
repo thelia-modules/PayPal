@@ -830,10 +830,6 @@ class PayPalResponseController extends OrderController
         $payPalOrderEvent = new PayPalOrderEvent($payPalOrder);
         $this->dispatch(PayPalEvents::PAYPAL_ORDER_UPDATE, $payPalOrderEvent);
 
-        $event = new OrderEvent($payPalOrder->getOrder());
-        $event->setStatus(OrderStatusQuery::getPaidStatus()->getId());
-        $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS, $event);
-
         $response = $this->getPaymentSuccessPageUrl($payPalOrder->getId());
 
         PayPalLoggerService::log(

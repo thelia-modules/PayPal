@@ -239,9 +239,22 @@ class PayPalWebHookController extends BaseFrontController
             $params['order_id'] = $payPalOrder->getId();
             $params['customer_id'] = $payPalOrder->getOrder()->getCustomerId();
 
-            if ($eventType === self::HOOK_PAYMENT_SALE_DENIED) {
+            $newStatus = null;
+
+            switch ($eventType){
+                case self::HOOK_PAYMENT_SALE_DENIED :
+                    $newStatus = OrderStatusQuery::getCancelledStatus()->getId();
+                    break;
+                case self::HOOK_PAYMENT_SALE_COMPLETED :
+                    $newStatus = OrderStatusQuery::getPaidStatus()->getId();
+                    break;
+                default :
+                    break;
+            }
+
+            if (null !== $newStatus){
                 $event = new OrderEvent($payPalOrder->getOrder());
-                $event->setStatus(OrderStatusQuery::getCancelledStatus()->getId());
+                $event->setStatus($newStatus);
                 $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS, $event);
             }
         }
