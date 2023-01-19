@@ -265,7 +265,7 @@ class OrderListener implements EventSubscriberInterface
                 ['updateStatus', 128],
             ],
             TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL => ['sendConfirmationEmail', 129],
-            TheliaEvents::ORDER_SEND_NOTIFICATION_EMAIL => ['sendConfirmationEmail', 129],
+            TheliaEvents::ORDER_SEND_NOTIFICATION_EMAIL => ['sendNotificationEmail', 129],
             TheliaEvents::ORDER_SET_PAYMENT_MODULE => ['checkPayPalMethod', 120],
             PayPalEvents::PAYPAL_RECURSIVE_PAYMENT_CREATE => ['recursivePayment', 128]
         ];
