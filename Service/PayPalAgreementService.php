@@ -23,9 +23,12 @@
 
 namespace PayPal\Service;
 
+use Datetime;
+use Exception;
 use Monolog\Logger;
 use PayPal\Api\Agreement;
 use PayPal\Api\AgreementStateDescriptor;
+use PayPal\Api\AgreementTransactions;
 use PayPal\Api\ChargeModel;
 use PayPal\Api\CreditCard;
 use PayPal\Api\CreditCardToken;
@@ -37,6 +40,7 @@ use PayPal\Api\PatchRequest;
 use PayPal\Api\Payer;
 use PayPal\Api\PaymentDefinition;
 use PayPal\Api\Plan;
+use PayPal\Api\PlanList;
 use PayPal\Common\PayPalModel;
 use PayPal\Event\PayPalEvents;
 use PayPal\Event\PayPalOrderEvent;
@@ -49,6 +53,7 @@ use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\Model\PaypalPlanQuery;
 use PayPal\PayPal;
 use PayPal\Service\Base\PayPalBaseService;
+use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\Routing\Router;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\CurrencyQuery;
@@ -61,34 +66,34 @@ use Thelia\Tools\URL;
 
 class PayPalAgreementService extends PayPalBaseService
 {
-    const PLAN_TYPE_FIXED = 'FIXED';
-    const PLAN_TYPE_INFINITE = 'INFINITE';
+    public const PLAN_TYPE_FIXED = 'FIXED';
+    public const PLAN_TYPE_INFINITE = 'INFINITE';
 
-    const PAYMENT_TYPE_REGULAR = 'REGULAR';
-    const PAYMENT_TYPE_TRIAL = 'TRIAL';
+    public const PAYMENT_TYPE_REGULAR = 'REGULAR';
+    public const PAYMENT_TYPE_TRIAL = 'TRIAL';
 
-    const CHARGE_TYPE_SHIPPING = 'SHIPPING';
-    const CHARGE_TYPE_TAX = 'TAX';
+    public const CHARGE_TYPE_SHIPPING = 'SHIPPING';
+    public const CHARGE_TYPE_TAX = 'TAX';
 
-    const PAYMENT_FREQUENCY_DAY = 'DAY';
-    const PAYMENT_FREQUENCY_WEEK = 'WEEK';
-    const PAYMENT_FREQUENCY_MONTH = 'MONTH';
-    const PAYMENT_FREQUENCY_YEAR = 'YEAR';
+    public const PAYMENT_FREQUENCY_DAY = 'DAY';
+    public const PAYMENT_FREQUENCY_WEEK = 'WEEK';
+    public const PAYMENT_FREQUENCY_MONTH = 'MONTH';
+    public const PAYMENT_FREQUENCY_YEAR = 'YEAR';
 
-    const FAIL_AMOUNT_ACTION_CONTINUE = 'CONTINUE';
-    const FAIL_AMOUNT_ACTION_CANCEL = 'CANCEL';
+    public const FAIL_AMOUNT_ACTION_CONTINUE = 'CONTINUE';
+    public const FAIL_AMOUNT_ACTION_CANCEL = 'CANCEL';
 
-    const MAX_API_LENGHT = 128;
+    public const MAX_API_LENGHT = 128;
 
     /**
      * @param Order $order
      * @param PaypalPlanifiedPayment $planifiedPayment
-     * @param null $description
+     * @param string|null $description
      * @return Agreement
      * @throws PayPalConnectionException
-     * @throws \Exception
+     * @throws Exception
      */
-    public function makeAgreement(Order $order, PaypalPlanifiedPayment $planifiedPayment, $description = null)
+    public function makeAgreement(Order $order, PaypalPlanifiedPayment $planifiedPayment, string $description = null)
     {
         //Sadly, this description can NOT be null
         if (null === $description) {
@@ -132,6 +137,9 @@ class PayPalAgreementService extends PayPalBaseService
         return $agreement;
     }
 
+    /**
+     * @throws PropelException
+     */
     public function updateTheliaOrderForCycle(Order $order, $cycle, $cycleAmount)
     {
         //Be sure that there is no rounding price lost with this method
@@ -144,7 +152,7 @@ class PayPalAgreementService extends PayPalBaseService
         $moneyLeft -= ($newPostage + $newPostageTax + $newDiscount);
         $orderProducts = OrderProductQuery::create()->filterByOrderId($order->getId())->find();
 
-        /** @var \Thelia\Model\OrderProduct $orderProduct */
+        /** @var OrderProduct $orderProduct */
         foreach ($orderProducts as $orderProduct) {
             $newPrice = round($orderProduct->getPrice() / $cycle, 2);
             $newPromoPrice = round($orderProduct->getPrice() / $cycle, 2);
@@ -162,7 +170,7 @@ class PayPalAgreementService extends PayPalBaseService
             ;
             $taxes = OrderProductTaxQuery::create()->filterByOrderProductId($orderProduct->getId())->find();
 
-            /** @var \Thelia\Model\OrderProductTax $tax */
+            /** @var OrderProductTax $tax */
             foreach ($taxes as $tax) {
                 $newAmount = round($tax->getAmount() / $cycle, 2);
                 $newPromoAmount = round($tax->getPromoAmount() / $cycle, 2);
@@ -230,6 +238,19 @@ class PayPalAgreementService extends PayPalBaseService
         $plan->update($patchRequest, self::getApiContext());
         $plan = $this->getBillingPlan($plan->getId());
 
+        $this->setAndDispatchPaypalPlanEvent($order, $plan, 'update');
+
+        return $plan;
+    }
+
+    /**
+     * This function construct and dispatch a PayPalPlan based on $eventName
+     * @param Order $order
+     * @param Plan $plan
+     * @param string $eventName ("create" | "update")
+     * @return void
+     */
+    private function setAndDispatchPaypalPlanEvent(Order $order, Plan $plan, string $eventName) {
         if (null === $payPalPlan = PaypalPlanQuery::create()
                 ->filterByPaypalOrderId($order->getId())
                 ->filterByPlanId($plan->getId())
@@ -243,9 +264,11 @@ class PayPalAgreementService extends PayPalBaseService
 
         $payPalPlan->setState($plan->getState());
         $payPalPlanEvent = new PayPalPlanEvent($payPalPlan);
-        $this->dispatcher->dispatch($payPalPlanEvent, PayPalEvents::PAYPAL_PLAN_UPDATE);
-
-        return $plan;
+        if ($eventName === "create") {
+            $this->dispatcher->dispatch($payPalPlanEvent, PayPalEvents::PAYPAL_PLAN_CREATE);
+        } else {
+            $this->dispatcher->dispatch($payPalPlanEvent, PayPalEvents::PAYPAL_PLAN_UPDATE);
+        }
     }
 
     /**
@@ -253,7 +276,7 @@ class PayPalAgreementService extends PayPalBaseService
      * @param null $orderId
      * @return Agreement
      * @throws PayPalConnectionException
-     * @throws \Exception
+     * @throws Exception
      */
     public function activateBillingAgreementByToken($token, $orderId = null)
     {
@@ -273,7 +296,7 @@ class PayPalAgreementService extends PayPalBaseService
                 Logger::CRITICAL
             );
             throw $e;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             PayPalLoggerService::log(
                 $e->getMessage(),
                 [
@@ -290,12 +313,12 @@ class PayPalAgreementService extends PayPalBaseService
      * @param $name
      * @param $merchantPreferences
      * @param array $paymentDefinitions
-     * @param string $description
+     * @param string|null $description
      * @param string $type
      * @return Plan
-     * @throws \Exception
+     * @throws Exception
      */
-    public function generateBillingPlan(Order $order, $name, $merchantPreferences, $paymentDefinitions = [], $description = '', $type = self::PLAN_TYPE_FIXED)
+    public function generateBillingPlan(Order $order, $name, $merchantPreferences, array $paymentDefinitions = [], ?string $description = '', string $type = self::PLAN_TYPE_FIXED)
     {
         if (!in_array($type, self::getAllowedPlanType())) {
             $message = Translator::getInstance()->trans(
@@ -311,7 +334,7 @@ class PayPalAgreementService extends PayPalBaseService
                 ],
                 Logger::ERROR
             );
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         if (!is_array($paymentDefinitions) || count($paymentDefinitions) <= 0) {
@@ -328,7 +351,7 @@ class PayPalAgreementService extends PayPalBaseService
                 ],
                 Logger::ERROR
             );
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         $plan = new Plan();
@@ -356,9 +379,9 @@ class PayPalAgreementService extends PayPalBaseService
 
     /**
      * @param int $pageSize
-     * @return \PayPal\Api\PlanList
+     * @return PlanList
      */
-    public function listBillingPlans($pageSize = 2)
+    public function listBillingPlans(int $pageSize = 2)
     {
         $planList = Plan::all(['page_size' => $pageSize], self::getApiContext());
 
@@ -370,29 +393,16 @@ class PayPalAgreementService extends PayPalBaseService
      * @param Plan $plan
      * @return Plan
      * @throws PayPalConnectionException
-     * @throws \Exception
+     * @throws Exception
      */
     public function createBillingPlan(Order $order, Plan $plan)
     {
         try {
             $plan = $plan->create(self::getApiContext());
-
-            if (null === $payPalPlan = PaypalPlanQuery::create()
-                    ->filterByPaypalOrderId($order->getId())
-                    ->filterByPlanId($plan->getId())
-                    ->findOne()) {
-                $payPalPlan = new PaypalPlan();
-                $payPalPlan
-                    ->setPaypalOrderId($order->getId())
-                    ->setPlanId($plan->getId())
-                ;
-            }
-
-            $payPalPlan->setState($plan->getState());
-            $payPalPlanEvent = new PayPalPlanEvent($payPalPlan);
-            $this->dispatcher->dispatch($payPalPlanEvent, PayPalEvents::PAYPAL_PLAN_CREATE);
+            $this->setAndDispatchPaypalPlanEvent($order, $plan, 'create');
 
             return $plan;
+
         }  catch (PayPalConnectionException $e) {
             $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
             PayPalLoggerService::log(
@@ -404,7 +414,7 @@ class PayPalAgreementService extends PayPalBaseService
                 Logger::CRITICAL
             );
             throw $e;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             PayPalLoggerService::log(
                 $e->getMessage(),
                 [
@@ -424,6 +434,8 @@ class PayPalAgreementService extends PayPalBaseService
      * @param $name
      * @param $description
      * @return Agreement
+     * @throws PropelException
+     * @throws Exception
      */
     public function createBillingAgreementWithCreditCard(Order $order, Plan $plan, $creditCardId, $name, $description)
     {
@@ -462,6 +474,7 @@ class PayPalAgreementService extends PayPalBaseService
      * @param $name
      * @param $description
      * @return Agreement
+     * @throws Exception
      */
     public function createBillingAgreementWithPayPal(Order $order, Plan $plan, $name, $description)
     {
@@ -488,11 +501,11 @@ class PayPalAgreementService extends PayPalBaseService
     /**
      * @param $agreementId
      * @param array $params
-     * @return \PayPal\Api\AgreementTransactions
+     * @return AgreementTransactions
      */
-    public function getBillingAgreementTransactions($agreementId, $params = [])
+    public function getBillingAgreementTransactions($agreementId, array $params = [])
     {
-        if (is_array($params) || count($params) == 0) {
+        if (is_array($params) || count($params) === 0) {
             $params = [
                 'start_date' => date('Y-m-d', strtotime('-15 years')),
                 'end_date' => date('Y-m-d', strtotime('+5 days'))
@@ -509,7 +522,7 @@ class PayPalAgreementService extends PayPalBaseService
      * @param string $note
      * @return Agreement
      */
-    public function suspendBillingAgreement(Agreement $agreement, $note = 'Suspending the agreement')
+    public function suspendBillingAgreement(Agreement $agreement, string $note = 'Suspending the agreement')
     {
         //Create an Agreement State Descriptor, explaining the reason to suspend.
         $agreementStateDescriptor = new AgreementStateDescriptor();
@@ -527,7 +540,7 @@ class PayPalAgreementService extends PayPalBaseService
      * @param string $note
      * @return Agreement
      */
-    public function reActivateBillingAgreement(Agreement $agreement, $note = 'Reactivating the agreement')
+    public function reActivateBillingAgreement(Agreement $agreement, string $note = 'Reactivating the agreement')
     {
         //Create an Agreement State Descriptor, explaining the reason to re activate.
         $agreementStateDescriptor = new AgreementStateDescriptor();
@@ -550,9 +563,9 @@ class PayPalAgreementService extends PayPalBaseService
      * @param int $frequencyInterval
      * @param int $cycles
      * @return PaymentDefinition
-     * @throws \Exception
+     * @throws Exception
      */
-    public function createPaymentDefinition(Order $order, $name, $chargeModels = [], $cycleAmount = null, $type = self::PAYMENT_TYPE_REGULAR, $frequency = self::PAYMENT_FREQUENCY_DAY, $frequencyInterval = 1, $cycles = 1)
+    public function createPaymentDefinition(Order $order, $name, array $chargeModels = [], $cycleAmount = null, string $type = self::PAYMENT_TYPE_REGULAR, string $frequency = self::PAYMENT_FREQUENCY_DAY, int $frequencyInterval = 1, int $cycles = 1)
     {
         if (!in_array($type, self::getAllowedPaymentType())) {
             $message = Translator::getInstance()->trans(
@@ -568,7 +581,7 @@ class PayPalAgreementService extends PayPalBaseService
                 ],
                 Logger::ERROR
             );
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         if (!in_array($frequency, self::getAllowedPaymentFrequency())) {
@@ -585,7 +598,7 @@ class PayPalAgreementService extends PayPalBaseService
                 ],
                 Logger::ERROR
             );
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         if (!is_array($chargeModels) || count($chargeModels) <= 0) {
@@ -602,7 +615,7 @@ class PayPalAgreementService extends PayPalBaseService
                 ],
                 Logger::ERROR
             );
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         $paymentDefinition = new PaymentDefinition();
@@ -630,9 +643,9 @@ class PayPalAgreementService extends PayPalBaseService
      * @param int $chargeAmount
      * @param string $type
      * @return ChargeModel
-     * @throws \Exception
+     * @throws Exception
      */
-    public function createChargeModel(Order $order, $chargeAmount = 0, $type = self::CHARGE_TYPE_SHIPPING)
+    public function createChargeModel(Order $order, int $chargeAmount = 0, string $type = self::CHARGE_TYPE_SHIPPING)
     {
         if (!in_array($type, self::getAllowedChargeType())) {
             $message = Translator::getInstance()->trans(
@@ -648,7 +661,7 @@ class PayPalAgreementService extends PayPalBaseService
                 ],
                 Logger::ERROR
             );
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         $chargeModel = new ChargeModel();
@@ -667,9 +680,9 @@ class PayPalAgreementService extends PayPalBaseService
      * @param int $maxFailAttempts
      * @param int $feeAmount
      * @return MerchantPreferences
-     * @throws \Exception
+     * @throws Exception
      */
-    public function createMerchantPreferences(Order $order, $autoBillAmount = false, $failAction = self::FAIL_AMOUNT_ACTION_CONTINUE, $maxFailAttempts = 0, $feeAmount = 0)
+    public function createMerchantPreferences(Order $order, bool $autoBillAmount = false, string $failAction = self::FAIL_AMOUNT_ACTION_CONTINUE, int $maxFailAttempts = 0, int $feeAmount = 0)
     {
         if (!in_array($failAction, self::getAllowedFailedAction())) {
             $message = Translator::getInstance()->trans(
@@ -685,7 +698,7 @@ class PayPalAgreementService extends PayPalBaseService
                 ],
                 Logger::ERROR
             );
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         $merchantPreferences = new MerchantPreferences();
@@ -730,12 +743,12 @@ class PayPalAgreementService extends PayPalBaseService
     /**
      * @param Order $order
      * @return Order
-     * @throws \Exception
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @throws Exception
+     * @throws PropelException
      */
     public function duplicateOrder(Order $order)
     {
-        $today = new \Datetime;
+        $today = new Datetime;
         $newOrder = new Order();
         $newOrder
             ->setCustomerId($order->getCustomerId())
@@ -760,7 +773,7 @@ class PayPalAgreementService extends PayPalBaseService
 
         $orderProducts = OrderProductQuery::create()->filterByOrderId($order->getId())->find();
 
-        /** @var \Thelia\Model\OrderProduct $orderProduct */
+        /** @var OrderProduct $orderProduct */
         foreach ($orderProducts as $orderProduct) {
             $newOrderProduct = new OrderProduct();
             $newOrderProduct
@@ -789,7 +802,7 @@ class PayPalAgreementService extends PayPalBaseService
 
             $orderProductTaxes = OrderProductTaxQuery::create()->filterByOrderProductId($orderProduct->getId())->find();
 
-            /** @var \Thelia\Model\OrderProductTax $orderProductTax */
+            /** @var OrderProductTax $orderProductTax */
             foreach ($orderProductTaxes as $orderProductTax) {
 
                 $newOrderProductTax = new OrderProductTax();
@@ -822,7 +835,7 @@ class PayPalAgreementService extends PayPalBaseService
 
             $payPalPlans = PaypalPlanQuery::create()->filterByPaypalOrderId($payPalOrder->getId());
 
-            /** @var \PayPal\Model\PaypalPlan $payPalPlan */
+            /** @var PaypalPlan $payPalPlan */
             foreach ($payPalPlans as $payPalPlan) {
 
                 $newPayPalPlan = new PaypalPlan();
@@ -847,15 +860,15 @@ class PayPalAgreementService extends PayPalBaseService
      * @param $name
      * @param string $description
      * @return Agreement
-     * @throws \Exception
+     * @throws Exception
      */
-    public function generateAgreement(Order $order, Plan $plan, Payer $payer, $name, $description = '')
+    public function generateAgreement(Order $order, Plan $plan, Payer $payer, $name, string $description = '')
     {
         $agreement = new Agreement();
         $agreement
             ->setName($name)
             ->setDescription($description)
-            ->setStartDate((new \Datetime)->format('Y-m-d\TG:i:s\Z'))
+            ->setStartDate((new Datetime)->format('Y-m-d\TG:i:s\Z'))
             ->setPlan($plan)
         ;
 

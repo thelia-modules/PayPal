@@ -23,6 +23,7 @@
 
 namespace PayPal\Service;
 
+use Exception;
 use Monolog\Logger;
 use PayPal\Api\Amount;
 use PayPal\Api\CreditCard;
@@ -39,6 +40,7 @@ use PayPal\Api\Transaction;
 use PayPal\Exception\PayPalConnectionException;
 use PayPal\PayPal;
 use PayPal\Service\Base\PayPalBaseService;
+use Propel\Runtime\Exception\PropelException;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\Cart;
 use Thelia\Model\Currency;
@@ -63,8 +65,9 @@ class PayPalPaymentService extends PayPalBaseService
      * @param string|null $creditCardId
      * @param string|null $description
      * @return Payment
+     * @throws PropelException|PayPalConnectionException
      */
-    public function makePayment(Order $order, $creditCardId = null, $description = null, $future = false)
+    public function makePayment(Order $order, ?string $creditCardId = null, ?string $description = null, bool $future = false)
     {
         $payPalOrderEvent = $this->generatePayPalOrder($order);
 
@@ -96,6 +99,10 @@ class PayPalPaymentService extends PayPalBaseService
         return $payment;
     }
 
+    /**
+     * @throws PayPalConnectionException
+     * @throws PropelException
+     */
     public function makePaymentFromCart(Cart $cart, $description = null, $future = false, $fromCartView = true)
     {
         $payer = self::generatePayer();
@@ -110,8 +117,6 @@ class PayPalPaymentService extends PayPalBaseService
         $transaction = $this->generateTransaction($amount, $description);
 
         $payment = $this->generatePaymentFromCart($cart, $payer, $transaction, $future, $fromCartView);
-
-        //$this->updatePayPalOrder($payPalOrderEvent->getPayPalOrder(), $payment->getState(), $payment->getId());
 
         return $payment;
     }
@@ -129,7 +134,7 @@ class PayPalPaymentService extends PayPalBaseService
      *
      * @return Payment
      */
-    public function executePayment($paymentId, $payerId, Details $details = null)
+    public function executePayment(string $paymentId, string $payerId, Details $details = null)
     {
         $payment = $this->getPaymentDetails($paymentId);
         $paymentExecution = new PaymentExecution();
@@ -211,7 +216,7 @@ class PayPalPaymentService extends PayPalBaseService
      * @param $expireYear
      * @param $cvv2
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function getPayPalCreditCardId($type, $number, $expireMonth, $expireYear, $cvv2)
     {
@@ -226,9 +231,9 @@ class PayPalPaymentService extends PayPalBaseService
             $card->create(self::getApiContext());
 
             return $card->getId();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             PayPalLoggerService::log($e->getMessage(), [], Logger::ERROR);
-            throw new \Exception(Translator::getInstance()->trans('Credit card is invalid', [], PayPal::DOMAIN_NAME));
+            throw new Exception(Translator::getInstance()->trans('Credit card is invalid', [], PayPal::DOMAIN_NAME));
         }
     }
 
@@ -239,7 +244,7 @@ class PayPalPaymentService extends PayPalBaseService
      * @param bool $future
      * @return FuturePayment|Payment
      * @throws PayPalConnectionException
-     * @throws \Exception
+     * @throws Exception
      */
     public function generatePayment(Order $order, Payer $payer, Transaction $transaction, $future = false)
     {
@@ -286,7 +291,7 @@ class PayPalPaymentService extends PayPalBaseService
                 Logger::CRITICAL
             );
             throw $e;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             PayPalLoggerService::log(
                 $e->getMessage(),
                 [
@@ -304,11 +309,12 @@ class PayPalPaymentService extends PayPalBaseService
      * @param Payer $payer
      * @param Transaction $transaction
      * @param bool $future
+     * @param bool $fromCartView
      * @return FuturePayment|Payment
      * @throws PayPalConnectionException
-     * @throws \Exception
+     * @throws Exception
      */
-    public function generatePaymentFromCart(Cart $cart, Payer $payer, Transaction $transaction, $future = false, $fromCartView = true)
+    public function generatePaymentFromCart(Cart $cart, Payer $payer, Transaction $transaction, bool $future = false, bool $fromCartView = true)
     {
         if ($future) {
             $payment = new FuturePayment();
@@ -354,7 +360,7 @@ class PayPalPaymentService extends PayPalBaseService
                 Logger::CRITICAL
             );
             throw $e;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             PayPalLoggerService::log(
                 $e->getMessage(),
                 [],
