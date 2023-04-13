@@ -23,11 +23,13 @@
 
 namespace PayPal\Service;
 
+use Datetime;
 use Monolog\Logger;
 use MySQLHandler\MySQLHandler;
 use PayPal\Model\Map\PaypalLogTableMap;
 use PayPal\Model\PaypalLogQuery;
 use PayPal\PayPal;
+use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Propel;
 use Thelia\Install\Database;
 
@@ -41,17 +43,17 @@ class PayPalLoggerService
      * @param $message
      * @param array $params
      * @param int $level
+     * @throws PropelException
      */
-    public static function log($message, $params = [], $level = Logger::DEBUG)
+    public static function log($message, array $params = [], int $level = Logger::DEBUG)
     {
         $staticParams = self::getStaticParams();
 
         $logger = new Logger(PayPal::getModuleCode());
 
         //Create MysqlHandler
-        $database = new Database(Propel::getConnection());
-        $mySQLHandler = new MySQLHandler(
-            null,
+        $mySQLHandler = new MyOwnSQLHandler(
+            Propel::getConnection()->getWrappedConnection(),
             PaypalLogTableMap::TABLE_NAME,
             array_keys($staticParams),
             $level
@@ -104,7 +106,7 @@ class PayPalLoggerService
     {
         $psr3Fields = ['channel', 'level', 'message', 'time'];
         $payPalLogFields = PaypalLogTableMap::getFieldNames(PaypalLogTableMap::TYPE_FIELDNAME);
-        $readableDate = new \Datetime();
+        $readableDate = new Datetime();
 
         $staticParams = [];
         foreach ($payPalLogFields as $fieldName) {
@@ -116,9 +118,6 @@ class PayPalLoggerService
 
             if (in_array($fieldName, ['created_at', 'updated_at'])) {
                 $staticParams[$fieldName] = $readableDate->format('Y-m-d H:i:s');
-            } elseif (in_array($fieldName, ['id'])) {
-                $lastId = PaypalLogQuery::create()->count();
-                $staticParams[$fieldName] = $lastId + 1;
             } else {
                 $staticParams[$fieldName] = null;
             }

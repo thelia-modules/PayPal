@@ -23,6 +23,7 @@
 
 namespace PayPal\Service\Base;
 
+use Exception;
 use Monolog\Logger;
 use PayPal\Api\Amount;
 use PayPal\Api\FuturePayment;
@@ -40,6 +41,7 @@ use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\PayPal;
 use PayPal\Rest\ApiContext;
 use PayPal\Service\PayPalLoggerService;
+use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
@@ -50,22 +52,23 @@ use Thelia\Core\Translation\Translator;
 use Thelia\Model\Cart;
 use Thelia\Model\Country;
 use Thelia\Model\Currency;
+use Thelia\Model\Lang;
 use Thelia\Model\Order;
 use Thelia\Model\OrderAddressQuery;
 
 class PayPalBaseService
 {
     /** @var EventDispatcherInterface */
-    protected $dispatcher;
+    protected EventDispatcherInterface $dispatcher;
 
     /** @var RequestStack */
-    protected $requestStack;
+    protected RequestStack $requestStack;
 
     /** @var RouterInterface */
-    protected $router;
+    protected RouterInterface $router;
 
     /** @var OAuthTokenCredential */
-    protected $authTokenCredential;
+    protected OAuthTokenCredential $authTokenCredential;
 
     /**
      * PayPalBaseService constructor.
@@ -84,9 +87,10 @@ class PayPalBaseService
 
     /**
      * @param Order $order
-     * @param string|null $creditCardId
-     * @param PaypalPlanifiedPayment $planifiedPayment
+     * @param null $creditCardId
+     * @param PaypalPlanifiedPayment|null $planifiedPayment
      * @return PayPalOrderEvent
+     * @throws PropelException
      */
     public function generatePayPalOrder(Order $order, $creditCardId = null, PaypalPlanifiedPayment $planifiedPayment = null)
     {
@@ -101,7 +105,7 @@ class PayPalBaseService
         }
 
         if (null !== $planifiedPayment) {
-            /** @var \Thelia\Model\Lang $lang */
+            /** @var Lang $lang */
             $lang = $this->requestStack->getCurrentRequest()->getSession()->get('thelia.current.lang');
             $planifiedPayment->getTranslation($lang->getLocale());
 
@@ -129,7 +133,7 @@ class PayPalBaseService
      * @param string|null $agreementId
      * @return PayPalOrderEvent
      */
-    public function updatePayPalOrder(PaypalOrder $payPalOrder, $state, $paymentId = null, $agreementId = null)
+    public function updatePayPalOrder(PaypalOrder $payPalOrder, $state, string $paymentId = null, string $agreementId = null)
     {
         $payPalOrder->setState($state);
 
@@ -174,10 +178,10 @@ class PayPalBaseService
     /**
      * @param string $method
      * @param array $fundingInstruments
-     * @param PayerInfo $payerInfo
+     * @param PayerInfo|null $payerInfo
      * @return Payer
      */
-    public static function generatePayer($method = PayPal::PAYPAL_METHOD_PAYPAL, $fundingInstruments = [], PayerInfo $payerInfo = null)
+    public static function generatePayer(string $method = PayPal::PAYPAL_METHOD_PAYPAL, array $fundingInstruments = [], PayerInfo $payerInfo = null)
     {
         $payer = new Payer();
         $payer->setPaymentMethod($method);
@@ -196,11 +200,13 @@ class PayPalBaseService
 
     public static function generatePayerInfo($data = [])
     {
-        $payerInfo = new PayerInfo($data);
-
-        return $payerInfo;
+        return new PayerInfo($data);
     }
 
+    /**
+     * @throws PropelException
+     * @throws Exception
+     */
     public static function generateShippingAddress(Order $order)
     {
         if (null !== $orderAddress = OrderAddressQuery::create()->findOneById($order->getDeliveryOrderAddressId())) {
@@ -231,33 +237,30 @@ class PayPalBaseService
                 $shippingAddress->setLine2($orderAddress->getAddress3());
             }
 
-            if (null !== $orderAddress->getStateId()) {
-                //$shippingAddress->setState($orderAddress->getState()->getIsocode());
-            }
-
             return $shippingAddress;
-        } else {
-            $message = Translator::getInstance()->trans(
-                'Order address no found to generate PayPal shipping address',
-                [],
-                PayPal::DOMAIN_NAME
-            );
-            PayPalLoggerService::log(
-                $message,
-                [
-                    'customer_id' => $order->getCustomerId(),
-                    'order_id' => $order->getId()
-                ],
-                Logger::ERROR
-            );
-            throw new \Exception($message);
         }
+
+        $message = Translator::getInstance()->trans(
+            'Order address no found to generate PayPal shipping address',
+            [],
+            PayPal::DOMAIN_NAME
+        );
+        PayPalLoggerService::log(
+            $message,
+            [
+                'customer_id' => $order->getCustomerId(),
+                'order_id' => $order->getId()
+            ],
+            Logger::ERROR
+        );
+        throw new Exception($message);
     }
 
     /**
      * @param Order $order
      * @param Currency $currency
      * @return Amount
+     * @throws PropelException
      */
     public function generateAmount(Order $order, Currency $currency)
     {
@@ -273,6 +276,7 @@ class PayPalBaseService
      * @param Cart $cart
      * @param Currency $currency
      * @return Amount
+     * @throws PropelException
      */
     public function generateAmountFromCart(Cart $cart, Currency $currency)
     {
@@ -286,10 +290,10 @@ class PayPalBaseService
 
     /**
      * @param Amount $amount
-     * @param string $description
+     * @param string|null $description
      * @return Transaction
      */
-    public function generateTransaction(Amount $amount, $description = '')
+    public function generateTransaction(Amount $amount, ?string $description = '')
     {
         // ###Transaction
         // A transaction defines the contract of a
@@ -352,7 +356,7 @@ class PayPalBaseService
      */
     public static function getLogin()
     {
-        if (PayPal::getConfigValue('sandbox') == 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
             $login = PayPal::getConfigValue('sandbox_login');
         } else {
             $login = PayPal::getConfigValue('login');
@@ -366,7 +370,7 @@ class PayPalBaseService
      */
     public static function getPassword()
     {
-        if (PayPal::getConfigValue('sandbox') == 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
             $password = PayPal::getConfigValue('sandbox_password');
         } else {
             $password = PayPal::getConfigValue('password');
@@ -380,7 +384,7 @@ class PayPalBaseService
      */
     public static function getMerchantId()
     {
-        if (PayPal::getConfigValue('sandbox') == 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
             $login = PayPal::getConfigValue('sandbox_merchant_id');
         } else {
             $login = PayPal::getConfigValue('merchant_id');
@@ -394,7 +398,7 @@ class PayPalBaseService
      */
     public static function getMode()
     {
-        if (PayPal::getConfigValue('sandbox') == 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
             $mode = 'sandbox';
         } else {
             $mode = 'live';
@@ -407,8 +411,8 @@ class PayPalBaseService
     {
         if (self::getMode() === 'live') {
             return false;
-        } else {
-            return true;
         }
+
+        return true;
     }
 }
