@@ -356,7 +356,7 @@ class PayPalBaseService
      */
     public static function getLogin()
     {
-        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === true) {
             $login = PayPal::getConfigValue('sandbox_login');
         } else {
             $login = PayPal::getConfigValue('login');
@@ -370,7 +370,7 @@ class PayPalBaseService
      */
     public static function getPassword()
     {
-        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === true) {
             $password = PayPal::getConfigValue('sandbox_password');
         } else {
             $password = PayPal::getConfigValue('password');
@@ -384,7 +384,7 @@ class PayPalBaseService
      */
     public static function getMerchantId()
     {
-        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === true) {
             $login = PayPal::getConfigValue('sandbox_merchant_id');
         } else {
             $login = PayPal::getConfigValue('merchant_id');
@@ -398,7 +398,7 @@ class PayPalBaseService
      */
     public static function getMode()
     {
-        if ((bool)PayPal::getConfigValue('sandbox') === 1) {
+        if ((bool)PayPal::getConfigValue('sandbox') === true) {
             $mode = 'sandbox';
         } else {
             $mode = 'live';
@@ -407,12 +407,8 @@ class PayPalBaseService
         return $mode;
     }
 
-    public static function isSandboxMode()
+    public static function isSandboxMode(): bool
     {
-        if (self::getMode() === 'live') {
-            return false;
-        }
-
-        return true;
+        return self::getMode() === 'sandbox';
     }
 }

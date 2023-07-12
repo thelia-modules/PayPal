@@ -5,11 +5,6 @@
     <fullnamespace>PayPal\PayPal</fullnamespace>
     <descriptive locale="en_US">
         <title>PayPal</title>
-        <!--
-        <subtitle></subtitle>
-        <description></description>
-        <postscriptum></postscriptum>
-        -->
     </descriptive>
     <descriptive locale="fr_FR">
         <title>PayPal</title>
@@ -20,7 +15,7 @@
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>4.0.4</version>
+    <version>4.0.5</version>
     <authors>
         <author>
             <name>gbarral</name>
@@ -28,14 +23,6 @@
         </author>
     </authors>
     <type>classic</type>
-    <!--
-    module dependencies
-    <required>
-        <module version="&gt;=0.1">Front</module>
-        <module version="~1.0">HookCart</module>
-        <module version="&gt;0.2">HookSearch</module>
-    </required>
-    -->
     <thelia>2.4.0</thelia>
     <stability>other</stability>
 </module>
