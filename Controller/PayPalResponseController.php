@@ -86,11 +86,18 @@ class PayPalResponseController extends OrderController
      */
     public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher)
     {
-        if (null !== $order = OrderQuery::create()->findOneById($orderId)) {
-            $event = new OrderEvent($order);
-            $event->setStatus(OrderStatusQuery::getCancelledStatus()->getId());
-            $eventDispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
+        if (!$order = OrderQuery::create()->findOneById($orderId)) {
+            return $this->pageNotFound();
         }
+
+        $event = new OrderEvent($order);
+        $event->setStatus(OrderStatusQuery::getCancelledStatus()->getId());
+        $eventDispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
+
+        $orderId = $order->getId();
+        $message = Translator::getInstance()->trans('Order cancel', [], PayPal::DOMAIN_NAME);
+
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl("/order/failed/$orderId/$message"));
     }
 
     /**
