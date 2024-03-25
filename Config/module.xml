@@ -15,14 +15,14 @@
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>4.0.8</version>
+    <version>4.0.9</version>
     <authors>
         <author>
             <name>gbarral</name>
             <email>gbarral@openstudio.fr</email>
         </author>
     </authors>
-    <type>classic</type>
+    <type>payment</type>
     <thelia>2.4.0</thelia>
     <stability>other</stability>
 </module>
