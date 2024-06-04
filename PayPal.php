@@ -41,7 +41,7 @@ class PayPal extends AbstractPaymentModule
 {
     /** @var string */
     const DOMAIN_NAME = 'paypal';
-    const ROUTER = 'router.paypal';
+    const ROUTER = 'router.PayPal';
 
     /**
      * The confirmation message identifier
@@ -66,6 +66,13 @@ class PayPal extends AbstractPaymentModule
     const PAYMENT_STATE_APPROVED = 'approved';
     const PAYMENT_STATE_CREATED = 'created';
     const PAYMENT_STATE_REFUSED = 'refused';
+
+    const PAYPAL_API_BASE_SANDBOX_URL = "https://api-m.sandbox.paypal.com";
+    const PAYPAL_API_BASE_URL = "https://api-m.paypal.com";
+    const PAYPAL_API_AUTH_URL = "/v1/oauth2/token";
+    const PAYPAL_API_CREATE_ORDER_URL = "/v2/checkout/orders";
+    const PAYPAL_API_CREATE_PLAN_URL = "/v1/billing/plans";
+    const PAYPAL_API_CREATE_PRODUCT_URL = "/v1/catalogs/products";
 
     /**
      *  Method used by payment gateway.
@@ -378,5 +385,14 @@ class PayPal extends AbstractPaymentModule
             ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
             ->autowire(true)
             ->autoconfigure(true);
+    }
+
+    public static function getBaseUrl()
+    {
+        if ((bool)PayPal::getConfigValue('sandbox') === true){
+            return self::PAYPAL_API_BASE_SANDBOX_URL;
+        }
+
+        return self::PAYPAL_API_BASE_URL;
     }
 }
