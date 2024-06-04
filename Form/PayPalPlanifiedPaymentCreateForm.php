@@ -35,6 +35,7 @@ use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Thelia\Core\Translation\Translator;
 use Thelia\Form\BaseForm;
+use Thelia\Model\LangQuery;
 
 class PayPalPlanifiedPaymentCreateForm extends BaseForm
 {
@@ -46,7 +47,17 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
     protected function buildForm()
     {
         /** @var \Thelia\Model\Lang $lang */
-        $lang = $this->getRequest()->getSession()->get('thelia.current.lang');
+        //$lang = $this->getRequest()->getSession()->get('thelia.current.lang');
+        $lang = $this->getRequest()->getSession()->get('thelia.admin.edition.lang');
+
+        $editLanguageId = $this->getRequest()->get('edit_language_id');
+
+        if (
+            null !== $editLanguageId &&
+            null !== $editLang = LangQuery::create()->findPk($editLanguageId)
+        ){
+            $lang = $editLang;
+        }
 
         $this->formBuilder
             ->add(
