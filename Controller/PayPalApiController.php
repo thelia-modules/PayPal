@@ -4,6 +4,7 @@ namespace PayPal\Controller;
 
 use PayPal\Event\PayPalOrderEvent;
 use PayPal\Model\PaypalOrder;
+use PayPal\Model\PaypalOrderQuery;
 use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
@@ -39,7 +40,7 @@ class PayPalApiController extends BaseFrontController
         try {
             $data = json_decode($request->getContent(), true);
 
-            $order = $this->createTheliaOrder($request, $eventDispatcher, $data);
+            $order = OrderQuery::create()->findPk($data['order_id']);
 
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
 
@@ -83,9 +84,11 @@ class PayPalApiController extends BaseFrontController
             $responseContent = $response->getContent();
             $responseInfo = json_decode($responseContent, true);
 
-            $paypalOrder = new PaypalOrder();
+            $paypalOrder = PaypalOrderQuery::create()
+                ->filterById($order->getId())
+                ->findOneOrCreate();
+
             $paypalOrder
-                ->setId($order->getId())
                 ->setPaymentId($responseInfo['id'])
                 ->save();
 
@@ -103,11 +106,11 @@ class PayPalApiController extends BaseFrontController
         try {
             $data = json_decode($request->getContent(), true);
 
-            $paypalOrderId = $data['paypal_order_id'];
+            $paypalOrder = PaypalOrderQuery::create()->findPk($data['order_id']);
 
             $response = $payPalApiService->sendPostResquest(
                 null,
-                PayPal::getBaseUrl().PayPal::PAYPAL_API_CREATE_ORDER_URL.'/'.$paypalOrderId.'/capture'
+                PayPal::getBaseUrl().PayPal::PAYPAL_API_CREATE_ORDER_URL.'/'.$paypalOrder->getPaymentId().'/capture'
             );
 
             $responseContent = $response->getContent();
@@ -125,7 +128,7 @@ class PayPalApiController extends BaseFrontController
             $data = json_decode($request->getContent(), true);
             $lang = $request->getSession()->getLang();
 
-            $order = $this->createTheliaOrder($request, $eventDispatcher, $data);
+            $order = OrderQuery::create()->findPk($data['order_id']);
 
             $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findPk($data["planified_payment_id"]);
             $planifiedPayment->setLocale($lang?->getLocale());
@@ -171,79 +174,6 @@ class PayPalApiController extends BaseFrontController
             return new JsonResponse(json_encode(['error' => $exception->getMessage()]), $exception->getCode());
         }
 
-    }
-
-    private function createTheliaOrder(Request $request, EventDispatcherInterface $eventDispatcher, $data)
-    {
-        $session = $request->getSession();
-
-        $translator = Translator::getInstance();
-
-        $cart = $session->getSessionCart($eventDispatcher);
-        $currency = $cart?->getCurrency();
-        $lang = $session->getLang();
-
-        $deliveryAddress = AddressQuery::create()->findPk($data['delivery_address_id']);
-        $invoiceAddress = AddressQuery::create()->findPk($data['invoice_address_id']);
-        $paymentModule = ModuleQuery::create()->findPk(PayPal::getModuleId());
-        $deliveryModule = ModuleQuery::create()->findPk($data['delivery_module_id']);
-
-        $order = new Order();
-        $order
-            ->setCustomerId($cart?->getCustomerId())
-            ->setCurrencyId($currency->getId())
-            ->setCurrencyRate($currency->getRate())
-            ->setStatusId(OrderStatusQuery::getNotPaidStatus()?->getId())
-            ->setLangId($lang->getDefaultLanguage()->getId())
-            ->setChoosenDeliveryAddress($deliveryAddress)
-            ->setChoosenInvoiceAddress($invoiceAddress)
-            ->setPaymentModuleId($paymentModule->getId())
-            ->setDeliveryModuleId($deliveryModule->getId())
-        ;
-
-        $orderEvent = new OrderEvent($order);
-
-        $moduleInstance = $deliveryModule->getDeliveryModuleInstance($this->container);
-        $deliveryPostageEvent = new DeliveryPostageEvent($moduleInstance, $cart, $deliveryAddress);
-
-        $eventDispatcher->dispatch(
-            $deliveryPostageEvent,
-            TheliaEvents::MODULE_DELIVERY_GET_POSTAGE
-        );
-
-        if (!$deliveryPostageEvent->isValidModule() || null === $deliveryPostageEvent->getPostage()) {
-            throw new DeliveryException(
-                $translator->trans('The delivery module is not valid.', [], PayPal::DOMAIN_NAME)
-            );
-        }
-
-        $postage = $deliveryPostageEvent->getPostage();
-
-        $orderEvent->setPostage($postage?->getAmount());
-        $orderEvent->setPostageTax($postage?->getAmountTax());
-        $orderEvent->setPostageTaxRuleTitle($postage?->getTaxRuleTitle());
-        $orderEvent->setDeliveryAddress($deliveryAddress->getId());
-        $orderEvent->setInvoiceAddress($invoiceAddress->getId());
-        $orderEvent->setDeliveryModule($deliveryModule->getId());
-        $orderEvent->setPaymentModule($paymentModule->getId());
-
-        $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_DELIVERY_ADDRESS);
-        $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_INVOICE_ADDRESS);
-        $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_POSTAGE);
-        $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_DELIVERY_MODULE);
-        $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_PAYMENT_MODULE);
-
-        $orderManualEvent = new OrderManualEvent(
-            $orderEvent->getOrder(),
-            $orderEvent->getOrder()->getCurrency(),
-            $orderEvent->getOrder()->getLang(),
-            $cart,
-            $cart?->getCustomer()
-        );
-
-        $eventDispatcher->dispatch($orderManualEvent, TheliaEvents::ORDER_CREATE_MANUAL);
-
-        return $orderManualEvent->getPlacedOrder();
     }
 
 }
