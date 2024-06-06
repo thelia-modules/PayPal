@@ -1,0 +1,108 @@
+{extends file="layout.tpl"}
+
+{* Security *}
+{block name="no-return-functions" prepend}
+    {check_auth role="CUSTOMER" login_tpl="login"}
+    {check_cart_not_empty}
+{/block}
+
+{* Body Class *}
+{block name="body-class"}order-gateway-paypal{/block}
+
+{block name="header"}
+    {include file="components/smarty/Header/Header.html" lite=true}
+{/block}
+
+{block name="navigation"}
+    {* hide nav *}
+{/block}
+
+{block name="minicart"}
+    {* hide minicart *}
+{/block}
+
+
+{block name="main-content"}
+
+    <nav class="Steps">
+        <ul class="Steps-list">
+           <li class="Steps-item Steps-item--active">
+               <span clas="Steps-number">1</span>
+               <span class="Steps-name">Finalisation Paiement - Paypal</span>
+           </li>
+
+        </ul>
+    </nav>
+
+    <script src="https://www.paypal.com/sdk/js?client-id={$paypal_client_id}&currency={currency attr="code"}&intent=capture&commit=false&vault=true">
+        // Replace YOUR_CLIENT_ID with your sandbox client ID
+    </script>
+
+    <div id="paypal-button-container"></div>
+    <script>
+        paypal.Buttons({
+            // Order is created on the server and the order id is returned
+            createOrder()
+            {
+                return fetch("/paypal/api/pay", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    // Use the "body" param to optionally pass additional order information
+                    // such as product SKUs and quantities
+                    body: JSON.stringify({
+                        order_id : {$order_id},
+                        return_url: "{url path='/order-invoice'}",
+                        cancel_url: "{url path='/order-invoice'}"
+                    }),
+                })
+                    .then((response) => {
+                        console.log(response);
+                        return response.json();
+                    })
+                    .then((order) => {
+                        const orderResult = JSON.parse(order);
+                        return orderResult.id;
+                    });
+            }
+        }).render('#paypal-button-container');
+    </script>
+
+{/block}
+
+
+{block name="footer"}
+{/block}
+
+{*{block name="main-content"}
+    <button class="btn-success btn" id="paypalButton">TEST PAYPAL</button>
+    <br>
+    <input type="text" class="form-control" id="paypalIdSave">
+{/block}
+
+{block name="javascript-data"}
+    <script>
+        let paypalButton = document.getElementById("paypalButton")
+        let capturePaypalButton = document.getElementById("capturePaypalButton")
+        let paypalId = document.getElementById("paypalIdSave")
+
+        let payFunction = async function (e){
+            fetch("/paypal/api/pay", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    "order_id" : {$order_id},
+                    "return_url": "{url path='/order-invoice'}",
+                    "cancel_url": "{url path='/order-invoice'}"
+                })
+            }).then((response => response.json()))
+                .then(orderData => paypalId.value = JSON.parse(orderData).id)
+
+        }
+
+        paypalButton.addEventListener('click', payFunction)
+    </script>
+{/block}*}
