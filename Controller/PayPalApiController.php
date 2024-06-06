@@ -2,44 +2,37 @@
 
 namespace PayPal\Controller;
 
-use PayPal\Event\PayPalOrderEvent;
-use PayPal\Model\PaypalOrder;
 use PayPal\Model\PaypalOrderQuery;
-use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
 use PayPal\Service\PayPalApiService;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Front\BaseFrontController;
-use Thelia\Core\Event\Delivery\DeliveryPostageEvent;
-use Thelia\Core\Event\Order\OrderEvent;
-use Thelia\Core\Event\Order\OrderManualEvent;
-use Thelia\Core\Event\TheliaEvents;
-use Thelia\Core\Translation\Translator;
 use Thelia\Log\Tlog;
-use Thelia\Model\Base\AddressQuery;
-use Thelia\Model\Base\ModuleQuery;
-use Thelia\Model\Base\ProductQuery;
 use Thelia\Model\CurrencyQuery;
-use Thelia\Model\LangQuery;
-use Thelia\Model\Order;
 use Thelia\Model\OrderQuery;
-use Thelia\Model\OrderStatusQuery;
-use Thelia\Module\Exception\DeliveryException;
 
 #[Route("/paypal/api", name: "paypal_api_")]
 class PayPalApiController extends BaseFrontController
 {
 
     #[Route("/pay", name: "pay", methods: "POST")]
-    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher)
+    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService){
+        $data = json_decode($request->getContent(), true);
+
+        if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
+            return $this->createPlan($request, $payPalApiService, $data);
+        }
+
+        return $this->createOrder($request, $payPalApiService, $data);
+    }
+
+
+    public function createOrder(Request $request, PayPalApiService $payPalApiService, $data)
     {
         try {
-            $data = json_decode($request->getContent(), true);
-
             $order = OrderQuery::create()->findPk($data['order_id']);
 
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
@@ -121,11 +114,9 @@ class PayPalApiController extends BaseFrontController
         }
     }
 
-    #[Route("/planified-payment", name: "planified-payment", methods: "POST")]
-    public function createPlan(Request $request, EventDispatcherInterface $eventDispatcher, PayPalApiService $payPalApiService)
+    public function createPlan(Request $request, PayPalApiService $payPalApiService, $data)
     {
         try {
-            $data = json_decode($request->getContent(), true);
             $lang = $request->getSession()->getLang();
 
             $order = OrderQuery::create()->findPk($data['order_id']);
