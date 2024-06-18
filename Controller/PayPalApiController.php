@@ -158,8 +158,7 @@ class PayPalApiController extends BaseFrontController
 
             $response = $payPalApiService->sendPostResquest($body, PayPal::getBaseUrl() . PayPal::PAYPAL_API_CREATE_PLAN_URL);
             $responseContent = $response->getContent();
-            $responseInfo = json_decode($responseContent, true);
-            return new JsonResponse($responseInfo);
+            return new JsonResponse($responseContent);
         } catch (\Exception $exception) {
             Tlog::getInstance()->error($exception->getMessage());
             return new JsonResponse(json_encode(['error' => $exception->getMessage()]), $exception->getCode());

@@ -3,6 +3,8 @@
 namespace PayPal\Controller;
 
 use OpenApi\Controller\Front\CheckoutController;
+use PayPal\Model\Base\PaypalPlanifiedPayment;
+use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\Service\Base\PayPalBaseService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -19,23 +21,25 @@ class PayPalFrontController extends BaseFrontController
         $templateData['paypal_merchant_id'] = PayPalBaseService::getMerchantId();
         $templateData['paypal_client_id'] = PayPalBaseService::getLogin();
         $paymentOptions = $request->getSession()->get(CheckoutController::PAYMENT_MODULE_OPTION_CHOICES_SESSION_KEY);
+        $lang = $request->getSession()->getLang();
 
         $templateData['intent'] = "capture";
         $templateData['planified_payment_id'] = null;
 
-        if (!empty($paymentOptions)) {
-            foreach ($paymentOptions as $group => $values) {
-                if ($group !== 'paypal_type') {
-                    continue;
-                }
+        if (!empty($paymentOptions) && 'paypal' !== $paymentType = $paymentOptions['code']) {
+            $planifiedPaymentId = explode('_', $paymentType)[1];
 
-                if ('paypal' !== $paymentType = array_pop($values)) {
-                    $planifiedPaymentId = explode('_', $paymentType)[1];
 
-                    $templateData['intent'] = "subscription";
-                    $templateData['planified_payment_id'] = $planifiedPaymentId;
-                }
-            }
+            $plan =  PaypalPlanifiedPaymentQuery::create()->findPk($planifiedPaymentId);
+            $plan->setLocale($lang->getLocale());
+
+            $templateData['intent'] = "subscription";
+            $templateData['planified_payment_id'] = $planifiedPaymentId;
+            $templateData['plan_title'] = $plan->getTitle();
+            $templateData['plan_description'] = $plan->getDescription();
+            $templateData['plan_frequency'] = $plan->getFrequency();
+            $templateData['plan_frequency_interval'] = $plan->getFrequencyInterval();
+            $templateData['plan_cycle'] = $plan->getCycle();
         }
 
         $templateData['order_id'] = $request->get('order_id');
