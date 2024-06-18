@@ -94,6 +94,7 @@
         <hook id="paypal.front.hook" class="PayPal\Hook\FrontHookManager">
             <argument type="service" id="request_stack"/>
             <argument type="service" id="service_container" />
+            <tag name="hook.event_listener" event="main.head-bottom" type="front" method="injectCSS" />
             <tag name="hook.event_listener" event="login.main-bottom" type="front" method="onLoginMainBottom"/>
             <tag name="hook.event_listener" event="order-invoice.payment-extra" type="front" method="onOrderInvoicePaymentExtra"/>
             <tag name="hook.event_listener" event="order-invoice.bottom" type="front" method="onOrderInvoiceBottom"/>
