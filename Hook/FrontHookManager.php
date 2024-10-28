@@ -205,4 +205,9 @@ class FrontHookManager extends BaseHook
 
         return $isValid;
     }
+
+    public function injectCSS(HookRenderEvent $event)
+    {
+        $event->add($this->addCSS('assets/css/style.css'));
+    }
 }

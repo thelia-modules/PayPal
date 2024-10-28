@@ -41,7 +41,7 @@ class PayPal extends AbstractPaymentModule
 {
     /** @var string */
     const DOMAIN_NAME = 'paypal';
-    const ROUTER = 'router.paypal';
+    const ROUTER = 'router.PayPal';
 
     /**
      * The confirmation message identifier
@@ -67,6 +67,13 @@ class PayPal extends AbstractPaymentModule
     const PAYMENT_STATE_CREATED = 'created';
     const PAYMENT_STATE_REFUSED = 'refused';
 
+    const PAYPAL_API_BASE_SANDBOX_URL = "https://api-m.sandbox.paypal.com";
+    const PAYPAL_API_BASE_URL = "https://api-m.paypal.com";
+    const PAYPAL_API_AUTH_URL = "/v1/oauth2/token";
+    const PAYPAL_API_CREATE_ORDER_URL = "/v2/checkout/orders";
+    const PAYPAL_API_CREATE_PLAN_URL = "/v1/billing/plans";
+    const PAYPAL_API_CREATE_PRODUCT_URL = "/v1/catalogs/products";
+
     /**
      *  Method used by payment gateway.
      *
@@ -82,149 +89,7 @@ class PayPal extends AbstractPaymentModule
      */
     public function pay(Order $order)
     {
-        $con = Propel::getConnection();
-        $con->beginTransaction();
-
-        try {
-            /** @var PayPalPaymentService $payPalService */
-            $payPalService = $this->getContainer()->get(self::PAYPAL_PAYMENT_SERVICE_ID);
-            /** @var PayPalAgreementService $payPalAgreementService */
-            $payPalAgreementService = $this->getContainer()->get(self::PAYPAL_AGREEMENT_SERVICE_ID);
-
-            if (null !== $payPalCart = PaypalCartQuery::create()->findOneById($order->getCartId())) {
-
-                if (null !== $payPalCart->getCreditCardId()) {
-                    $payment = $payPalService->makePayment($order, $payPalCart->getCreditCardId());
-
-                    //This payment method does not have a callback URL... So we have to check the payment status
-                    if ($payment->getState() === PayPal::PAYMENT_STATE_APPROVED) {
-                        $event = new OrderEvent($order);
-                        $event->setStatus(OrderStatusQuery::getPaidStatus()->getId());
-                        $this->getDispatcher()->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
-                        $response = new RedirectResponse(URL::getInstance()->absoluteUrl('/order/placed/' . $order->getId()));
-                        PayPalLoggerService::log(
-                            Translator::getInstance()->trans(
-                                'Order payed with success with method : %method',
-                                [
-                                    '%method' => self::PAYPAL_METHOD_CREDIT_CARD
-                                ],
-                                self::DOMAIN_NAME
-                            ),
-                            [
-                                'order_id' => $order->getId(),
-                                'customer_id' => $order->getCustomerId()
-                            ],
-                            Logger::INFO
-                        );
-                    } else {
-                        $response = new RedirectResponse(URL::getInstance()->absoluteUrl('/module/paypal/cancel/' . $order->getId()));
-                        PayPalLoggerService::log(
-                            Translator::getInstance()->trans(
-                                'Order failed with method : %method',
-                                [
-                                    '%method' => self::PAYPAL_METHOD_CREDIT_CARD
-                                ],
-                                self::DOMAIN_NAME
-                            ),
-                            [
-                                'order_id' => $order->getId(),
-                                'customer_id' => $order->getCustomerId()
-                            ],
-                            Logger::CRITICAL
-                        );
-                    }
-                } elseif (null !== $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findOneById($payPalCart->getPlanifiedPaymentId())) {
-                    //Agreement Payment
-                    $agreement = $payPalAgreementService->makeAgreement($order, $planifiedPayment);
-                    $response = new RedirectResponse($agreement->getApprovalLink());
-                    PayPalLoggerService::log(
-                        Translator::getInstance()->trans(
-                            'Order created with success in PayPal with method : %method',
-                            [
-                                '%method' => self::PAYPAL_METHOD_PLANIFIED_PAYMENT
-                            ],
-                            self::DOMAIN_NAME
-                        ),
-                        [
-                            'order_id' => $order->getId(),
-                            'customer_id' => $order->getCustomerId()
-                        ],
-                        Logger::INFO
-                    );
-                } else {
-                    //Classic Payment
-                    $payment = $payPalService->makePayment($order);
-                    $response = new RedirectResponse($payment->getApprovalLink());
-                    PayPalLoggerService::log(
-                        Translator::getInstance()->trans(
-                            'Order created with success in PayPal with method : %method',
-                            [
-                                '%method' => self::PAYPAL_METHOD_PAYPAL
-                            ],
-                            self::DOMAIN_NAME
-                        ),
-                        [
-                            'order_id' => $order->getId(),
-                            'customer_id' => $order->getCustomerId()
-                        ],
-                        Logger::INFO
-                    );
-                }
-
-            } else {
-                //Classic Payment
-                $payment = $payPalService->makePayment($order);
-                $response = new RedirectResponse($payment->getApprovalLink());
-                PayPalLoggerService::log(
-                    Translator::getInstance()->trans(
-                        'Order created with success in PayPal with method : %method',
-                        [
-                            '%method' => self::PAYPAL_METHOD_PAYPAL
-                        ],
-                        self::DOMAIN_NAME
-                    ),
-                    [
-                        'order_id' => $order->getId(),
-                        'customer_id' => $order->getCustomerId()
-                    ],
-                    Logger::INFO
-                );
-
-                //Future Payment NOT OPERATIONNEL IN PAYPAL API REST YET !
-                //$payment = $payPalService->makePayment($order, null, null, true);
-                //$response = new RedirectResponse($payment->getApprovalLink());
-            }
-
-            $con->commit();
-
-            return $response;
-        } catch (PayPalConnectionException $e) {
-            $con->rollBack();
-
-            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
-            PayPalLoggerService::log(
-                $message,
-                [
-                    'customer_id' => $order->getCustomerId(),
-                    'order_id' => $order->getId()
-                ],
-                Logger::CRITICAL
-            );
-            throw $e;
-        } catch(\Exception $e) {
-            $con->rollBack();
-
-
-            PayPalLoggerService::log(
-                $e->getMessage(),
-                [
-                    'customer_id' => $order->getCustomerId(),
-                    'order_id' => $order->getId()
-                ],
-                Logger::CRITICAL
-            );
-            throw $e;
-        }
+        return new RedirectResponse(URL::getInstance()->absoluteUrl('/order/paypal/pay', ["order_id" => $order->getId()]));
     }
 
     /**
@@ -378,5 +243,14 @@ class PayPal extends AbstractPaymentModule
             ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
             ->autowire(true)
             ->autoconfigure(true);
+    }
+
+    public static function getBaseUrl()
+    {
+        if ((bool)PayPal::getConfigValue('sandbox') === true){
+            return self::PAYPAL_API_BASE_SANDBOX_URL;
+        }
+
+        return self::PAYPAL_API_BASE_URL;
     }
 }

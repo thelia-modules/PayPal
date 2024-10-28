@@ -55,6 +55,7 @@ DROP TABLE IF EXISTS `paypal_planified_payment`;
 CREATE TABLE `paypal_planified_payment`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `paypal_id` VARCHAR(255) NOT NULL,
     `frequency` VARCHAR(255) NOT NULL,
     `frequency_interval` INTEGER NOT NULL,
     `cycle` INTEGER NOT NULL,

@@ -31,6 +31,7 @@ use PayPal\Form\PayPalPlanifiedPaymentUpdateForm;
 use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -39,7 +40,9 @@ use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Template\ParserContext;
 use Symfony\Component\Routing\Annotation\Route;
+use Thelia\Model\LangQuery;
 use Thelia\Tools\TokenProvider;
+use Thelia\Tools\URL;
 
 /**
  * @Route("/admin/module/paypal/configure/planified", name="configure_planified")
@@ -143,8 +146,17 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     protected function hydrateObjectForm(ParserContext $parserContext, $object)
     {
         /** @var \Thelia\Model\Lang $lang */
-        $parserContext->getSession()->get('thelia.current.lang');
-        $object->getTranslation($lang->getLocale());
+        $lang = $parserContext->getSession()->get('thelia.admin.edition.lang');
+        $editLanguageId = $this->getRequest()->get('edit_language_id');
+
+        if (
+            null !== $editLanguageId &&
+            null !== $editLang = LangQuery::create()->findPk($editLanguageId)
+        ){
+            $lang = $editLang;
+        }
+
+        $object->setLocale($lang->getLocale());
 
         $data = [
             PayPalFormFields::FIELD_PP_ID => $object->getId(),
@@ -158,7 +170,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
             PayPalFormFields::FIELD_PP_POSITION => $object->getPosition()
         ];
 
-        return $this->createForm(PayPalPlanifiedPaymentUpdateForm::getName(), 'form', $data);
+        return $this->createForm(PayPalPlanifiedPaymentUpdateForm::getName(), FormType::class, $data);
     }
 
     /**
@@ -328,11 +340,9 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      */
     protected function redirectToEditionTemplate()
     {
-        return $this->generateRedirectFromRoute(
-            'paypal.admin.configuration.planified.update',
-            [],
-            $this->getEditionArguments()
-        );
+        $result = $this->getEditionArguments();
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/paypal/configure/planified/'.$result['planifiedPaymentId']));
+
     }
 
     /**

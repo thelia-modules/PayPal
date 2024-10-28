@@ -38,6 +38,7 @@
 
     <table name="paypal_planified_payment" namespace="PayPal\Model">
         <column name="id" autoIncrement="true" primaryKey="true" required="true" type="INTEGER" />
+        <column name="paypal_id" size="255" type="VARCHAR" required="true" />
         <column name="title" size="255" type="VARCHAR" required="true" />
         <column name="description" type="CLOB" />
         <column name="frequency" size="255" type="VARCHAR" required="true" />
