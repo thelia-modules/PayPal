@@ -1,0 +1,11 @@
+<form id="paypal-express-checkout" method="post" action="{url path='/module/paypal/express/checkout'}" class="pull-right"></form>
+<script>
+    window.paypalCheckoutReady = function() {
+        paypal.checkout.setup('{$paypal_merchantid}', {
+            environment: '{$paypal_mode}',
+            container: 'paypal-express-checkout',
+            locale: '{lang attr="locale"}'
+        });
+    };
+</script>
+<script src="//www.paypalobjects.com/api/checkout.js" async></script>

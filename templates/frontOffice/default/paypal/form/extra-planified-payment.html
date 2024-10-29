@@ -1,0 +1,26 @@
+{assign var="methodName" value=$name}
+{form_field field='paypal_planified_payment'}
+    {if count($choices) > 0}
+    <fieldset class="col-xs-11 col-xs-offset-1">
+        <input type="radio" id="{$label_attr.for}{$choice->label}" class="paypal-method" name="{$methodName}" data-content="#content-paypal-planified-payment" value="{$choice->label}" {if $value == $choice->label}checked{/if}/>
+        <label class="control-label" for="{$label_attr.for}{$choice->label}"><strong>{intl l=$choice->label d="paypal.fo.default"}</strong>&nbsp;:<br />{if $required} <span class="required">*</span>{/if}</label>
+        <div id="content-paypal-planified-payment" class="hidden">
+            {foreach $choices as $choice}
+            {assign var="planifiedPayment" value=$choice->data}
+            <div class="form-group row{if $error} has-error{/if}">
+                <div class="control-input col-sm-5">
+                    <input type="radio" id="{$label_attr.for}{$planifiedPayment->getId()}" name="{$name}" value="{$planifiedPayment->getId()}" {if $value == $planifiedPayment->getId()}checked{/if}/>
+                    <label class="control-label" for="{$label_attr.for}{$planifiedPayment->getId()}"><strong>{$planifiedPayment->getTitle()}</strong>&nbsp;:<br />{if $required} <span class="required">*</span>{/if}</label>
+                    <div class="row">
+                        <div class="col-md-12">
+                            {$planifiedPayment->getDescription()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/foreach}
+        </div>
+    </fieldset>
+    {/if}
+{/form_field}
+
