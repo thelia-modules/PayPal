@@ -44,7 +44,7 @@ class PayPalApiController extends BaseFrontController
                         'reference_id' => $order->getRef(),
                         'amount' => [
                             'currency_code' => $currency?->getCode(),
-                            'value' => $order->getTotalAmount($tax, true, true)
+                            'value' => round($order->getTotalAmount($tax, true, true), 2)
                         ]
                     ]
                 ]
