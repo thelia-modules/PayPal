@@ -1,0 +1,21 @@
+{form name="thelia.order.payment"}
+<div id="paypal-methods" class="row hidden">
+    <hr>
+    {form_field field='paypal_method'}
+        {foreach from=$choices item=choice}
+
+            {if $choice->label == 'paypal' && {module_config key="method_paypal" module="PayPal" locale="en_US"} == 1}
+                {include file="paypal/form/extra-paypal.html"}
+            {/if}
+
+            {if $choice->label == 'credit_card' && {module_config key="method_credit_card" module="PayPal" locale="en_US"} == 1}
+                {include file="paypal/form/extra-credit-card.html"}
+            {/if}
+
+            {if $choice->label == 'planified_payment' && {module_config key="method_planified_payment" module="PayPal" locale="en_US"} == 1}
+                {include file="paypal/form/extra-planified-payment.html"}
+            {/if}
+        {/foreach}
+    {/form_field}
+</div>
+{/form}

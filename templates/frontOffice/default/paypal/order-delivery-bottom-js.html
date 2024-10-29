@@ -1,0 +1,7 @@
+<script>
+    $('#form-cart-delivery button:submit').each(function() {
+        if (!$(this).hasClass('paypal')) {
+            $(this).addClass('hidden');
+        }
+    });
+</script>

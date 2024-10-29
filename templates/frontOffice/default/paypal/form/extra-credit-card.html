@@ -1,0 +1,85 @@
+<fieldset class="col-xs-11 col-xs-offset-1">
+    <input type="radio" id="{$label_attr.for}{$choice->label}" class="paypal-method" name="{$name}" data-content="#content-paypal-credit-card" value="{$choice->label}" {if $value == $choice->label}checked{/if}/>
+    <label class="control-label" for="{$label_attr.for}{$choice->label}"><strong>{intl l=$choice->label d="paypal.fo.default"}</strong>&nbsp;:<br />{if $required} <span class="required">*</span>{/if}</label>
+    <img src="{image file='assets/cards-logo.jpg' source="PayPal"}" border="0" alt="CB / VISA / Mastercard" />
+
+    <div id="content-paypal-credit-card" class="hidden">
+        {form_field field='paypal_credit_card_type.card_type'}
+        <div class="form-group row{if $error} has-error{/if}">
+            <label class="control-label col-sm-3" for="{$label_attr.for}">{$label}{if $required} <span class="required">*</span>{/if}</label>
+            <div class="control-input col-sm-5">
+
+                <select name="{$name}" id="{$label_attr.for}">
+                    {foreach from=$choices item=type}
+                    <option value="{$type->value}">{$type->label}</option>
+                    {/foreach}
+                </select>
+                {if $error }
+                <span class="help-block">{$message}</span>
+                {assign var="error_focus" value="true"}
+                {/if}
+            </div>
+        </div>
+        {/form_field}
+
+        {form_field field='paypal_credit_card_type.card_number'}
+        <div class="form-group row{if $error} has-error{/if}">
+            <label class="control-label col-sm-3" for="{$label_attr.for}">{$label}{if $required} <span class="required">*</span>{/if}</label>
+            <div class="control-input col-sm-5">
+                <input type="text" name="{$name}" id="{$label_attr.for}" value="" />
+            </div>
+            {if $error }
+            <span class="help-block">{$message}</span>
+            {assign var="error_focus" value="true"}
+            {/if}
+        </div>
+        {/form_field}
+
+        {form_field field='paypal_credit_card_type.card_expire_month'}
+        <div class="form-group row{if $error} has-error{/if}">
+            <label class="control-label col-sm-3" for="{$label_attr.for}">{$label}{if $required} <span class="required">*</span>{/if}</label>
+            <div class="control-input col-sm-5">
+                <select name="{$name}" id="{$label_attr.for}">
+                    {foreach from=$choices item=type}
+                    <option value="{$type->value}">{$type->label}</option>
+                    {/foreach}
+                </select>
+                {if $error }
+                <span class="help-block">{$message}</span>
+                {assign var="error_focus" value="true"}
+                {/if}
+            </div>
+        </div>
+        {/form_field}
+
+        {form_field field='paypal_credit_card_type.card_expire_year'}
+        <div class="form-group row{if $error} has-error{/if}">
+            <label class="control-label col-sm-3" for="{$label_attr.for}">{$label}{if $required} <span class="required">*</span>{/if}</label>
+            <div class="control-input col-sm-5">
+                <select name="{$name}" id="{$label_attr.for}">
+                    {foreach from=$choices item=type}
+                    <option value="{$type->value}">{$type->label}</option>
+                    {/foreach}
+                </select>
+                {if $error }
+                <span class="help-block">{$message}</span>
+                {assign var="error_focus" value="true"}
+                {/if}
+            </div>
+        </div>
+        {/form_field}
+
+        {form_field field='paypal_credit_card_type.card_cvv'}
+        <div class="form-group row{if $error} has-error{/if}">
+            <label class="control-label col-sm-3" for="{$label_attr.for}">{$label}{if $required} <span class="required">*</span>{/if}</label>
+            <div class="control-input col-sm-5">
+                <input type="text" name="{$name}" id="{$label_attr.for}" value="" />
+                {if $error }
+                <span class="help-block">{$message}</span>
+                {assign var="error_focus" value="true"}
+                {/if}
+            </div>
+        </div>
+        {/form_field}
+    </div>
+</fieldset>

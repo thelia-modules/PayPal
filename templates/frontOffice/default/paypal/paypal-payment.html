@@ -114,6 +114,8 @@
         </script>
     {else}
         <script>
+            const orderId = {$order_id};
+
             async function createPaypalOrder(orderId)
             {
                 try {
@@ -145,21 +147,17 @@
                 }
             }
 
-            const orderId = {$order_id};
-
-            createPaypalOrder(orderId).then(order => {
-                if (order) {
-                    console.log('Order:', order);-
-                        paypal.Buttons({
-                            onApprove: function (data, actions) {
-                                window.location.href = `/order/placed/{$order_id}`;
-                            }
-                        }).render('#paypal-button-container'); // Renders the PayPal button
-
-                } else {
-                    console.error('Failed to create PayPal order');
+            paypal.Buttons({
+                createOrder: function(data, actions) {
+                    return createPaypalOrder(orderId)
+                },
+                onApprove: function (data, actions) {
+                    console.log('test Paypal')
+                    console.log(data.orderID)
+                    window.location.href = `/order/placed/{$order_id}`;
                 }
-            });
+            }).render('#paypal-button-container');
+
         </script>
     {/if}
 {/block}
