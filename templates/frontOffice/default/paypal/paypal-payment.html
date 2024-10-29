@@ -1,34 +1,168 @@
 {extends file="layout.tpl"}
 
-
-{*{block name="main-content"}
-    <button class="btn-success btn" id="paypalButton">TEST PAYPAL</button>
-    <br>
-    <input type="text" class="form-control" id="paypalIdSave">
+{* Security *}
+{block name="no-return-functions" prepend}
+    {check_auth role="CUSTOMER" login_tpl="login"}
+    {check_cart_not_empty}
 {/block}
 
-{block name="javascript-data"}
-    <script>
-        let paypalButton = document.getElementById("paypalButton")
-        let capturePaypalButton = document.getElementById("capturePaypalButton")
-        let paypalId = document.getElementById("paypalIdSave")
+{* Body Class *}
+{block name="body-class"}order-gateway-paypal{/block}
 
-        let payFunction = async function (e){
-            fetch("/paypal/api/pay", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    "order_id" : {$order_id},
-                    "return_url": "{url path='/order-invoice'}",
-                    "cancel_url": "{url path='/order-invoice'}"
-                })
-            }).then((response => response.json()))
-                .then(orderData => paypalId.value = JSON.parse(orderData).id)
+{block name="header"}
+    {include file="components/smarty/Header/Header.html" lite=true}
+{/block}
 
-        }
+{block name="navigation"}
+    {* hide nav *}
+{/block}
 
-        paypalButton.addEventListener('click', payFunction)
+{block name="minicart"}
+    {* hide minicart *}
+{/block}
+
+{block name="modals"}
+    {* hide modals *}
+{/block}
+
+{block name="css" append}
+    {hook name="order-failed.stylesheet"}
+{/block}
+
+{block name="main-content"}
+    <div class="Paypal">
+        <nav class="Steps">
+            <ul class="Steps-list">
+                <li class="Steps-item Steps-item--active">
+                    <span class="Steps-number">1</span>
+                    <span class="Steps-name">{intl l="Finalisation Paiement - PayPal"}</span>
+                </li>
+            </ul>
+        </nav>
+        <section class="container">
+            <div class="Paypal-container grid h-full md:grid-cols-2 grid-cols-1 my-8 gap-6 items-center">
+                <div class="Paypal-headers">
+                    <h1 class="text-2xl">{intl l="PayPal - Sélection de paiement"}</h1>
+                    <p>{intl l="Afin de finaliser la commande via PayPal merci de sélectionner votre moyen de paiement :"}</p>
+                    <p>{intl l="Vous avez choisi le mode :"} {if $intent eq 'subscription'}<span>{$plan_title} - {$plan_description}</span>{else} {intl l='PayPal - Unique payment mode'}{/if}</p>
+                </div>
+                <div class="Paypal-actions flex-col" style="">
+                    <div id="paypal-button-container"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="https://www.paypal.com/sdk/js?client-id={$paypal_client_id}&currency={currency attr="code"}&intent={$intent}&commit=false&vault=true">
+        // Replace YOUR_CLIENT_ID with your sandbox client ID
     </script>
-{/block}*}
+
+    {if $intent eq 'subscription'}
+        <script>
+            async function createPaypalPlanifiedOrder(orderId, planifiedPaymentId)
+            {
+                try {
+                    const response = await fetch("/paypal/api/pay", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            order_id: orderId,
+                            return_url: "{url path='/order-invoice'}",
+                            cancel_url: "{url path='/order-invoice'}",
+                            planified_payment_id: planifiedPaymentId
+                        }),
+                    });
+
+                    const order = await response.json();
+
+                    if (!response.ok) {
+                        console.error('Error:', order.error.message);
+                        return null;
+                    }
+
+                    const parsedOrder = JSON.parse(order);
+                    return parsedOrder.id;
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    return null;
+                }
+            }
+
+            const orderId = {$order_id};
+            const planifiedPaymentId = {$planified_payment_id};
+
+            createPaypalPlanifiedOrder(orderId, planifiedPaymentId).then(planId => {
+                if (planId) {
+
+                    paypal.Buttons({
+                        createSubscription: function (data, actions) {
+                            return actions.subscription.create({
+                                'plan_id': planId // Creates the subscription
+                            });
+                        },
+                        onApprove: function (data, actions) {
+                            window.location.href = `/order/placed/{$order_id}`;
+                        }
+                    }).render('#paypal-button-container'); // Renders the PayPal button
+
+                } else {
+                    console.error('Failed to create PayPal order');
+                }
+            });
+        </script>
+    {else}
+        <script>
+            async function createPaypalOrder(orderId)
+            {
+                try {
+                    const response = await fetch("/paypal/api/pay", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            order_id: orderId,
+                            return_url: "{url path='/order-invoice'}",
+                            cancel_url: "{url path='/order-invoice'}",
+                        }),
+                    });
+
+                    const order = await response.json();
+
+                    if (!response.ok) {
+                        console.error('Error:', order.error.message);
+                        return null;
+                    }
+
+                    const parsedOrder = JSON.parse(order);
+                    return parsedOrder.id;
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    return null;
+                }
+            }
+
+            const orderId = {$order_id};
+
+            createPaypalOrder(orderId).then(order => {
+                if (order) {
+                    console.log('Order:', order);-
+                        paypal.Buttons({
+                            onApprove: function (data, actions) {
+                                window.location.href = `/order/placed/{$order_id}`;
+                            }
+                        }).render('#paypal-button-container'); // Renders the PayPal button
+
+                } else {
+                    console.error('Failed to create PayPal order');
+                }
+            });
+        </script>
+    {/if}
+{/block}
+
+{block name="footer"}
+{/block}
