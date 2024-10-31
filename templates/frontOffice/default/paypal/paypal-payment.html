@@ -147,14 +147,46 @@
                 }
             }
 
+            async function capturePaypalOrder(orderId)
+            {
+                try {
+                    const response = await fetch("/paypal/api/capture", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            order_id: orderId
+                        }),
+                    });
+
+                    const order = await response.json();
+
+                    if (!response.ok) {
+                        console.error('Error:', order.error.message);
+                        return null;
+                    }
+
+                    const parsedOrder = JSON.parse(order);
+
+                    if (parsedOrder.status === "COMPLETED") {
+                        window.location.href = `/order/placed/{$order_id}`;
+                    } else {
+                        window.location.href = `/order-failed`;
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    return null;
+                }
+            }
+
             paypal.Buttons({
                 createOrder: function(data, actions) {
-                    return createPaypalOrder(orderId)
+                    return createPaypalOrder(orderId);
                 },
                 onApprove: function (data, actions) {
-                    console.log('test Paypal')
-                    console.log(data.orderID)
-                    window.location.href = `/order/placed/{$order_id}`;
+                    capturePaypalOrder(orderId);
                 }
             }).render('#paypal-button-container');
 

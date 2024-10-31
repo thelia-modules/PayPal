@@ -9,10 +9,15 @@ use PayPal\Service\PayPalApiService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
+use Thelia\Core\Event\Order\OrderEvent;
+use Thelia\Core\Event\TheliaEvents;
 use Thelia\Log\Tlog;
+use Thelia\Model\Base\OrderStatusQuery;
 use Thelia\Model\CurrencyQuery;
 use Thelia\Model\OrderQuery;
+use Thelia\Model\OrderStatus;
 
 #[Route("/paypal/api", name: "paypal_api_")]
 class PayPalApiController extends BaseFrontController
@@ -94,7 +99,7 @@ class PayPalApiController extends BaseFrontController
     }
 
     #[Route("/capture", name: "capture", methods: "POST")]
-    public function captureOrder(Request $request, PayPalApiService $payPalApiService)
+    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher)
     {
         try {
             $data = json_decode($request->getContent(), true);
@@ -107,6 +112,12 @@ class PayPalApiController extends BaseFrontController
             );
 
             $responseContent = $response->getContent();
+            $status = json_decode($responseContent, true)['status'];
+            if ("COMPLETED" === $status){
+                $event = new OrderEvent($paypalOrder->getOrder());
+                $event->setStatus(OrderStatusQuery::create()->filterByCode(OrderStatus::CODE_PAID)->findOne()?->getId());
+                $dispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
+            }
             return new JsonResponse($responseContent);
         } catch (\Exception $exception) {
             Tlog::getInstance()->error($exception->getMessage());
