@@ -52,9 +52,14 @@
             </div>
         </section>
     </div>
-    <script src="https://www.paypal.com/sdk/js?client-id={$paypal_client_id}&currency={currency attr="code"}&intent={$intent}&commit=false&vault=true">
-        // Replace YOUR_CLIENT_ID with your sandbox client ID
-    </script>
+    {$fundings = "paylater,card"}
+    {if $intent eq 'subscription'}
+        {$fundings = "card"}
+    {/if}
+
+    <script
+            src="https://www.paypal.com/sdk/js?client-id={$paypal_client_id}&currency={currency attr="code"}&intent={$intent}&components=buttons&enable-funding={$fundings}"
+    ></script>
 
     {if $intent eq 'subscription'}
         <script>
