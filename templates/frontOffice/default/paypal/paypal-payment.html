@@ -52,13 +52,9 @@
             </div>
         </section>
     </div>
-    {$fundings = "paylater,card"}
-    {if $intent eq 'subscription'}
-        {$fundings = "card"}
-    {/if}
 
     <script
-            src="https://www.paypal.com/sdk/js?client-id={$paypal_client_id}&currency={currency attr="code"}&intent={$intent}&components=buttons&enable-funding={$fundings}"
+            src="https://www.paypal.com/sdk/js?client-id={$paypal_client_id}&currency={currency attr="code"}&intent={$intent}&components=buttons&enable-funding=paylater,card{if $intent eq 'subscription'}&vault=true{/if}"
     ></script>
 
     {if $intent eq 'subscription'}
