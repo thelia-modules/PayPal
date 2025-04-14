@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Order\OrderEvent;
+use Thelia\Core\Event\Order\OrderPayTotalEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Log\Tlog;
 use Thelia\Model\Base\OrderStatusQuery;
@@ -24,23 +25,31 @@ class PayPalApiController extends BaseFrontController
 {
 
     #[Route("/pay", name: "pay", methods: "POST")]
-    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService){
+    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher){
         $data = json_decode($request->getContent(), true);
 
         if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
             return $this->createPlan($request, $payPalApiService, $data);
         }
 
-        return $this->createOrder($request, $payPalApiService, $data);
+        return $this->createOrder($request, $payPalApiService, $eventDispatcher, $data);
     }
 
 
-    public function createOrder(Request $request, PayPalApiService $payPalApiService, $data)
+    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data)
     {
         try {
             $order = OrderQuery::create()->findPk($data['order_id']);
 
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
+
+            $orderPayEvent = new OrderPayTotalEvent($order);
+            $orderPayEvent
+                ->setTax(0)
+                ->setIncludePostage(true)
+                ->setIncludeDiscount(true);
+
+            $eventDispatcher->dispatch($orderPayEvent, TheliaEvents::ORDER_PAY_GET_TOTAL);
 
             $body = [
                 'intent' => 'CAPTURE',
@@ -49,7 +58,7 @@ class PayPalApiController extends BaseFrontController
                         'reference_id' => $order->getRef(),
                         'amount' => [
                             'currency_code' => $currency?->getCode(),
-                            'value' => round($order->getTotalAmount($tax, true, true), 2)
+                            'value' => round($orderPayEvent->getTotal(), 2)
                         ]
                     ]
                 ]
