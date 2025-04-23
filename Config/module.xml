@@ -14,6 +14,21 @@
     <descriptive locale="fr_FR">
         <title>PayPal</title>
     </descriptive>
+    <descriptive locale="it_IT">
+        <title>PayPal</title>
+    </descriptive>
+    <descriptive locale="es_ES">
+        <title>PayPal</title>
+    </descriptive>
+    <descriptive locale="de_DE">
+        <title>PayPal</title>
+    </descriptive>
+    <descriptive locale="ru_RU">
+        <title>PayPal</title>
+    </descriptive>
+    <descriptive locale="cs_CZ">
+        <title>PayPal</title>
+    </descriptive>
     <!-- <logo></logo> -->
     <!--<images-folder>images</images-folder>-->
     <languages>
