@@ -37,6 +37,7 @@ use PayPal\Event\PayPalOrderEvent;
 use PayPal\Model\PaypalCart;
 use PayPal\Model\PaypalCartQuery;
 use PayPal\Model\PaypalOrder;
+use PayPal\Model\PaypalOrderQuery;
 use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\PayPal;
 use PayPal\Rest\ApiContext;
@@ -94,30 +95,32 @@ class PayPalBaseService
      */
     public function generatePayPalOrder(Order $order, $creditCardId = null, PaypalPlanifiedPayment $planifiedPayment = null)
     {
-        $payPalOrder = new PaypalOrder();
-        $payPalOrder
-            ->setId($order->getId())
-            ->setAmount($order->getTotalAmount())
-        ;
-
-        if (null !== $creditCardId) {
-            $payPalOrder->setCreditCardId($creditCardId);
-        }
-
-        if (null !== $planifiedPayment) {
-            /** @var Lang $lang */
-            $lang = $this->requestStack->getCurrentRequest()->getSession()->get('thelia.current.lang');
-            $planifiedPayment->getTranslation($lang->getLocale());
-
+        if (null === $payPalOrder = PaypalOrderQuery::create()->findOneById($order->getId())) {
+            $payPalOrder = new PaypalOrder();
             $payPalOrder
-                ->setPlanifiedTitle($planifiedPayment->getTitle())
-                ->setPlanifiedDescription($planifiedPayment->getDescription())
-                ->setPlanifiedFrequency($planifiedPayment->getFrequency())
-                ->setPlanifiedFrequencyInterval($planifiedPayment->getFrequencyInterval())
-                ->setPlanifiedCycle($planifiedPayment->getCycle())
-                ->setPlanifiedMinAmount($planifiedPayment->getMinAmount())
-                ->setPlanifiedMaxAmount($planifiedPayment->getMaxAmount())
+                ->setId($order->getId())
+                ->setAmount($order->getTotalAmount())
             ;
+
+            if (null !== $creditCardId) {
+                $payPalOrder->setCreditCardId($creditCardId);
+            }
+
+            if (null !== $planifiedPayment) {
+                /** @var Lang $lang */
+                $lang = $this->requestStack->getCurrentRequest()->getSession()->get('thelia.current.lang');
+                $planifiedPayment->getTranslation($lang->getLocale());
+
+                $payPalOrder
+                    ->setPlanifiedTitle($planifiedPayment->getTitle())
+                    ->setPlanifiedDescription($planifiedPayment->getDescription())
+                    ->setPlanifiedFrequency($planifiedPayment->getFrequency())
+                    ->setPlanifiedFrequencyInterval($planifiedPayment->getFrequencyInterval())
+                    ->setPlanifiedCycle($planifiedPayment->getCycle())
+                    ->setPlanifiedMinAmount($planifiedPayment->getMinAmount())
+                    ->setPlanifiedMaxAmount($planifiedPayment->getMaxAmount())
+                ;
+            }
         }
 
         $payPalOrderEvent = new PayPalOrderEvent($payPalOrder);
