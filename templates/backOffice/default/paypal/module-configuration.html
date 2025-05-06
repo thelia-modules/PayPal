@@ -214,6 +214,11 @@
                                         {/custom_render_form_field}
 
                                         {render_form_field form=$form field="cart_item_count" value=$cart_item_count}
+
+                                        {custom_render_form_field form=$form field="keep_order"}
+                                        <input type="checkbox" {form_field_attributes form=$form field="keep_order"} {if $keep_order|default:null}checked{/if}>
+                                        {$label}
+                                        {/custom_render_form_field}
                                     </div>
                                 </div>
                             </div>
