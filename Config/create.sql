@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS `paypal_customer`
     PRIMARY KEY (`id`,`paypal_user_id`),
     CONSTRAINT `fk_paypal_payer_customer_id`
         FOREIGN KEY (`id`)
-        REFERENCES `customer` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE
+            REFERENCES `customer` (`id`)
+            ON UPDATE RESTRICT
+            ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS `paypal_customer`
 CREATE TABLE IF NOT EXISTS `paypal_planified_payment`
 (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `paypal_id` VARCHAR(255) NOT NULL,
     `frequency` VARCHAR(255) NOT NULL,
     `frequency_interval` INTEGER NOT NULL,
     `cycle` INTEGER NOT NULL,
@@ -64,7 +65,6 @@ CREATE TABLE IF NOT EXISTS `paypal_planified_payment`
 -- ---------------------------------------------------------------------
 -- paypal_cart
 -- ---------------------------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `paypal_cart`
 (
     `id` INTEGER NOT NULL,
@@ -79,14 +79,14 @@ CREATE TABLE IF NOT EXISTS `paypal_cart`
     INDEX `fi_paypal_cart_planified_payment_id` (`planified_payment_id`),
     CONSTRAINT `fk_paypal_cart_cart_id`
         FOREIGN KEY (`id`)
-        REFERENCES `cart` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE,
+            REFERENCES `cart` (`id`)
+            ON UPDATE RESTRICT
+            ON DELETE CASCADE,
     CONSTRAINT `fk_paypal_cart_planified_payment_id`
         FOREIGN KEY (`planified_payment_id`)
-        REFERENCES `paypal_planified_payment` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE
+            REFERENCES `paypal_planified_payment` (`id`)
+            ON UPDATE RESTRICT
+            ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -117,9 +117,9 @@ CREATE TABLE IF NOT EXISTS `paypal_order`
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_paypal_order_order_id`
         FOREIGN KEY (`id`)
-        REFERENCES `order` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE
+            REFERENCES `order` (`id`)
+            ON UPDATE RESTRICT
+            ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -138,9 +138,9 @@ CREATE TABLE IF NOT EXISTS `paypal_plan`
     INDEX `fi_paypal_plan_paypal_order_id` (`paypal_order_id`),
     CONSTRAINT `fk_paypal_plan_paypal_order_id`
         FOREIGN KEY (`paypal_order_id`)
-        REFERENCES `paypal_order` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE
+            REFERENCES `paypal_order` (`id`)
+            ON UPDATE RESTRICT
+            ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -164,14 +164,14 @@ CREATE TABLE IF NOT EXISTS `paypal_log`
     INDEX `fi_paypal_log_order_id` (`order_id`),
     CONSTRAINT `fk_paypal_log_customer_id`
         FOREIGN KEY (`customer_id`)
-        REFERENCES `customer` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE,
+            REFERENCES `customer` (`id`)
+            ON UPDATE RESTRICT
+            ON DELETE CASCADE,
     CONSTRAINT `fk_paypal_log_order_id`
         FOREIGN KEY (`order_id`)
-        REFERENCES `order` (`id`)
-        ON UPDATE RESTRICT
-        ON DELETE CASCADE
+            REFERENCES `order` (`id`)
+            ON UPDATE RESTRICT
+            ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -187,8 +187,8 @@ CREATE TABLE IF NOT EXISTS `paypal_planified_payment_i18n`
     PRIMARY KEY (`id`,`locale`),
     CONSTRAINT `paypal_planified_payment_i18n_fk_c9dfe7`
         FOREIGN KEY (`id`)
-        REFERENCES `paypal_planified_payment` (`id`)
-        ON DELETE CASCADE
+            REFERENCES `paypal_planified_payment` (`id`)
+            ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 # This restores the fkey checks, after having unset them earlier
