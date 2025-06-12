@@ -43,7 +43,7 @@ class FrontHookManager extends BaseHook
     protected $requestStack;
 
     /** @var ContainerInterface */
-    protected $container;
+    public \Psr\Container\ContainerInterface $container;
 
     /**
      * FrontHookManager constructor.
@@ -52,6 +52,8 @@ class FrontHookManager extends BaseHook
      */
     public function __construct(RequestStack $requestStack, ContainerInterface $container)
     {
+        parent::__construct(); 
+
         $this->requestStack = $requestStack;
         $this->container = $container;
     }

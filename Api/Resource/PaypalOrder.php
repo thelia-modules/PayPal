@@ -15,7 +15,11 @@ use Thelia\Api\Resource\Order;
 use Thelia\Api\Resource\PropelResourceInterface;
 use Thelia\Api\Resource\PropelResourceTrait;
 use Thelia\Api\Resource\ResourceAddonInterface;
+use ApiPlatform\Metadata\ApiFilter;
 use Thelia\Api\Resource\ResourceAddonTrait;
+use Thelia\Api\Bridge\Propel\Filter\SearchFilter;
+use Thelia\Api\Bridge\Propel\Filter\OrderFilter;
+
 
 #[ApiResource(
     operations: [
@@ -46,6 +50,18 @@ use Thelia\Api\Resource\ResourceAddonTrait;
         ),
     ],
     normalizationContext: ['groups' => [self::GROUP_READ_ADMIN]]
+)]
+#[ApiFilter(
+    filterClass: SearchFilter::class,
+    properties: [
+        'id' => 'exact',
+    ]
+)]
+#[ApiFilter(
+    filterClass: OrderFilter::class,
+    properties: [
+        'id',
+    ]
 )]
 class PaypalOrder implements PropelResourceInterface, ResourceAddonInterface
 {
