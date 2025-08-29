@@ -5,6 +5,7 @@ namespace PayPal\Migration;
 use ApyUtilities\Model\Migration\AbstractMigration;
 use PDO;
 use Propel\Runtime\Propel;
+use Thelia\Model\ModuleI18n;
 use Thelia\Model\ModuleI18nQuery;
 
 /**
@@ -84,16 +85,16 @@ class Migration20250423104754 extends AbstractMigration
      */
     private function needMigration(): bool
     {
-        foreach(self::AVAILABLE_LANGUAGES as $lang) {
+        foreach (self::AVAILABLE_LANGUAGES as $lang) {
             $PaypalModuleLanguages = ModuleI18nQuery::create()->filterByLocale($lang)
                 ->filterByTitle('PayPal')
                 ->findOne();
 
-            if (null === $PaypalModuleLanguages) {
+            if (!$PaypalModuleLanguages instanceof ModuleI18n) {
                 $this->missingLanguages[] = $lang;
-                return true;
             }
         }
-        return false;
+
+        return !empty($this->missingLanguages);
     }
 }
