@@ -23,7 +23,7 @@
 
 namespace PayPal\Controller;
 
-use ApyMyBox\Helper\OrderHelper;
+use ApyUtilities\ApyUtilities;
 use ApyUtilities\Event\PaymentEventInterface;
 use ApyUtilities\Interfaces\OrderHelperInterface;
 use Front\Controller\OrderController;
@@ -116,7 +116,10 @@ class PayPalResponseController extends OrderController
             $order       = OrderQuery::create()->findOneById($orderId);
 
             // Si la commande est déjà en statut "payé", on ne rejoue pas le processus de paiement
-            if (OrderHelper::isOrderPaid($order)) {
+            if (ApyUtilities::isSecretBox() && \ApyMyBox\Helper\OrderHelper::isOrderPaid($order)) {
+                return;
+            }
+            if (ApyUtilities::isShopAndGo() && \ApyShopAndGo\Helper\OrderHelper::isOrderPaid($order)) {
                 return;
             }
 
