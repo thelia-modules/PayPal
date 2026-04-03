@@ -23,7 +23,6 @@
 
 namespace PayPal\Controller;
 
-use ApyUtilities\ApyUtilities;
 use ApyUtilities\Event\PaymentEventInterface;
 use ApyUtilities\Interfaces\OrderHelperInterface;
 use Front\Controller\OrderController;
@@ -97,14 +96,19 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @param $orderId
-     * @param RequestStack $requestStack
+     * @param                          $orderId
+     * @param RequestStack             $requestStack
      * @param EventDispatcherInterface $eventDispatcher
+     * @param OrderHelperInterface     $orderHelper
      * @return RedirectResponse|void
      * @Route("/module/paypal/ok/{orderId}", name="_ok", methods="GET")
      */
-    public function okAction($orderId, RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
-    {
+    public function okAction(
+        $orderId,
+        RequestStack $requestStack,
+        EventDispatcherInterface $eventDispatcher,
+        OrderHelperInterface $orderHelper
+    ) {
         $con = Propel::getConnection();
         $con->beginTransaction();
 
@@ -116,17 +120,18 @@ class PayPalResponseController extends OrderController
             $order       = OrderQuery::create()->findOneById($orderId);
 
             // Si la commande est déjà en statut "payé", on ne rejoue pas le processus de paiement
-            if (ApyUtilities::isSecretBox() && \ApyMyBox\Helper\OrderHelper::isOrderPaid($order)) {
-                return;
-            }
-            if (ApyUtilities::isShopAndGo() && \ApyShopAndGo\Helper\OrderHelper::isOrderPaid($order)) {
+            if ($orderHelper::isOrderPaid($order)) {
                 return;
             }
 
             if (null !== $payPalOrder && null !== $payerId) {
-
-                $response = $this->executePayment($eventDispatcher, $payPalOrder, $payPalOrder->getPaymentId(),
-                    $payerId, $token);
+                $response = $this->executePayment(
+                    $eventDispatcher,
+                    $payPalOrder,
+                    $payPalOrder->getPaymentId(),
+                    $payerId,
+                    $token
+                );
             } else {
                 $con->rollBack();
                 $message = Translator::getInstance()->trans(
