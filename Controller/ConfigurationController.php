@@ -34,10 +34,9 @@ use Thelia\Core\Translation\Translator;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Tools\URL;
 use Thelia\Tools\Version\Version;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * @Route("/admin/module/paypal/configure", name="paypal_configure")
  * Class ConfigurePaypal
  * @package Paypal\Controller
  */
@@ -50,6 +49,7 @@ class ConfigurationController extends BaseAdminController
      * @return mixed|\Symfony\Component\HttpFoundation\Response|\Thelia\Core\HttpFoundation\Response
      * @Route("", name="_save", methods="POSt")
      */
+    #[Route('/admin/module/paypal/configure', name: 'paypal_configure')]
     public function configureAction(RequestStack $requestStack, Translator $translator)
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Paypal', AccessManager::UPDATE)) {
@@ -110,8 +110,8 @@ class ConfigurationController extends BaseAdminController
 
     /**
      * @return \Thelia\Core\HttpFoundation\Response
-     * @Route("/log", name="_log", methods="GET")
      */
+    #[Route('/log', name: '_log', methods: ['GET'])]
     public function logAction()
     {
         return $this->render('paypal/paypal-log');

@@ -70,10 +70,9 @@ use Thelia\Model\OrderQuery;
 use Thelia\Model\OrderStatusQuery;
 use Thelia\Module\Exception\DeliveryException;
 use Thelia\Tools\URL;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * @Route("", name="paypal")
  * Class PayPalResponseController
  * @package PayPal\Controller
  */
@@ -84,6 +83,7 @@ class PayPalResponseController extends OrderController
      * @param EventDispatcherInterface $eventDispatcher
      * @Route("/module/paypal/cancel/{orderId}", name="_cancel", methods="GET")
      */
+    #[Route(', name=', name: 'paypal')]
     public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher)
     {
         if (!$order = OrderQuery::create()->findOneById($orderId)) {
@@ -105,8 +105,8 @@ class PayPalResponseController extends OrderController
      * @param RequestStack $requestStack
      * @param EventDispatcherInterface $eventDispatcher
      * @return RedirectResponse
-     * @Route("/module/paypal/ok/{orderId}", name="_ok", methods="GET")
      */
+    #[Route('/module/paypal/ok/{orderId}', name: '_ok', methods: ['GET'])]
     public function okAction($orderId, RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
     {
         $con = Propel::getConnection();
@@ -175,8 +175,8 @@ class PayPalResponseController extends OrderController
      * @param string $routeId
      * @param bool $fromCartView
      * @return RedirectResponse
-     * @Route("/module/paypal/express/checkout", name="_express_checkout", methods="POST")
      */
+    #[Route('/module/paypal/express/checkout', name: '_express_checkout', methods: ['POST'])]
     public function expressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $dispatcher, $routeId = 'cart.view', $fromCartView = true)
     {
         $session = $requestStack->getCurrentRequest()->getSession();
@@ -201,8 +201,8 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @Route("/module/paypal/invoice/express/checkout", name="_invoice_express_checkout", methods="POST")
      */
+    #[Route('/module/paypal/invoice/express/checkout', name: '_invoice_express_checkout', methods: ['POST'])]
     public function invoiceExpressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $dispatcher)
     {
         return $this->expressCheckoutAction($requestStack,  $dispatcher, 'order.invoice', false);
@@ -213,8 +213,8 @@ class PayPalResponseController extends OrderController
      * @return RedirectResponse
      * @throws PayPalConnectionException
      * @throws \Exception
-     * @Route("/module/paypal/invoice/express/checkout/ok/{cartId}", name="_invoice_express_checkout_ok", methods="GET")
      */
+    #[Route('/module/paypal/invoice/express/checkout/ok/{cartId}', name: '_invoice_express_checkout_ok', methods: ['GET'])]
     public function invoiceExpressCheckoutOkAction($cartId, RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext, Translator $translator)
     {
         $con = Propel::getConnection();
@@ -265,8 +265,8 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @Route("/module/paypal/invoice/express/checkout/ko/{cartId}", name="_invoice_express_checkout_ko", methods="GET")
      */
+    #[Route('/module/paypal/invoice/express/checkout/ko/{cartId}', name: '_invoice_express_checkout_ko', methods: ['GET'])]
     public function invoiceExpressCheckoutKoAction($cartId)
     {
         return $this->getUrlFromRouteId('order.invoice');
@@ -276,8 +276,8 @@ class PayPalResponseController extends OrderController
      * @return RedirectResponse
      * @throws PayPalConnectionException
      * @throws \Exception
-     * @Route("/module/paypal/express/checkout/ok/{cartId}", name="_express_checkout_ok", methods="POST")
      */
+    #[Route('/module/paypal/express/checkout/ok/{cartId}', name: '_express_checkout_ok', methods: ['POST'])]
     public function expressCheckoutOkAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext)
     {
         $con = Propel::getConnection();
@@ -330,8 +330,8 @@ class PayPalResponseController extends OrderController
 
     /**
      * @return RedirectResponse|\Symfony\Component\HttpFoundation\Response
-     * @Route("/order/delivery", name="_order_delivery", methods="POST")
      */
+    #[Route('/order/delivery', name: '_order_delivery', methods: ['POST'])]
     public function executeExpressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, Translator $translator, $fromCartView = true)
     {
         if (null === $responseParent = parent::deliver($eventDispatcher)) {
@@ -536,8 +536,8 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @Route("/module/paypal/express/checkout/ko/{cartId}", name="_express_checkout_ko", methods="POST")
      */
+    #[Route('/module/paypal/express/checkout/ko/{cartId}', name: '_express_checkout_ko', methods: ['POST'])]
     public function expressCheckoutKoAction()
     {
         PayPalLoggerService::log(
@@ -554,8 +554,8 @@ class PayPalResponseController extends OrderController
      * @param EventDispatcherInterface $eventDispatcher
      * @return RedirectResponse
      * @throws \Propel\Runtime\Exception\PropelException
-     * @Route("/module/paypal/login/ok", name="_login_ok", methods="GET")
      */
+    #[Route('/module/paypal/login/ok', name: '_login_ok', methods: ['GET'])]
     public function loginOkAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
     {
         if (null !== $authorizationCode = $requestStack->getCurrentRequest()->query->get('code')) {
@@ -601,8 +601,8 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @Route("/module/paypal/agreement/ok/{orderId}", name="_agreement_ok", methods="GET")
      */
+    #[Route('/module/paypal/agreement/ok/{orderId}', name: '_agreement_ok', methods: ['GET'])]
     public function agreementOkAction($orderId, RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
     {
         $con = Propel::getConnection();
@@ -698,8 +698,8 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @Route("/module/paypal/ipn/{orderId}", name="_ipn", methods="GET")
      */
+    #[Route('/module/paypal/ipn/{orderId}', name: '_ipn', methods: ['GET'])]
     public function ipnAction($orderId, RequestStack $requestStack)
     {
         PayPalLoggerService::log('GUIGIT', ['hook' => 'guigit', 'order_id' => $orderId], Logger::DEBUG);

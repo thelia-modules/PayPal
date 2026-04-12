@@ -39,13 +39,12 @@ use Thelia\Controller\Admin\AbstractCrudController;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Template\ParserContext;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Model\LangQuery;
 use Thelia\Tools\TokenProvider;
 use Thelia\Tools\URL;
 
 /**
- * @Route("/admin/module/paypal/configure/planified", name="configure_planified")
  * Class PayPalPlanifiedPaymentController
  * @package PayPal\Controller
  */
@@ -57,6 +56,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     /**
      * PayPalPlanifiedPaymentController constructor.
      */
+    #[Route('/admin/module/paypal/configure/planified', name: 'configure_planified')]
     public function __construct()
     {
         parent::__construct(
@@ -74,8 +74,8 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * The default action is displaying the list.
      *
      * @return Response
-     * @Route("", name="_render", methods="GET")
      */
+    #[Route(', name=', name: '_render', methods: ['GET'])]
     public function defaultAction()
     {
         // Check current user authorization
@@ -87,32 +87,32 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     }
 
     /**
-    * @Route("/create", name="_create", methods="POST")
     */
+    #[Route('/create', name: '_create', methods: ['POST'])]
     public function createAction(EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator)
     {
         return parent::createAction($eventDispatcher, $translator);
     }
 
     /**
-     * @Route("/create/delete", name="_delete", methods="POST")
      */
+    #[Route('/create/delete', name: '_delete', methods: ['POST'])]
     public function deleteAction(Request $request, TokenProvider $tokenProvider, EventDispatcherInterface $eventDispatcher, ParserContext $parserContext)
     {
         return parent::deleteAction($request, $tokenProvider, $eventDispatcher, $parserContext);
     }
 
     /**
-     * @Route("/{planifiedPaymentId}", name="_update", methods="GET")
      */
+    #[Route('/{planifiedPaymentId}', name: '_update', methods: ['GET'])]
     public function updateAction(ParserContext $parserContext)
     {
         return parent::updateAction($parserContext);
     }
 
     /**
-     * @Route("/{planifiedPaymentId}", name="_process_update", methods="POST")
      */
+    #[Route('/{planifiedPaymentId}', name: '_process_update', methods: ['POST'])]
     public function processUpdateAction(Request $request, EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator)
     {
         return parent::processUpdateAction($request, $eventDispatcher, $translator);

@@ -42,10 +42,9 @@ use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\Request;
 use Thelia\Core\Translation\Translator;
 use Thelia\Model\OrderStatusQuery;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * @Route("/module/paypal/webhook/all/events", name="paypal_webhook_events")
  * Class PayPalWebHookController
  * @package PayPal\Controller
  */
@@ -143,6 +142,7 @@ class PayPalWebHookController extends BaseFrontController
      *
      * @Route("", name="_all", methods="GET")
      */
+    #[Route('/module/paypal/webhook/all/events', name: 'paypal_webhook_events')]
     public function allAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
     {
         $request = $requestStack->getCurrentRequest();
