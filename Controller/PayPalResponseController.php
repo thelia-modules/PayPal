@@ -96,26 +96,42 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @param $orderId
-     * @param RequestStack $requestStack
+     * @param                          $orderId
+     * @param RequestStack             $requestStack
      * @param EventDispatcherInterface $eventDispatcher
-     * @return RedirectResponse
+     * @param OrderHelperInterface     $orderHelper
+     * @return RedirectResponse|void
      * @Route("/module/paypal/ok/{orderId}", name="_ok", methods="GET")
      */
-    public function okAction($orderId, RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
-    {
+    public function okAction(
+        $orderId,
+        RequestStack $requestStack,
+        EventDispatcherInterface $eventDispatcher,
+        OrderHelperInterface $orderHelper
+    ) {
         $con = Propel::getConnection();
         $con->beginTransaction();
 
         try {
-            $request = $requestStack->getCurrentRequest();
-            $payerId = $request->query->get('PayerID');
-            $token = $request->query->get('token');
+            $request     = $requestStack->getCurrentRequest();
+            $payerId     = $request->query->get('PayerID');
+            $token       = $request->query->get('token');
             $payPalOrder = PaypalOrderQuery::create()->findOneById($orderId);
+            $order       = OrderQuery::create()->findOneById($orderId);
+
+            // Si la commande est déjà en statut "payé", on ne rejoue pas le processus de paiement
+            if ($orderHelper::isOrderPaid($order)) {
+                return;
+            }
 
             if (null !== $payPalOrder && null !== $payerId) {
-
-                $response = $this->executePayment($eventDispatcher, $payPalOrder, $payPalOrder->getPaymentId(), $payerId, $token);
+                $response = $this->executePayment(
+                    $eventDispatcher,
+                    $payPalOrder,
+                    $payPalOrder->getPaymentId(),
+                    $payerId,
+                    $token
+                );
             } else {
                 $con->rollBack();
                 $message = Translator::getInstance()->trans(
@@ -159,9 +175,7 @@ class PayPalResponseController extends OrderController
             $response = $this->getPaymentFailurePageUrl($orderId, $e->getMessage());
         }
 
-
         $con->commit();
-
 
         $order = OrderQuery::create()
             ->findOneById($orderId);
