@@ -76,7 +76,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @return Response
      */
     #[Route(', name=', name: '_render', methods: ['GET'])]
-    public function defaultAction()
+    public function defaultAction(): \Symfony\Component\HttpFoundation\Response
     {
         // Check current user authorization
         if (null !== $response = $this->checkAuth($this->resourceCode, $this->getModuleCode(), AccessManager::VIEW)) {
@@ -89,7 +89,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     /**
     */
     #[Route('/create', name: '_create', methods: ['POST'])]
-    public function createAction(EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator)
+    public function createAction(EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator): \Symfony\Component\HttpFoundation\RedirectResponse|\Symfony\Component\HttpFoundation\Response
     {
         return parent::createAction($eventDispatcher, $translator);
     }
@@ -97,7 +97,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     /**
      */
     #[Route('/create/delete', name: '_delete', methods: ['POST'])]
-    public function deleteAction(Request $request, TokenProvider $tokenProvider, EventDispatcherInterface $eventDispatcher, ParserContext $parserContext)
+    public function deleteAction(Request $request, TokenProvider $tokenProvider, EventDispatcherInterface $eventDispatcher, ParserContext $parserContext): \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\RedirectResponse
     {
         return parent::deleteAction($request, $tokenProvider, $eventDispatcher, $parserContext);
     }
@@ -105,7 +105,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     /**
      */
     #[Route('/{planifiedPaymentId}', name: '_update', methods: ['GET'])]
-    public function updateAction(ParserContext $parserContext)
+    public function updateAction(ParserContext $parserContext): \Symfony\Component\HttpFoundation\Response
     {
         return parent::updateAction($parserContext);
     }
@@ -113,7 +113,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     /**
      */
     #[Route('/{planifiedPaymentId}', name: '_process_update', methods: ['POST'])]
-    public function processUpdateAction(Request $request, EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator)
+    public function processUpdateAction(Request $request, EventDispatcherInterface $eventDispatcher, TranslatorInterface $translator): \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\RedirectResponse
     {
         return parent::processUpdateAction($request, $eventDispatcher, $translator);
     }
