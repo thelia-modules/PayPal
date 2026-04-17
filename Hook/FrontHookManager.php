@@ -43,7 +43,7 @@ class FrontHookManager extends BaseHook
     protected $requestStack;
 
     /** @var ContainerInterface */
-    protected $container;
+    public $container;
 
     /**
      * FrontHookManager constructor.
