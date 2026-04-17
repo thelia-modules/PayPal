@@ -191,7 +191,7 @@ class PayPalCreditCardType extends AbstractTheliaType
     /**
      * @inheritDoc
      */
-    public static function getName()
+    public static function getName(): string
     {
         return self::TYPE_NAME;
     }

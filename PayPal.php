@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Translation\Translator;
-use Thelia\Install\Database;
+use Thelia\Core\Install\Database;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\ModuleImageQuery;
@@ -87,7 +87,7 @@ class PayPal extends AbstractPaymentModule
      * @return RedirectResponse
      * @throws \Exception
      */
-    public function pay(Order $order)
+    public function pay(Order $order): ?\Symfony\Component\HttpFoundation\Response
     {
         return new RedirectResponse(URL::getInstance()->absoluteUrl('/order/paypal/pay', ["order_id" => $order->getId()]));
     }
@@ -101,7 +101,7 @@ class PayPal extends AbstractPaymentModule
      *
      * @return boolean
      */
-    public function isValidPayment()
+    public function isValidPayment(): bool
     {
         $isValid = false;
 
@@ -150,7 +150,7 @@ class PayPal extends AbstractPaymentModule
      *
      * @return bool
      */
-    public function manageStockOnCreation()
+    public function manageStockOnCreation(): bool
     {
         return false;
     }

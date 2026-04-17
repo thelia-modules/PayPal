@@ -49,7 +49,7 @@ class PayPalPlanifiedPaymentUpdateForm extends PayPalPlanifiedPaymentCreateForm
         ;
     }
 
-    public static function getName()
+    public static function getName(): string
     {
         return self::FORM_NAME;
     }

@@ -29,7 +29,7 @@ class PayPalPlanifiedPaymentLoop extends BaseI18nLoop implements PropelSearchLoo
      *
      * @return LoopResult
      */
-    public function parseResults(LoopResult $loopResult)
+    public function parseResults(LoopResult $loopResult): LoopResult
     {
         /** @var \Thelia\Model\Lang $lang */
         $lang = $this->getCurrentRequest()->getSession()->get('thelia.current.lang');
@@ -54,7 +54,7 @@ class PayPalPlanifiedPaymentLoop extends BaseI18nLoop implements PropelSearchLoo
     /**
      * @return PaypalPlanifiedPaymentQuery
      */
-    public function buildModelCriteria()
+    public function buildModelCriteria(): \Propel\Runtime\ActiveQuery\ModelCriteria
     {
         $query = new PaypalPlanifiedPaymentQuery();
 
@@ -112,7 +112,7 @@ class PayPalPlanifiedPaymentLoop extends BaseI18nLoop implements PropelSearchLoo
     /**
      * @return \Thelia\Core\Template\Loop\Argument\ArgumentCollection
      */
-    protected function getArgDefinitions()
+    protected function getArgDefinitions(): \Thelia\Core\Template\Loop\Argument\ArgumentCollection
     {
         return new ArgumentCollection(
             Argument::createIntListTypeArgument('id'),

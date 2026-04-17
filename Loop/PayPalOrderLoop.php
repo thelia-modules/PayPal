@@ -36,7 +36,7 @@ class PayPalOrderLoop extends BaseLoop implements PropelSearchLoopInterface
      *
      * @return LoopResult
      */
-    public function parseResults(LoopResult $loopResult)
+    public function parseResults(LoopResult $loopResult): LoopResult
     {
         /**
          * @var PaypalOrder $model
@@ -57,7 +57,7 @@ class PayPalOrderLoop extends BaseLoop implements PropelSearchLoopInterface
     /**
      * @return PaypalOrderQuery
      */
-    public function buildModelCriteria()
+    public function buildModelCriteria(): \Propel\Runtime\ActiveQuery\ModelCriteria
     {
         $query = new PaypalOrderQuery();
 
@@ -92,7 +92,7 @@ class PayPalOrderLoop extends BaseLoop implements PropelSearchLoopInterface
     /**
      * @return \Thelia\Core\Template\Loop\Argument\ArgumentCollection
      */
-    protected function getArgDefinitions()
+    protected function getArgDefinitions(): \Thelia\Core\Template\Loop\Argument\ArgumentCollection
     {
         return new ArgumentCollection(
             Argument::createIntListTypeArgument('id'),

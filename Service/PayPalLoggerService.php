@@ -31,7 +31,7 @@ use PayPal\Model\PaypalLogQuery;
 use PayPal\PayPal;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Propel;
-use Thelia\Install\Database;
+use Thelia\Core\Install\Database;
 
 /**
  * Class PayPalLoggerService
