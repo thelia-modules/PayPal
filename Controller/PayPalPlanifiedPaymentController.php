@@ -253,7 +253,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param PayPalPlanifiedPaymentEvent $event
      * @return bool
      */
-    protected function eventContainsObject($event)
+    protected function eventContainsObject(\Symfony\Contracts\EventDispatcher\Event $event): bool
     {
         return $event->getPayPalPlanifiedPayment() ? true : false;
     }
@@ -263,7 +263,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param PayPalPlanifiedPaymentEvent $event
      * @return PaypalPlanifiedPayment
      */
-    protected function getObjectFromEvent($event)
+    protected function getObjectFromEvent(\Symfony\Contracts\EventDispatcher\Event $event): mixed
     {
         return $event->getPayPalPlanifiedPayment();
     }
