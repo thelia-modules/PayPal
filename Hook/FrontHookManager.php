@@ -43,7 +43,7 @@ class FrontHookManager extends BaseHook
     protected $requestStack;
 
     /** @var ContainerInterface */
-    public $container;
+    public \Symfony\Component\DependencyInjection\ContainerInterface $container;
 
     /**
      * FrontHookManager constructor.
