@@ -123,7 +123,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Return the creation form for this object
      * @return PayPalPlanifiedPaymentCreateForm
      */
-    protected function getCreationForm()
+    protected function getCreationForm(): ?\Thelia\Form\BaseForm
     {
         return $this->createForm(PayPalPlanifiedPaymentCreateForm::getName());
     }
@@ -132,7 +132,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Return the update form for this object
      * @return PayPalPlanifiedPaymentUpdateForm
      */
-    protected function getUpdateForm()
+    protected function getUpdateForm(): ?\Thelia\Form\BaseForm
     {
         return $this->createForm(PayPalPlanifiedPaymentUpdateForm::getName());
     }
@@ -143,7 +143,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param PaypalPlanifiedPayment $object
      * @return PayPalPlanifiedPaymentUpdateForm
      */
-    protected function hydrateObjectForm(ParserContext $parserContext, $object)
+    protected function hydrateObjectForm(ParserContext $parserContext, \Propel\Runtime\ActiveRecord\ActiveRecordInterface $object): \Thelia\Form\BaseForm
     {
         /** @var \Thelia\Model\Lang $lang */
         $lang = $parserContext->getSession()->get('thelia.admin.edition.lang');
@@ -179,7 +179,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param mixed $formData
      * @return PayPalPlanifiedPaymentEvent
      */
-    protected function getCreationEvent($formData)
+    protected function getCreationEvent(array $formData): \Thelia\Core\Event\ActionEvent|\Thelia\Core\Event\ActiveRecordEvent|null
     {
         $planifiedPayment = new PaypalPlanifiedPayment();
 
@@ -196,7 +196,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param mixed $formData
      * @return PayPalPlanifiedPaymentEvent
      */
-    protected function getUpdateEvent($formData)
+    protected function getUpdateEvent(array $formData): \Thelia\Core\Event\ActionEvent|\Thelia\Core\Event\ActiveRecordEvent|null
     {
         if (null === $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findOneById($formData[PayPalFormFields::FIELD_PP_ID])) {
             throw new \InvalidArgumentException(
@@ -240,7 +240,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Creates the delete event with the provided form data
      * @return PayPalPlanifiedPaymentEvent
      */
-    protected function getDeleteEvent()
+    protected function getDeleteEvent(): \Thelia\Core\Event\ActiveRecordEvent|\Thelia\Core\Event\ActionEvent|null
     {
         return new PayPalPlanifiedPaymentEvent(
             $this->getExistingObject()
@@ -272,7 +272,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Load an existing object from the database
      * @return PaypalPlanifiedPayment
      */
-    protected function getExistingObject()
+    protected function getExistingObject(): ?\Propel\Runtime\ActiveRecord\ActiveRecordInterface
     {
         if (null === $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findOneById((int)$this->getRequest()->get('planifiedPaymentId'))) {
             throw new \InvalidArgumentException(
@@ -290,7 +290,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param PaypalPlanifiedPayment $object
      * @return string
      */
-    protected function getObjectLabel($object)
+    protected function getObjectLabel(\Propel\Runtime\ActiveRecord\ActiveRecordInterface $object): ?string
     {
         return $object->getTitle();
     }
@@ -301,7 +301,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param PaypalPlanifiedPayment $object
      * @return int
      */
-    protected function getObjectId($object)
+    protected function getObjectId(\Propel\Runtime\ActiveRecord\ActiveRecordInterface $object): int
     {
         return $object->getId();
     }
@@ -312,7 +312,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param mixed $currentOrder , if any, null otherwise.
      * @return Response
      */
-    protected function renderListTemplate($currentOrder)
+    protected function renderListTemplate(string $currentOrder): \Symfony\Component\HttpFoundation\Response
     {
         $this->getListOrderFromSession('planified_payment', 'order', 'manual');
 
@@ -329,7 +329,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Render the edition template
      * @return Response
      */
-    protected function renderEditionTemplate()
+    protected function renderEditionTemplate(): \Symfony\Component\HttpFoundation\Response
     {
         return $this->render('paypal/planified-payment-edit', $this->getEditionArguments());
     }
@@ -338,7 +338,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Must return a RedirectResponse instance
      * @return Response
      */
-    protected function redirectToEditionTemplate()
+    protected function redirectToEditionTemplate(): \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\RedirectResponse
     {
         $result = $this->getEditionArguments();
         return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/paypal/configure/planified/'.$result['planifiedPaymentId']));
@@ -349,7 +349,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Must return a RedirectResponse instance
      * @return Response
      */
-    protected function redirectToListTemplate()
+    protected function redirectToListTemplate(): \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\RedirectResponse
     {
         return $this->generateRedirectFromRoute('paypal.admin.configuration.planified');
     }
