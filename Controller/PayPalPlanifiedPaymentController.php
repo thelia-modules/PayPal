@@ -179,7 +179,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param mixed $formData
      * @return PayPalPlanifiedPaymentEvent
      */
-    protected function getCreationEvent(array $formData): \Thelia\Core\Event\ActionEvent|\Thelia\Core\Event\ActiveRecordEvent|null
+    protected function getCreationEvent(array $formData): \Thelia\Core\Event\ActionEvent|\Propel\Runtime\Event\ActiveRecordEvent|null
     {
         $planifiedPayment = new PaypalPlanifiedPayment();
 
@@ -196,7 +196,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * @param mixed $formData
      * @return PayPalPlanifiedPaymentEvent
      */
-    protected function getUpdateEvent(array $formData): \Thelia\Core\Event\ActionEvent|\Thelia\Core\Event\ActiveRecordEvent|null
+    protected function getUpdateEvent(array $formData): \Thelia\Core\Event\ActionEvent|\Propel\Runtime\Event\ActiveRecordEvent|null
     {
         if (null === $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findOneById($formData[PayPalFormFields::FIELD_PP_ID])) {
             throw new \InvalidArgumentException(
@@ -240,7 +240,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      * Creates the delete event with the provided form data
      * @return PayPalPlanifiedPaymentEvent
      */
-    protected function getDeleteEvent(): \Thelia\Core\Event\ActiveRecordEvent|\Thelia\Core\Event\ActionEvent|null
+    protected function getDeleteEvent(): \Propel\Runtime\Event\ActiveRecordEvent|\Thelia\Core\Event\ActionEvent|null
     {
         return new PayPalPlanifiedPaymentEvent(
             $this->getExistingObject()
