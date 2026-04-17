@@ -6,7 +6,7 @@
   "require": {
     "thelia/installer": "~1.1",
     "cqfdev/paypal-rest-api-sdk-php": "1.*",
-    "wazaari/monolog-mysql": "1.0.5",
+    "wazaari/monolog-mysql": "^2.0",
     "symfony/http-client": "^7.0"
   },
   "extra": {
