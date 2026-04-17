@@ -51,7 +51,7 @@ use Thelia\Tools\URL;
 class PayPalPlanifiedPaymentController extends AbstractCrudController
 {
     /** @var string */
-    protected $currentRouter = PayPal::ROUTER;
+    protected string $currentRouter = PayPal::ROUTER;
 
     /**
      * PayPalPlanifiedPaymentController constructor.
