@@ -76,14 +76,14 @@ use Symfony\Component\Routing\Attribute\Route;
  * Class PayPalResponseController
  * @package PayPal\Controller
  */
+#[Route('', name: 'paypal')]
 class PayPalResponseController extends OrderController
 {
     /**
      * @param $orderId
      * @param EventDispatcherInterface $eventDispatcher
-     * @Route("/module/paypal/cancel/{orderId}", name="_cancel", methods="GET")
      */
-    #[Route(', name=', name: 'paypal')]
+    #[Route('/module/paypal/cancel/{orderId}', name: '_cancel', methods: 'GET')]
     public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher)
     {
         if (!$order = OrderQuery::create()->findOneById($orderId)) {

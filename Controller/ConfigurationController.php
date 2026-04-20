@@ -40,6 +40,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * Class ConfigurePaypal
  * @package Paypal\Controller
  */
+#[Route('/admin/module/paypal/configure', name: 'paypal_configure')]
 class ConfigurationController extends BaseAdminController
 {
     /*
@@ -47,9 +48,8 @@ class ConfigurationController extends BaseAdminController
      */
     /**
      * @return mixed|\Symfony\Component\HttpFoundation\Response|\Thelia\Core\HttpFoundation\Response
-     * @Route("", name="_save", methods="POSt")
      */
-    #[Route('/admin/module/paypal/configure', name: 'paypal_configure')]
+    #[Route('', name: '_save', methods: 'POST')]
     public function configureAction(RequestStack $requestStack, Translator $translator)
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Paypal', AccessManager::UPDATE)) {

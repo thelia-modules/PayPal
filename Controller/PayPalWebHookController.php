@@ -48,6 +48,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * Class PayPalWebHookController
  * @package PayPal\Controller
  */
+#[Route('/module/paypal/webhook/all/events', name: 'paypal_webhook_events')]
 class PayPalWebHookController extends BaseFrontController
 {
     const HOOK_BILLING_PLAN_CREATED = 'BILLING.PLAN.CREATED';
@@ -140,9 +141,8 @@ class PayPalWebHookController extends BaseFrontController
      *       )
      *   );
      *
-     * @Route("", name="_all", methods="GET")
      */
-    #[Route('/module/paypal/webhook/all/events', name: 'paypal_webhook_events')]
+    #[Route('', name: '_all', methods: 'GET')]
     public function allAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher)
     {
         $request = $requestStack->getCurrentRequest();

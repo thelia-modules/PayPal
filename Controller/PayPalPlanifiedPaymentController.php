@@ -48,6 +48,7 @@ use Thelia\Tools\URL;
  * Class PayPalPlanifiedPaymentController
  * @package PayPal\Controller
  */
+#[Route('/admin/module/paypal/configure/planified', name: 'configure_planified')]
 class PayPalPlanifiedPaymentController extends AbstractCrudController
 {
     /** @var string */
@@ -56,7 +57,6 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     /**
      * PayPalPlanifiedPaymentController constructor.
      */
-    #[Route('/admin/module/paypal/configure/planified', name: 'configure_planified')]
     public function __construct()
     {
         parent::__construct(
@@ -75,7 +75,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      *
      * @return Response
      */
-    #[Route(', name=', name: '_render', methods: ['GET'])]
+    #[Route('', name: '_render', methods: ['GET'])]
     public function defaultAction(): \Symfony\Component\HttpFoundation\Response
     {
         // Check current user authorization
