@@ -2,7 +2,6 @@
 
 namespace PayPal\Controller;
 
-use OpenApi\Controller\Front\CheckoutController;
 use PayPal\Model\Base\PaypalPlanifiedPayment;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\Service\Base\PayPalBaseService;
@@ -13,6 +12,14 @@ use Thelia\Controller\Front\BaseFrontController;
 #[Route("/order/paypal", name: "paypal_front_")]
 class PayPalFrontController extends BaseFrontController
 {
+    /**
+     * Session key historically populated by `OpenApi\Controller\Front\CheckoutController`
+     * to remember the customer's payment module option selection. Kept as a
+     * literal so PayPal stays backwards compatible with sessions seeded by the
+     * legacy module while we migrate the checkout flow to API Platform 4.3.
+     */
+    private const PAYMENT_MODULE_OPTION_CHOICES_SESSION_KEY = 'payment_module_option_choices';
+
     #[Route("/pay", name: "pay", methods: "GET")]
     public function showPayPalPaymentPage(Request $request)
     {
@@ -20,7 +27,7 @@ class PayPalFrontController extends BaseFrontController
         $templateData['paypal_mode'] = PayPalBaseService::getMode();
         $templateData['paypal_merchant_id'] = PayPalBaseService::getMerchantId();
         $templateData['paypal_client_id'] = PayPalBaseService::getLogin();
-        $paymentOptions = $request->getSession()->get(CheckoutController::PAYMENT_MODULE_OPTION_CHOICES_SESSION_KEY);
+        $paymentOptions = $request->getSession()->get(self::PAYMENT_MODULE_OPTION_CHOICES_SESSION_KEY);
         $lang = $request->getSession()->getLang();
 
         $templateData['intent'] = "capture";
