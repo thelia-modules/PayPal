@@ -5,9 +5,9 @@
         xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-1.0.xsd">
 
     <loops>
-        <loop name="paypal_order" class="PayPal\Loop\PayPalOrderLoop" />
-        <loop name="paypal_planified_payment" class="PayPal\Loop\PayPalPlanifiedPaymentLoop" />
-        <loop name="paypal_log" class="PayPal\Loop\PayPalLogLoop" />
+        <loop name="paypal-order" class="PayPal\Loop\PayPalOrderLoop" />
+        <loop name="paypal-planified-payment" class="PayPal\Loop\PayPalPlanifiedPaymentLoop" />
+        <loop name="paypal-log" class="PayPal\Loop\PayPalLogLoop" />
     </loops>
 
     <forms>
