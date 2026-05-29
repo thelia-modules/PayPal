@@ -44,6 +44,11 @@ class PayPalPlanifiedPaymentListener implements EventSubscriberInterface
     public function create(PayPalPlanifiedPaymentEvent $event)
     {
         $planifiedPayment =  $event->getPayPalPlanifiedPayment();
+
+        if (null === $planifiedPayment->getPaypalId()) {
+            $planifiedPayment->setPaypalId('');
+        }
+
         $planifiedPayment->save();
 
         try {
