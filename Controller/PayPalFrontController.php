@@ -8,6 +8,7 @@ use PayPal\Service\Base\PayPalBaseService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Front\BaseFrontController;
+use Thelia\Model\CurrencyQuery;
 
 #[Route("/order/paypal", name: "paypal_front_")]
 class PayPalFrontController extends BaseFrontController
@@ -20,7 +21,7 @@ class PayPalFrontController extends BaseFrontController
      */
     private const PAYMENT_MODULE_OPTION_CHOICES_SESSION_KEY = 'payment_module_option_choices';
 
-    #[Route("/pay", name: "pay", methods: "GET")]
+    #[Route("/pay", name: "pay")]
     public function showPayPalPaymentPage(Request $request)
     {
         $templateData = [];
@@ -32,6 +33,7 @@ class PayPalFrontController extends BaseFrontController
 
         $templateData['intent'] = "capture";
         $templateData['planified_payment_id'] = null;
+        $templateData['currency'] = CurrencyQuery::create()->findOneByByDefault(1)->getCode();
 
         if (!empty($paymentOptions) && 'paypal' !== $paymentType = $paymentOptions['code']) {
             $planifiedPaymentId = explode('_', $paymentType)[1];
@@ -51,6 +53,6 @@ class PayPalFrontController extends BaseFrontController
 
         $templateData['order_id'] = $request->get('order_id');
 
-        return $this->render("paypal/paypal-payment", $templateData);
+        return $this->render("paypal-payment", $templateData);
     }
 }
