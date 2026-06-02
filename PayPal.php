@@ -25,6 +25,7 @@ use Propel\Runtime\Propel;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\Translation\Translator;
@@ -89,7 +90,9 @@ class PayPal extends AbstractPaymentModule
      */
     public function pay(Order $order): ?\Symfony\Component\HttpFoundation\Response
     {
-        return new RedirectResponse(URL::getInstance()->absoluteUrl('/order/paypal/pay', ["order_id" => $order->getId()]));
+        $platformUrl = URL::getInstance()->absoluteUrl('/order/paypal/pay', ["order_id" => $order->getId()]);
+
+        return $this->generateGatewayFormResponse($order, $platformUrl, []);
     }
 
     /**
