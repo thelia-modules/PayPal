@@ -59,8 +59,8 @@
                         },
                         body: JSON.stringify({
                             order_id: orderId,
-                            return_url: "{url path='/order-invoice'}",
-                            cancel_url: "{url path='/order-invoice'}",
+                            return_url: "{{ absolute_url('/checkout/pay') }}",
+                            cancel_url: "{{ absolute_url('/checkout/pay') }}",
                             planified_payment_id: planifiedPaymentId
                         }),
                     });
@@ -117,8 +117,8 @@
                         },
                         body: JSON.stringify({
                             order_id: orderId,
-                            return_url: "{url path='/order-invoice'}",
-                            cancel_url: "{url path='/order-invoice'}",
+                            return_url: "{{ absolute_url('/checkout/pay') }}",
+                            cancel_url: "{{ absolute_url('/checkout/pay') }}",
                         }),
                     });
 
