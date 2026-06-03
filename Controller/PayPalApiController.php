@@ -2,6 +2,8 @@
 
 namespace PayPal\Controller;
 
+use PayPal\Event\PayPalEvents;
+use PayPal\Event\PayPalOrderEvent;
 use PayPal\Model\PaypalOrderQuery;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
@@ -25,7 +27,8 @@ class PayPalApiController extends BaseFrontController
 {
 
     #[Route("/pay", name: "pay", methods: "POST")]
-    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher){
+    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher)
+    {
         $data = json_decode($request->getContent(), true);
 
         if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
@@ -87,7 +90,7 @@ class PayPalApiController extends BaseFrontController
                 ];
             }
 
-            $response = $payPalApiService->sendPostResquest($body, PayPal::getBaseUrl().PayPal::PAYPAL_API_CREATE_ORDER_URL);
+            $response = $payPalApiService->sendPostResquest($body, PayPal::getBaseUrl() . PayPal::PAYPAL_API_CREATE_ORDER_URL);
             $responseContent = $response->getContent();
             $responseInfo = json_decode($responseContent, true);
 
@@ -95,12 +98,21 @@ class PayPalApiController extends BaseFrontController
                 ->filterById($order->getId())
                 ->findOneOrCreate();
 
+            $paypalOrder->setPaymentId($responseInfo['id']);
+
             $paypalOrder
-                ->setPaymentId($responseInfo['id'])
-                ->save();
+                ->setPlanifiedTitle("")
+                ->setPlanifiedFrequency("")
+                ->setPlanifiedFrequencyInterval(0)
+                ->setPlanifiedCycle(0)
+                ->setPlanifiedMinAmount(0)
+                ->setPlanifiedMaxAmount(0);
+
+            $payPalOrderEvent = new PayPalOrderEvent($paypalOrder);
+            $eventDispatcher->dispatch($payPalOrderEvent, PayPalEvents::PAYPAL_ORDER_CREATE);
 
             return new JsonResponse($responseContent);
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             Tlog::getInstance()->error($exception->getMessage());
             return new JsonResponse(json_encode(['error' => $exception->getMessage()]), $exception->getCode());
         }
@@ -117,12 +129,12 @@ class PayPalApiController extends BaseFrontController
 
             $response = $payPalApiService->sendPostResquest(
                 null,
-                PayPal::getBaseUrl().PayPal::PAYPAL_API_CREATE_ORDER_URL.'/'.$paypalOrder->getPaymentId().'/capture'
+                PayPal::getBaseUrl() . PayPal::PAYPAL_API_CREATE_ORDER_URL . '/' . $paypalOrder->getPaymentId() . '/capture'
             );
 
             $responseContent = $response->getContent();
             $status = json_decode($responseContent, true)['status'];
-            if ("COMPLETED" === $status){
+            if ("COMPLETED" === $status) {
                 $event = new OrderEvent($paypalOrder->getOrder());
                 $event->setStatus(OrderStatusQuery::create()->filterByCode(OrderStatus::CODE_PAID)->findOne()?->getId());
                 $dispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
