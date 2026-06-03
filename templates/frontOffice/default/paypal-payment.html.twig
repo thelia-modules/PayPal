@@ -1,170 +1,195 @@
-{% extends 'base.html.twig' %}
+{% extends 'checkout-base.html.twig' %}
 
-{% block body %}
-<div class="Paypal">
-    <nav class="Steps">
-        <ul class="Steps-list">
-            <li class="Steps-item Steps-item--active">
-                <span class="Steps-number">1</span>
-                <span class="Steps-name">{{ "Finalisation Paiement - PayPal"|trans }}</span>
-            </li>
-        </ul>
-    </nav>
-    <section class="container">
-        <div class="Paypal-container grid h-full md:grid-cols-2 grid-cols-1 my-8 gap-6 items-center">
+{% block title %}
+    {{ 'Finalisation Paiement - PayPal'|trans }}
+{% endblock %}
+
+{% block checkoutSteps %}
+    {% set current = 1 %}
+    {{ component('Flexy:Checkout:CheckoutSteps',{
+        steps: [
+            {
+                text: "Finalisation Paiement - PayPal"|trans
+            }
+        ],
+        current
+    } ) }}
+{% endblock %}
+
+{% block checkoutContent %}
+    <section class="Paypal">
+        <div class="flex flex-col gap-5 container">
             <div class="Paypal-headers">
-                <h1 class="text-2xl">{{ "PayPal - Sélection de paiement"|trans }}</h1>
-                <p>{{ "Afin de finaliser la commande via PayPal merci de sélectionner votre moyen de paiement :"|trans }}</p>
-                <p>{{ "Vous avez choisi le mode :"|trans }}
+                <h1 class="h3 mb-4">
+                    {{ "PayPal - Sélection de paiement"|trans }}
+                </h1>
+                <p class="paragraph-2">
+                    {{ "Afin de finaliser la commande via PayPal merci de sélectionner votre moyen de paiement :"|trans }}
+                </p>
+                <p class="paragraph-2">
+                    {{ "Vous avez choisi le mode :"|trans }}
                     {% if intent == 'subscription' %}
-                        <span> {{ plan_title }} - {{ plan_description }}</span>
+                        <span>
+                            {{ plan_title }} - {{ plan_description }}
+                        </span>
                     {% else %}
-                        {{ 'PayPal - Unique payment mode'|trans }}
-                    {% endif %}</p>
+                        <strong>
+                            {{ 'PayPal - Unique payment mode'|trans }}
+                        </strong>
+                    {% endif %}
+                </p>
             </div>
-            <div class="Paypal-actions flex-col" style="">
+            <div class="Paypal-actions" style="">
                 <div id="paypal-button-container"></div>
             </div>
         </div>
     </section>
-</div>
 
-<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency={{ currency }}&intent={{ intent }}&components=buttons&enable-funding=paylater,card{% if intent == 'subscription' %}&vault=true{% endif %}"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency={{ currency }}&intent={{ intent }}&components=buttons&enable-funding=paylater,card{% if intent == 'subscription' %}&vault=true{% endif %}"></script>
 
-{% if intent == 'subscription' %}
-<script>
-    async function createPaypalPlanifiedOrder(orderId, planifiedPaymentId)
-    {
-        try {
-            const response = await fetch("/paypal/api/pay", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    order_id: orderId,
-                    return_url: "{url path='/order-invoice'}",
-                    cancel_url: "{url path='/order-invoice'}",
-                    planified_payment_id: planifiedPaymentId
-                }),
-            });
+    {% if intent == 'subscription' %}
+        <script>
+            async function createPaypalPlanifiedOrder(orderId, planifiedPaymentId)
+            {
+                try {
+                    const response = await fetch("/paypal/api/pay", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            order_id: orderId,
+                            return_url: "{url path='/order-invoice'}",
+                            cancel_url: "{url path='/order-invoice'}",
+                            planified_payment_id: planifiedPaymentId
+                        }),
+                    });
 
-            const order = await response.json();
+                    const order = await response.json();
 
-            if (!response.ok) {
-                console.error('Error:', order.error.message);
-                return null;
+                    if (!response.ok) {
+                        console.error('Error:', order.error.message);
+                        return null;
+                    }
+
+                    const parsedOrder = JSON.parse(order);
+                    return parsedOrder.id;
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    return null;
+                }
             }
 
-            const parsedOrder = JSON.parse(order);
-            return parsedOrder.id;
+            const orderId = {{ order_id }};
+            const planifiedPaymentId = {{ planified_payment_id }};
 
-        } catch (error) {
-            console.error('Error:', error);
-            return null;
-        }
-    }
+            createPaypalPlanifiedOrder(orderId, planifiedPaymentId).then(planId => {
+                if (planId) {
 
-    const orderId = {{ order_id }};
-    const planifiedPaymentId = {{ planified_payment_id }};
+                    paypal.Buttons({
+                        createSubscription: function (data, actions) {
+                            return actions.subscription.create({
+                                'plan_id': planId // Creates the subscription
+                            });
+                        },
+                        onApprove: function (data, actions) {
+                            window.location.href = `/order/placed/{{ order_id }}`;
+                        }
+                    }).render('#paypal-button-container'); // Renders the PayPal button
 
-    createPaypalPlanifiedOrder(orderId, planifiedPaymentId).then(planId => {
-        if (planId) {
+                } else {
+                    console.error('Failed to create PayPal order');
+                }
+            });
+        </script>
+    {% else %}
+        <script>
+            const orderId = {{ order_id }};
+
+            async function createPaypalOrder(orderId)
+            {
+                try {
+                    const response = await fetch("/paypal/api/pay", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            order_id: orderId,
+                            return_url: "{url path='/order-invoice'}",
+                            cancel_url: "{url path='/order-invoice'}",
+                        }),
+                    });
+
+                    const order = await response.json();
+
+                    if (!response.ok) {
+                        console.error('Error:', order.error.message);
+                        return null;
+                    }
+
+                    const parsedOrder = JSON.parse(order);
+                    return parsedOrder.id;
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    return null;
+                }
+            }
+
+            async function capturePaypalOrder(orderId)
+            {
+                try {
+                    const response = await fetch("/paypal/api/capture", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            order_id: orderId
+                        }),
+                    });
+
+                    const order = await response.json();
+
+                    if (!response.ok) {
+                        console.error('Error:', order.error.message);
+                        return null;
+                    }
+
+                    const parsedOrder = JSON.parse(order);
+
+                    if (parsedOrder.status === "COMPLETED") {
+                        window.location.href = `/order/placed/{{ order_id }}`;
+                    } else {
+                        window.location.href = `/order-failed`;
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    return null;
+                }
+            }
 
             paypal.Buttons({
-                createSubscription: function (data, actions) {
-                    return actions.subscription.create({
-                        'plan_id': planId // Creates the subscription
-                    });
+                createOrder: function(data, actions) {
+                    return createPaypalOrder(orderId);
                 },
                 onApprove: function (data, actions) {
-                    window.location.href = `/order/placed/{{ order_id }}`;
+                    capturePaypalOrder(orderId);
                 }
-            }).render('#paypal-button-container'); // Renders the PayPal button
+            }).render('#paypal-button-container');
 
-        } else {
-            console.error('Failed to create PayPal order');
-        }
-    });
-</script>
-{% else %}
-<script>
-    const orderId = {{ order_id }};
+        </script>
+    {% endif %}
+{% endblock %}
 
-    async function createPaypalOrder(orderId)
-    {
-        try {
-            const response = await fetch("/paypal/api/pay", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    order_id: orderId,
-                    return_url: "{url path='/order-invoice'}",
-                    cancel_url: "{url path='/order-invoice'}",
-                }),
-            });
-
-            const order = await response.json();
-
-            if (!response.ok) {
-                console.error('Error:', order.error.message);
-                return null;
-            }
-
-            const parsedOrder = JSON.parse(order);
-            return parsedOrder.id;
-
-        } catch (error) {
-            console.error('Error:', error);
-            return null;
-        }
-    }
-
-    async function capturePaypalOrder(orderId)
-    {
-        try {
-            const response = await fetch("/paypal/api/capture", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    order_id: orderId
-                }),
-            });
-
-            const order = await response.json();
-
-            if (!response.ok) {
-                console.error('Error:', order.error.message);
-                return null;
-            }
-
-            const parsedOrder = JSON.parse(order);
-
-            if (parsedOrder.status === "COMPLETED") {
-                window.location.href = `/order/placed/{{ order_id }}`;
-            } else {
-                window.location.href = `/order-failed`;
-            }
-
-        } catch (error) {
-            console.error('Error:', error);
-            return null;
-        }
-    }
-
-    paypal.Buttons({
-        createOrder: function(data, actions) {
-            return createPaypalOrder(orderId);
-        },
-        onApprove: function (data, actions) {
-            capturePaypalOrder(orderId);
-        }
-    }).render('#paypal-button-container');
-
-</script>
-{% endif %}
+{% block checkoutSummary %}
+    {%- if not emptyCart -%}
+        {{ component('Flexy:Checkout:Summary', {
+            style: 'light',
+            hasPromoCode: false,
+        }) }}
+    {%- endif -%}
 {% endblock %}
