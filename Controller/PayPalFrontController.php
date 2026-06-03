@@ -8,7 +8,9 @@ use PayPal\Service\Base\PayPalBaseService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Front\BaseFrontController;
+use Thelia\Model\CartQuery;
 use Thelia\Model\CurrencyQuery;
+use Thelia\Model\OrderQuery;
 
 #[Route("/order/paypal", name: "paypal_front_")]
 class PayPalFrontController extends BaseFrontController
@@ -51,7 +53,15 @@ class PayPalFrontController extends BaseFrontController
             $templateData['plan_cycle'] = $plan->getCycle();
         }
 
-        $templateData['order_id'] = $request->get('order_id');
+        $orderId = $request->query->get('order_id');
+
+        $templateData['order_id'] = $orderId;
+
+        if ($orderId) {
+            $order = OrderQuery::create()->filterByCustomerId($this->getSession()->getCustomerUser()->getId())->findPk($request->get('order_id'));
+            $cart = CartQuery::create()->findOneById($order?->getCartId());
+            $this->getRequest()->getSession()->setSessionCart($cart);
+        }
 
         return $this->render("paypal-payment", $templateData);
     }

@@ -111,6 +111,8 @@ class PayPalApiController extends BaseFrontController
             $payPalOrderEvent = new PayPalOrderEvent($paypalOrder);
             $eventDispatcher->dispatch($payPalOrderEvent, PayPalEvents::PAYPAL_ORDER_CREATE);
 
+            $this->getSession()->clearSessionCart($eventDispatcher);
+
             return new JsonResponse($responseContent);
         } catch (\Exception $exception) {
             Tlog::getInstance()->error($exception->getMessage());
