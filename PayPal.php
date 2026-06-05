@@ -12,29 +12,17 @@
 
 namespace PayPal;
 
-use Monolog\Logger;
-use PayPal\Exception\PayPalConnectionException;
-use PayPal\Model\PaypalCartQuery;
-use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\Service\Base\PayPalBaseService;
-use PayPal\Service\PayPalAgreementService;
-use PayPal\Service\PayPalLoggerService;
-use PayPal\Service\PayPalPaymentService;
 use Propel\Runtime\Connection\ConnectionInterface;
-use Propel\Runtime\Propel;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Thelia\Core\Event\Order\OrderEvent;
-use Thelia\Core\Event\TheliaEvents;
-use Thelia\Core\Translation\Translator;
 use Thelia\Core\Install\Database;
+use Thelia\Model\Base\ModuleI18nQuery;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\ModuleImageQuery;
 use Thelia\Model\Order;
-use Thelia\Model\OrderStatusQuery;
 use Thelia\Module\AbstractPaymentModule;
 use Thelia\Tools\URL;
 
@@ -246,6 +234,24 @@ class PayPal extends AbstractPaymentModule
             ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
             ->autowire(true)
             ->autoconfigure(true);
+    }
+
+    public static function getInfo(?string $locale = 'fr_FR')
+    {
+        $id = PayPal::getModuleId();
+        $moduleInfo = ModuleI18nQuery::create()
+            ->useModuleQuery()
+                ->filterById($id)
+            ->endUse()
+            ->filterByLocale($locale)
+            ->findOne();
+
+        return [
+            "title" => $moduleInfo->getTitle(),
+            "description" => $moduleInfo->getDescription(),
+            "chapo" => $moduleInfo->getChapo(),
+            "postscriptum" => $moduleInfo->getPostscriptum()
+        ];
     }
 
     public static function getBaseUrl()

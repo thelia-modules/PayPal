@@ -18,26 +18,32 @@
 
 {% block checkoutContent %}
     <section class="Paypal">
-        <div class="flex flex-col gap-5 container">
+         <div class="flex flex-col gap-5 container">
             <div class="Paypal-headers">
                 <h1 class="h3 mb-4">
-                    {{ "PayPal - Sélection de paiement"|trans }}
+                    {{ infos.title }}
                 </h1>
-                <p class="paragraph-2">
-                    {{ "Afin de finaliser la commande via PayPal merci de sélectionner votre moyen de paiement :"|trans }}
-                </p>
-                <p class="paragraph-2">
-                    {{ "Vous avez choisi le mode :"|trans }}
-                    {% if intent == 'subscription' %}
+
+                {% if infos.description %}
+                    <p class="paragraph-2">
+                        {{ infos.description }}
+                    </p>
+                {% endif %}
+
+                {% if infos.chapo %}
+                    <p class="paragraph-2">
+                        {{ infos.chapo }}
+                    </p>
+                {% endif %}
+
+                {% if intent == 'subscription' %}
+                    <p class="paragraph-2">
+                        {{ "Vous avez choisi le mode :"|trans }}
                         <span>
                             {{ plan_title }} - {{ plan_description }}
                         </span>
-                    {% else %}
-                        <strong>
-                            {{ 'PayPal - Unique payment mode'|trans }}
-                        </strong>
-                    {% endif %}
-                </p>
+                    </p>
+                {% endif %}
             </div>
             <div class="Paypal-actions" style="">
                 <div id="paypal-button-container"></div>

@@ -2,8 +2,8 @@
 
 namespace PayPal\Controller;
 
-use PayPal\Model\Base\PaypalPlanifiedPayment;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
+use PayPal\PayPal;
 use PayPal\Service\Base\PayPalBaseService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -36,6 +36,8 @@ class PayPalFrontController extends BaseFrontController
         $templateData['intent'] = "capture";
         $templateData['planified_payment_id'] = null;
         $templateData['currency'] = CurrencyQuery::create()->findOneByByDefault(1)->getCode();
+
+        $templateData['infos'] = PayPal::getInfo($lang->getLocale());
 
         if (!empty($paymentOptions) && 'paypal' !== $paymentType = $paymentOptions['code']) {
             $planifiedPaymentId = explode('_', $paymentType)[1];
