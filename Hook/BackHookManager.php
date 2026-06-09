@@ -74,6 +74,21 @@ class BackHookManager extends BaseHook
         $vars['paypal_appid'] = PayPalBaseService::getLogin();
         $vars['paypal_authend'] = PayPalBaseService::getMode();
 
+        $booleanFields = [
+            'sandbox',
+            'method_paypal',
+            'method_paypal_with_in_context',
+            'method_express_checkout',
+            'method_credit_card',
+            'method_planified_payment',
+            'send_confirmation_message_only_if_paid',
+            'send_payment_confirmation_message',
+            'send_recursive_message',
+        ];
+        foreach ($booleanFields as $booleanField) {
+            $vars[$booleanField] = isset($vars[$booleanField]) && (bool) $vars[$booleanField];
+        }
+
         $form = $this->formFactory->createForm(ConfigurationForm::getName(), data: $vars);
         $vars['form'] = $form->createView()->getView();
 
