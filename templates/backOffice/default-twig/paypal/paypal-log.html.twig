@@ -1,0 +1,68 @@
+{% extends '@BackOfficeDefaultTwig/base.html.twig' %}
+
+{% block title %}{{ 'Automatic PayPal logs'|trans({}, 'paypal.bo.default') }}{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin/home">{{ 'Home'|trans }}</a></li>
+        <li class="breadcrumb-item"><a href="/admin/modules">{{ 'Modules'|trans }}</a></li>
+        <li class="breadcrumb-item"><a href="/admin/module/PayPal">PayPal</a></li>
+        <li class="breadcrumb-item active">{{ 'Automatic PayPal logs'|trans({}, 'paypal.bo.default') }}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+
+        {% include '@PayPalModule/backOffice/default-twig/paypal/menu/menu.html.twig' with {'selectedMenu': 'log'} %}
+
+        <h3>
+            <span class="badge text-bg-primary">1</span>
+            {{ 'Automatic PayPal logs'|trans({}, 'paypal.bo.default') }}
+        </h3>
+
+        <div class="alert alert-info">
+            <h4 class="text-uppercase">
+                <i class="bi bi-info-circle"></i>&nbsp;{{ 'Help'|trans({}, 'paypal.bo.default') }}&nbsp;:
+            </h4>
+            {{ 'This is where we log all the transactions made with PayPal. PayPal webhooks also automatically feed these logs.'|trans({}, 'paypal.bo.default') }}
+            <br />{{ 'This informations can be found directly in concerned order details.'|trans({}, 'paypal.bo.default') }}
+        </div>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>{{ 'Date'|trans({}, 'paypal.bo.default') }}</th>
+                <th>{{ 'Details'|trans({}, 'paypal.bo.default') }}</th>
+                <th>{{ 'Customer ID'|trans({}, 'paypal.bo.default') }}</th>
+                <th>{{ 'Order ID'|trans({}, 'paypal.bo.default') }}</th>
+                <th>{{ 'Webhook'|trans({}, 'paypal.bo.default') }}</th>
+                <th>{{ 'Level'|trans({}, 'paypal.bo.default') }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for log in logs %}
+                {% include '@PayPalModule/backOffice/default-twig/paypal/includes/paypal-log-row.html.twig' with {'log': log} %}
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% if page_count > 1 %}
+        <nav>
+            <ul class="pagination">
+                {% for p in 1..page_count %}
+                    <li class="page-item {{ p == page ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('paypal_configure_log') }}?page={{ p }}&amp;limit={{ limit }}">{{ p }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+    {% include '@PayPalModule/backOffice/default-twig/paypal/includes/paypal-log-row-js.html.twig' %}
+{% endblock %}

@@ -1,0 +1,11 @@
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link {{ selectedMenu == 'general' ? 'active' : '' }}" href="{{ selectedMenu == 'general' ? '#' : '/admin/module/PayPal' }}">{{ 'General configuration'|trans({}, 'paypal.bo.default') }}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ selectedMenu == 'planifiedPayment' or selectedMenu == 'planified' ? 'active' : '' }}" href="{{ selectedMenu == 'planifiedPayment' or selectedMenu == 'planified' ? '#' : path('configure_planified_render') }}">{{ 'Planified payment'|trans({}, 'paypal.bo.default') }}</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ selectedMenu == 'log' ? 'active' : '' }}" href="{{ selectedMenu == 'log' ? '#' : path('paypal_configure_log') }}">{{ 'Log'|trans({}, 'paypal.bo.default') }}</a>
+    </li>
+</ul>

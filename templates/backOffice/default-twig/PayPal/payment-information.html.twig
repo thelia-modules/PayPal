@@ -1,0 +1,17 @@
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>{{ 'Date'|trans({}, 'paypal.bo.default') }}</th>
+        <th>{{ 'Details'|trans({}, 'paypal.bo.default') }}</th>
+        <th>{{ 'Customer ID'|trans({}, 'paypal.bo.default') }}</th>
+        <th>{{ 'Order ID'|trans({}, 'paypal.bo.default') }}</th>
+        <th>{{ 'Webhook'|trans({}, 'paypal.bo.default') }}</th>
+        <th>{{ 'Level'|trans({}, 'paypal.bo.default') }}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for log in logs %}
+        {% include '@PayPalModule/backOffice/default-twig/paypal/includes/paypal-log-row.html.twig' with {'log': log} %}
+    {% endfor %}
+    </tbody>
+</table>

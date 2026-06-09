@@ -23,14 +23,17 @@
 
 namespace PayPal\Hook;
 
+use PayPal\Form\ConfigurationForm;
+use PayPal\Model\PaypalLogQuery;
 use PayPal\Model\PaypalOrderQuery;
 use PayPal\PayPal;
 use PayPal\Service\Base\PayPalBaseService;
+use Propel\Runtime\ActiveQuery\Criteria;
 use Thelia\Core\Event\Hook\HookRenderEvent;
+use Thelia\Core\Form\TheliaFormFactory;
 use Thelia\Core\Hook\BaseHook;
 use Thelia\Model\ModuleConfig;
 use Thelia\Model\ModuleConfigQuery;
-
 
 /**
  * Class BackHookManager
@@ -38,6 +41,23 @@ use Thelia\Model\ModuleConfigQuery;
  */
 class BackHookManager extends BaseHook
 {
+    public function __construct(
+        private readonly TheliaFormFactory $formFactory,
+        ?\Symfony\Contracts\EventDispatcher\EventDispatcherInterface $dispatcher = null,
+        ?\Thelia\Core\Template\Parser\ParserResolver $parserResolver = null,
+    ) {
+        parent::__construct($dispatcher, $parserResolver);
+    }
+
+    public static function getSubscribedHooks(): array
+    {
+        return [
+            'module.configuration' => [['type' => 'back', 'method' => 'onModuleConfigure']],
+            'order-edit.payment-module-bottom' => [['type' => 'back', 'method' => 'onOrderEditPaymentModuleBottom']],
+            'order.edit-js' => [['type' => 'back', 'method' => 'onOrderEditJs']],
+        ];
+    }
+
     /**
      * @param HookRenderEvent $event
      */
@@ -47,15 +67,18 @@ class BackHookManager extends BaseHook
         if (null !== $moduleConfigs = ModuleConfigQuery::create()->findByModuleId(PayPal::getModuleId())) {
             /** @var ModuleConfig $moduleConfig */
             foreach ($moduleConfigs as $moduleConfig) {
-                $vars[ $moduleConfig->getName() ] = $moduleConfig->getValue();
+                $vars[$moduleConfig->getName()] = $moduleConfig->getValue();
             }
         }
 
         $vars['paypal_appid'] = PayPalBaseService::getLogin();
         $vars['paypal_authend'] = PayPalBaseService::getMode();
 
+        $form = $this->formFactory->createForm(ConfigurationForm::getName(), data: $vars);
+        $vars['form'] = $form->createView()->getView();
+
         $event->add(
-            $this->render('paypal/module-configuration.html', $vars)
+            $this->render('PayPal/module-configuration.html.twig', $vars)
         );
     }
 
@@ -64,13 +87,18 @@ class BackHookManager extends BaseHook
      */
     public function onOrderEditPaymentModuleBottom(HookRenderEvent $event)
     {
-        $templateData = $event->getArguments();
+        $orderId = (int) $event->getArgument('order_id');
 
-        if (null !== $payPalOrder = PaypalOrderQuery::create()->findOneById($event->getArgument('order_id'))) {
+        if (null !== PaypalOrderQuery::create()->findOneById($orderId)) {
+            $logs = PaypalLogQuery::create()
+                ->filterByOrderId($orderId)
+                ->orderByCreatedAt(Criteria::DESC)
+                ->find();
+
             $event->add(
                 $this->render(
-                    'paypal/payment-information.html',
-                    $templateData
+                    'PayPal/payment-information.html.twig',
+                    ['logs' => $logs]
                 )
             );
         }
@@ -81,14 +109,11 @@ class BackHookManager extends BaseHook
      */
     public function onOrderEditJs(HookRenderEvent $event)
     {
-        $templateData = $event->getArguments();
+        $orderId = (int) $event->getArgument('order_id');
 
-        if (null !== $payPalOrder = PaypalOrderQuery::create()->findOneById($event->getArgument('order_id'))) {
+        if (null !== PaypalOrderQuery::create()->findOneById($orderId)) {
             $event->add(
-                $this->render(
-                    'paypal/order-edit-js.html',
-                    $templateData
-                )
+                $this->render('PayPal/order-edit-js.html.twig', [])
             );
         }
     }

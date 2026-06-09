@@ -108,12 +108,34 @@ class ConfigurationController extends BaseAdminController
         }
     }
 
-    /**
-     * @return \Thelia\Core\HttpFoundation\Response
-     */
     #[Route('/log', name: '_log', methods: ['GET'])]
-    public function logAction()
+    public function logAction(\Twig\Environment $twig): \Symfony\Component\HttpFoundation\Response
     {
-        return $this->render('paypal/paypal-log');
+        if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'Paypal', AccessManager::VIEW)) {
+            return $response;
+        }
+
+        $request = $this->getRequest();
+        $page = max(1, (int) ($request->query->get('page') ?? 1));
+        $limit = max(1, (int) ($request->query->get('limit') ?? 100));
+
+        $query = \PayPal\Model\PaypalLogQuery::create()
+            ->orderByCreatedAt(\Propel\Runtime\ActiveQuery\Criteria::DESC);
+
+        $totalCount = (clone $query)->count();
+        $logs = $query
+            ->offset(($page - 1) * $limit)
+            ->limit($limit)
+            ->find();
+
+        return new \Symfony\Component\HttpFoundation\Response(
+            $twig->render('@PayPalModule/backOffice/default-twig/paypal/paypal-log.html.twig', [
+                'logs' => $logs,
+                'page' => $page,
+                'limit' => $limit,
+                'total_count' => $totalCount,
+                'page_count' => (int) ceil($totalCount / $limit),
+            ])
+        );
     }
 }

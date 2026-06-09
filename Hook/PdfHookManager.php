@@ -28,6 +28,13 @@ use Thelia\Core\Hook\BaseHook;
 
 class PdfHookManager  extends BaseHook
 {
+    public static function getSubscribedHooks(): array
+    {
+        return [
+            'invoice.after-payment-module' => [['type' => 'pdf', 'method' => 'onAfterPaymentModule']],
+        ];
+    }
+
     /**
      * @param HookRenderEvent $event
      */

@@ -1,0 +1,112 @@
+{# PayPal module configuration — fired by the module.configuration back hook (fragment) #}
+<div class="card mb-3">
+    <div class="card-body">
+
+        {% include '@PayPalModule/backOffice/default-twig/paypal/menu/menu.html.twig' with {'selectedMenu': 'general'} %}
+
+        {{ form_start(form, {'action': path('paypal_configure_save'), 'attr': {'class': 'mt-3'}}) }}
+        {{ form_errors(form) }}
+
+        <div class="row">
+            <div class="col-md-4">
+                <h3>
+                    <span class="badge text-bg-primary">1</span>
+                    {{ 'SandBox configuration'|trans({}, 'paypal.bo.default') }}
+                    <i class="bi bi-info-circle"></i>
+                </h3>
+
+                {{ form_row(form.sandbox) }}
+                {{ form_row(form.sandbox_login) }}
+                {{ form_row(form.sandbox_password) }}
+                {{ form_row(form.sandbox_merchant_id) }}
+                {{ form_row(form.allowed_ip_list) }}
+
+                <div class="alert alert-info mt-3">
+                    <h4 class="text-uppercase">
+                        <i class="bi bi-info-circle"></i>&nbsp;{{ 'Help'|trans({}, 'paypal.bo.default') }}&nbsp;:&nbsp;{{ 'Configuration'|trans({}, 'paypal.bo.default') }}
+                    </h4>
+                    - {{ 'Log In on <a target=\'_blank\' href=\'https://developer.paypal.com\'>developer.paypal.com</a>'|trans({}, 'paypal.bo.default')|raw }}<br />
+                    - {{ 'Create REST API apps <a target=\'_blank\' href=\'https://developer.paypal.com/developer/applications/\'>here</a>'|trans({}, 'paypal.bo.default')|raw }}<br />
+                    - {{ 'Click on Create App'|trans({}, 'paypal.bo.default') }}<br />
+                    - {{ 'Fill the fields : App Name & Sandbox developer account'|trans({}, 'paypal.bo.default') }}<br />
+                    - {{ 'Copy & Paste the Client ID in the form below'|trans({}, 'paypal.bo.default') }}<br />
+                    - {{ 'Copy & Paste the Client SECRET in the form below'|trans({}, 'paypal.bo.default') }}<br />
+                    - <strong>{{ 'In SANDBOX WEBHOOKS'|trans({}, 'paypal.bo.default') }}&nbsp;:</strong><br />
+                    - {{ 'Add Webhook'|trans({}, 'paypal.bo.default') }}<br />
+                    - {{ 'Check \'All events\''|trans({}, 'paypal.bo.default') }}<br />
+                    - <label class="alert alert-danger d-block">{{ 'This urls can take 3 hours to be taken in consideration'|trans({}, 'paypal.bo.default') }}</label>
+                    - <strong>{{ 'That\'s it !'|trans({}, 'paypal.bo.default') }}</strong>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <h3>
+                    <span class="badge text-bg-primary">2</span>
+                    {{ 'Production configuration'|trans({}, 'paypal.bo.default') }}
+                </h3>
+
+                {{ form_row(form.login) }}
+                {{ form_row(form.password) }}
+                {{ form_row(form.merchant_id) }}
+
+                <div class="alert alert-info mt-3">
+                    <h4 class="text-uppercase">
+                        <i class="bi bi-info-circle"></i>&nbsp;{{ 'Help'|trans({}, 'paypal.bo.default') }}&nbsp;:&nbsp;{{ 'Configuration'|trans({}, 'paypal.bo.default') }}
+                    </h4>
+                    - {{ 'In your PayPal page API configuration'|trans({}, 'paypal.bo.default') }}<br />
+                    - {{ 'Click on the Live Button'|trans({}, 'paypal.bo.default') }}<br />
+                    - {{ 'And configure it like the SandBox'|trans({}, 'paypal.bo.default') }}<br />
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <h3>
+                    <span class="badge text-bg-primary">3</span>
+                    {{ 'Payment configuration'|trans({}, 'paypal.bo.default') }}
+                </h3>
+
+                {{ form_row(form.method_paypal) }}
+                {{ form_row(form.method_paypal_with_in_context) }}
+                {{ form_row(form.method_express_checkout) }}
+                {{ form_row(form.method_credit_card) }}
+
+                <div class="alert alert-danger">
+                    <i class="bi bi-info-circle"></i>
+                    {{ 'This method works only with PayPal PRO UK account. Please contact PayPal to upgrade your account if you need this service. For more informations, go <a target="_blank" href="https://developer.paypal.com/docs/integration/direct/payments/accept-credit-cards/">here</a>'|trans({}, 'paypal.bo.default')|raw }}
+                </div>
+
+                {{ form_row(form.method_planified_payment) }}
+
+                <div class="alert alert-danger">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>{{ 'This method use PayPal webhooks and works only in HTTPS !'|trans({}, 'paypal.bo.default') }}</strong>
+                </div>
+
+                <div class="alert alert-secondary">
+                    <i class="bi bi-info-circle"></i>
+                    {{ 'You can add some planified payment <a href="%url">here</a>.'|trans({'%url': path('configure_planified_render')}, 'paypal.bo.default')|raw }}
+                </div>
+
+                {{ form_row(form.send_confirmation_message_only_if_paid) }}
+                {{ form_row(form.send_payment_confirmation_message) }}
+                {{ form_row(form.send_recursive_message) }}
+
+                <div class="alert alert-secondary">
+                    <i class="bi bi-info-circle"></i>
+                    {{ 'You can <a href="%url">edit the payment confirmation email</a> sent to the customer after a successful payment.'|trans({'%url': '/admin/configuration/messages'}, 'paypal.bo.default')|raw }}
+                </div>
+
+                {{ form_row(form.minimum_amount) }}
+                {{ form_row(form.maximum_amount) }}
+                {{ form_row(form.cart_item_count) }}
+            </div>
+        </div>
+
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-save"></i> {{ 'Save'|trans }}
+            </button>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>

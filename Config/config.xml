@@ -10,12 +10,6 @@
         <loop name="paypal-log" class="PayPal\Loop\PayPalLogLoop" />
     </loops>
 
-    <forms>
-        <form name="paypal_form_configure" class="PayPal\Form\ConfigurationForm" />
-        <form name="paypal_planified_payment_create_form" class="PayPal\Form\PayPalPlanifiedPaymentCreateForm" />
-        <form name="paypal_planified_payment_update_form" class="PayPal\Form\PayPalPlanifiedPaymentUpdateForm" />
-    </forms>
-
     <commands>
         <!--
         <command class="PayPal\Command\MySuperCommand" />
@@ -82,33 +76,6 @@
             <tag name="kernel.event_subscriber"/>
         </service>-->
     </services>
-
-    <hooks>
-        <!-- backOffice -->
-        <hook id="paypal.back.hook" class="PayPal\Hook\BackHookManager">
-            <tag name="hook.event_listener" event="module.configuration" type="back" method="onModuleConfigure" />
-            <tag name="hook.event_listener" event="order-edit.payment-module-bottom" type="back" method="onOrderEditPaymentModuleBottom"/>
-            <tag name="hook.event_listener" event="order.edit-js" type="back" method="onOrderEditJs"/>
-        </hook>
-        <!-- frontOffice -->
-        <hook id="paypal.front.hook" class="PayPal\Hook\FrontHookManager">
-            <argument type="service" id="request_stack"/>
-            <argument type="service" id="service_container" />
-            <tag name="hook.event_listener" event="main.head-bottom" type="front" method="injectCSS" />
-            <tag name="hook.event_listener" event="login.main-bottom" type="front" method="onLoginMainBottom"/>
-            <tag name="hook.event_listener" event="order-invoice.payment-extra" type="front" method="onOrderInvoicePaymentExtra"/>
-            <tag name="hook.event_listener" event="order-invoice.bottom" type="front" method="onOrderInvoiceBottom"/>
-            <tag name="hook.event_listener" event="order-invoice.javascript-initialization" type="front" method="onOrderInvoiceJavascriptInitialization"/>
-            <tag name="hook.event_listener" event="order-placed.additional-payment-info" type="front" method="onOrderPlacedAdditionalPaymentInfo"/>
-            <tag name="hook.event_listener" event="cart.bottom" type="front" method="onCartBottom"/>
-            <tag name="hook.event_listener" event="order-delivery.form-bottom" type="front" method="onOrderDeliveryFormBottom"/>
-            <tag name="hook.event_listener" event="order-delivery.after-javascript-include" type="front" method="onOrderAfterJavascriptInclude"/>
-        </hook>
-        <!-- pdf -->
-        <hook id="paypal.pdf.hook" class="PayPal\Hook\PdfHookManager">
-            <tag name="hook.event_listener" event="invoice.after-payment-module" type="pdf" method="onAfterPaymentModule"/>
-        </hook>
-    </hooks>
 
     <!--
     <exports>

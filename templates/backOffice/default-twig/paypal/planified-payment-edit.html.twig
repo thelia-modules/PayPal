@@ -1,0 +1,43 @@
+{% extends '@BackOfficeDefaultTwig/base.html.twig' %}
+
+{% block title %}{{ 'Edit planified payment'|trans({}, 'paypal.bo.default') }}{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin/home">{{ 'Home'|trans }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ path('configure_planified_render') }}">{{ 'Planified payments'|trans({}, 'paypal.bo.default') }}</a></li>
+        <li class="breadcrumb-item active">{{ 'Editing planified payment "%title"'|trans({'%title': planifiedPayment.title}, 'paypal.bo.default') }}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h3>{{ 'Edit planified payment %title'|trans({'%title': planifiedPayment.title}, 'paypal.bo.default') }}</h3>
+
+        {{ form_start(update_form, {'action': path('configure_planified_process_update', {'planifiedPaymentId': planifiedPayment.id}), 'attr': {'class': 'clearfix'}}) }}
+            {{ form_errors(update_form) }}
+
+            <input type="hidden" name="current_tab" value="general"/>
+            <input type="hidden" name="planifiedPaymentId" value="{{ planifiedPayment.id }}" />
+            <input type="hidden" name="success_url" value="{{ path('configure_planified_render') }}" />
+
+            <div class="row">
+                {% include '@PayPalModule/backOffice/default-twig/paypal/form/create-or-update-planified-payment-form.html.twig' with {'form': update_form} %}
+            </div>
+
+            <div class="text-end mb-3">
+                <a class="btn btn-secondary" href="{{ path('configure_planified_render') }}">{{ 'Cancel'|trans }}</a>
+                <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> {{ 'Save'|trans }}</button>
+            </div>
+
+            <small>{{ 'Planified payment created on %date_create. Last modification: %date_change'|trans({
+                '%date_create': planifiedPayment.create_date ? planifiedPayment.create_date|date('Y-m-d H:i:s') : '',
+                '%date_change': planifiedPayment.update_date ? planifiedPayment.update_date|date('Y-m-d H:i:s') : ''
+            }, 'paypal.bo.default') }}</small>
+
+            {{ form_rest(update_form) }}
+        {{ form_end(update_form, {'render_rest': false}) }}
+    </div>
+</div>
+{% endblock %}

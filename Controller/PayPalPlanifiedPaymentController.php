@@ -57,7 +57,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     /**
      * PayPalPlanifiedPaymentController constructor.
      */
-    public function __construct()
+    public function __construct(private readonly \Twig\Environment $twig)
     {
         parent::__construct(
             'team',
@@ -316,12 +316,39 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     {
         $this->getListOrderFromSession('planified_payment', 'order', 'manual');
 
-        return $this->render(
-            'paypal/planified-payment',
-            [
+        $locale = $this->getSession()->getLang()->getLocale();
+
+        $query = PaypalPlanifiedPaymentQuery::create();
+        if ($currentOrder === 'order-reverse') {
+            $query->orderById(\Propel\Runtime\ActiveQuery\Criteria::DESC);
+        } else {
+            $query->orderById();
+        }
+
+        $planifiedPayments = [];
+        foreach ($query->find() as $planifiedPayment) {
+            $planifiedPayment->setLocale($locale);
+            $planifiedPayments[] = [
+                'id' => $planifiedPayment->getId(),
+                'title' => $planifiedPayment->getTitle(),
+                'description' => $planifiedPayment->getDescription(),
+                'frequency_interval' => $planifiedPayment->getFrequencyInterval(),
+                'frequency' => $planifiedPayment->getFrequency(),
+                'cycle' => $planifiedPayment->getCycle(),
+                'min_amount' => $planifiedPayment->getMinAmount(),
+                'max_amount' => $planifiedPayment->getMaxAmount(),
+            ];
+        }
+
+        $createForm = $this->createForm(PayPalPlanifiedPaymentCreateForm::getName());
+
+        return new Response(
+            $this->getTwig()->render('@PayPalModule/backOffice/default-twig/paypal/planified-payment.html.twig', [
                 'order' => $currentOrder,
-                'selected_menu' => 'planified'
-            ]
+                'selected_menu' => 'planified',
+                'planified_payments' => $planifiedPayments,
+                'create_form' => $createForm->getForm()->createView(),
+            ])
         );
     }
 
@@ -331,7 +358,30 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      */
     protected function renderEditionTemplate(): \Symfony\Component\HttpFoundation\Response
     {
-        return $this->render('paypal/planified-payment-edit', $this->getEditionArguments());
+        $args = $this->getEditionArguments();
+
+        $object = $this->getExistingObject();
+        $locale = $this->getSession()->getLang()->getLocale();
+        $object->setLocale($locale);
+
+        $updateForm = $this->hydrateObjectForm($this->getParserContext(), $object);
+
+        $args['planifiedPayment'] = [
+            'id' => $object->getId(),
+            'title' => $object->getTitle(),
+            'create_date' => $object->getCreatedAt(),
+            'update_date' => $object->getUpdatedAt(),
+        ];
+        $args['update_form'] = $updateForm->getForm()->createView();
+
+        return new Response(
+            $this->getTwig()->render('@PayPalModule/backOffice/default-twig/paypal/planified-payment-edit.html.twig', $args)
+        );
+    }
+
+    private function getTwig(): \Twig\Environment
+    {
+        return $this->twig;
     }
 
     /**

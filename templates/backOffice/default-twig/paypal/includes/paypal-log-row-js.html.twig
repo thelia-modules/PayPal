@@ -1,0 +1,12 @@
+<script>
+    document.addEventListener('click', function (event) {
+        var trigger = event.target.closest('.paypal-log');
+        if (!trigger) {
+            return;
+        }
+        var details = document.querySelector(trigger.getAttribute('data-details'));
+        if (details) {
+            details.classList.toggle('d-none');
+        }
+    });
+</script>

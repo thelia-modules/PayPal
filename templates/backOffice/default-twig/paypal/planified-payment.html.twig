@@ -1,0 +1,148 @@
+{% extends '@BackOfficeDefaultTwig/base.html.twig' %}
+
+{% block title %}{{ 'Planified payment'|trans({}, 'paypal.bo.default') }}{% endblock %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin/home">{{ 'Home'|trans }}</a></li>
+        <li class="breadcrumb-item"><a href="/admin/modules">{{ 'Modules'|trans }}</a></li>
+        <li class="breadcrumb-item"><a href="/admin/module/PayPal">PayPal</a></li>
+        <li class="breadcrumb-item active">{{ 'Planified payment'|trans({}, 'paypal.bo.default') }}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+
+        {% include '@PayPalModule/backOffice/default-twig/paypal/menu/menu.html.twig' with {'selectedMenu': 'planified'} %}
+
+        <h3>
+            <span class="badge text-bg-primary">1</span>
+            {{ 'Planified payment configuration'|trans({}, 'paypal.bo.default') }}
+        </h3>
+
+        <div class="alert alert-info">
+            <h4 class="text-uppercase">
+                <i class="bi bi-info-circle"></i>&nbsp;{{ 'Help'|trans({}, 'paypal.bo.default') }}&nbsp;:
+            </h4>
+            {{ "This feature uses PayPal's Billing Plan and Agreement. It allows debiting a client recursively directly from PayPal."|trans({}, 'paypal.bo.default') }}
+            <br />{{ 'These planned payments will appear in step 4 of the purchase tunnel when selecting the payment method.'|trans({}, 'paypal.bo.default') }}
+        </div>
+
+        <table class="table table-striped">
+            <caption class="clearfix">
+                {{ 'List of planified payments'|trans({}, 'paypal.bo.default') }}
+                <span class="float-end">
+                    <button type="button" class="btn btn-primary" title="{{ 'Add a planified payment'|trans({}, 'paypal.bo.default') }}" data-bs-toggle="modal" data-bs-target="#creation_dialog">
+                        <i class="bi bi-plus-lg"></i> {{ 'Add a planified payment'|trans({}, 'paypal.bo.default') }}
+                    </button>
+                </span>
+            </caption>
+            <thead>
+            <tr>
+                <th>{{ 'Title'|trans({}, 'paypal.bo.default') }}</th>
+                <th>{{ 'Details'|trans({}, 'paypal.bo.default') }}</th>
+                <th class="actions"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for planifiedPayment in planified_payments %}
+            <tr>
+                <td>
+                    <strong>{{ planifiedPayment.title }}&nbsp;;</strong><br />
+                    {{ planifiedPayment.description }}
+                </td>
+                <td>
+                    <strong>{{ 'Frequency interval'|trans({}, 'paypal.bo.default') }}&nbsp;:&nbsp;</strong>{{ planifiedPayment.frequency_interval }}<br />
+                    <strong>{{ 'Frequency'|trans({}, 'paypal.bo.default') }}&nbsp;:&nbsp;</strong>{{ planifiedPayment.frequency }}<br />
+                    <strong>{{ 'Cycle'|trans({}, 'paypal.bo.default') }}&nbsp;:&nbsp;</strong>{{ planifiedPayment.cycle }}<br />
+                    <strong>{{ 'Min amount'|trans({}, 'paypal.bo.default') }}&nbsp;:&nbsp;</strong>{{ planifiedPayment.min_amount > 0 ? planifiedPayment.min_amount : 'None'|trans({}, 'paypal.bo.default') }}<br />
+                    <strong>{{ 'Max amount'|trans({}, 'paypal.bo.default') }}&nbsp;:&nbsp;</strong>{{ planifiedPayment.max_amount > 0 ? planifiedPayment.max_amount : 'None'|trans({}, 'paypal.bo.default') }}<br />
+                </td>
+                <td class="actions">
+                    <div class="btn-group btn-group-sm">
+                        <a class="btn btn-primary" title="{{ 'Edit this planified payment'|trans({}, 'paypal.bo.default') }}" href="{{ path('configure_planified_update', {'planifiedPaymentId': planifiedPayment.id}) }}">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-danger planified-payment-delete" title="{{ 'Delete this planified payment'|trans({}, 'paypal.bo.default') }}" data-id="{{ planifiedPayment.id }}" data-bs-toggle="modal" data-bs-target="#delete_dialog">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="100">
+                    <div class="alert alert-info">
+                        {{ 'No planified payment has been created yet. Click the + button to create one.'|trans({}, 'paypal.bo.default') }}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# Create dialog #}
+<div class="modal fade" id="creation_dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            {{ form_start(create_form, {'action': path('configure_planified_create'), 'attr': {'class': 'clearfix'}}) }}
+            <div class="modal-header">
+                <h5 class="modal-title">{{ 'Create a new planified payment'|trans({}, 'paypal.bo.default') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ form_errors(create_form) }}
+                {% include '@PayPalModule/backOffice/default-twig/paypal/form/create-or-update-planified-payment-form.html.twig' with {'form': create_form} %}
+                <input type="hidden" name="success_url" value="{{ path('configure_planified_render') }}" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans }}</button>
+                <button type="submit" class="btn btn-success">{{ 'Create this planified payment'|trans({}, 'paypal.bo.default') }}</button>
+            </div>
+            {{ form_rest(create_form) }}
+            {{ form_end(create_form, {'render_rest': false}) }}
+        </div>
+    </div>
+</div>
+
+{# Delete dialog #}
+<div class="modal fade" id="delete_dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path('configure_planified_delete') }}?_token={{ assignToken() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ 'Delete planified payment'|trans({}, 'paypal.bo.default') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{ 'Do you really want to delete this planified payment ?'|trans({}, 'paypal.bo.default') }}
+                    <input type="hidden" name="planifiedPaymentId" id="planifiedPaymentId" value="" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'Cancel'|trans }}</button>
+                    <button type="submit" class="btn btn-danger">{{ 'Delete'|trans }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    document.addEventListener('click', function (event) {
+        var trigger = event.target.closest('a.planified-payment-delete, button.planified-payment-delete');
+        if (!trigger) {
+            return;
+        }
+        var input = document.getElementById('planifiedPaymentId');
+        if (input) {
+            input.value = trigger.getAttribute('data-id');
+        }
+    });
+</script>
+{% endblock %}

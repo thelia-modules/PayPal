@@ -1,0 +1,23 @@
+{{ form_row(form.locale) }}
+<div class="card mb-3">
+    <div class="card-header">
+        {{ 'Global informations of this planified payment'|trans({}, 'paypal.bo.default') }}
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">{{ form_row(form.title) }}</div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">{{ form_row(form.description) }}</div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">{{ form_row(form.frequency_interval) }}</div>
+            <div class="col-md-4">{{ form_row(form.frequency) }}</div>
+            <div class="col-md-4">{{ form_row(form.cycle) }}</div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">{{ form_row(form.min_amount) }}</div>
+            <div class="col-md-4">{{ form_row(form.max_amount) }}</div>
+        </div>
+    </div>
+</div>

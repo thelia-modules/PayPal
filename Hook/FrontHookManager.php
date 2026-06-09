@@ -45,15 +45,30 @@ class FrontHookManager extends BaseHook
     /** @var ContainerInterface */
     public \Symfony\Component\DependencyInjection\ContainerInterface $container;
 
-    /**
-     * FrontHookManager constructor.
-     * @param RequestStack $requestStack
-     * @param ContainerInterface $container
-     */
-    public function __construct(RequestStack $requestStack, ContainerInterface $container)
-    {
+    public function __construct(
+        RequestStack $requestStack,
+        ContainerInterface $container,
+        ?\Symfony\Contracts\EventDispatcher\EventDispatcherInterface $dispatcher = null,
+        ?\Thelia\Core\Template\Parser\ParserResolver $parserResolver = null,
+    ) {
+        parent::__construct($dispatcher, $parserResolver);
         $this->requestStack = $requestStack;
         $this->container = $container;
+    }
+
+    public static function getSubscribedHooks(): array
+    {
+        return [
+            'main.head-bottom' => [['type' => 'front', 'method' => 'injectCSS']],
+            'login.main-bottom' => [['type' => 'front', 'method' => 'onLoginMainBottom']],
+            'order-invoice.payment-extra' => [['type' => 'front', 'method' => 'onOrderInvoicePaymentExtra']],
+            'order-invoice.bottom' => [['type' => 'front', 'method' => 'onOrderInvoiceBottom']],
+            'order-invoice.javascript-initialization' => [['type' => 'front', 'method' => 'onOrderInvoiceJavascriptInitialization']],
+            'order-placed.additional-payment-info' => [['type' => 'front', 'method' => 'onOrderPlacedAdditionalPaymentInfo']],
+            'cart.bottom' => [['type' => 'front', 'method' => 'onCartBottom']],
+            'order-delivery.form-bottom' => [['type' => 'front', 'method' => 'onOrderDeliveryFormBottom']],
+            'order-delivery.after-javascript-include' => [['type' => 'front', 'method' => 'onOrderAfterJavascriptInclude']],
+        ];
     }
 
     /**
