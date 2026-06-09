@@ -9,6 +9,9 @@
     "wazaari/monolog-mysql": "^2.0",
     "symfony/http-client": "^7.0"
   },
+  "suggest": {
+    "thelia/front-module": "Required at runtime by PayPalResponseController for express-checkout and order flows"
+  },
   "extra": {
     "installer-name": "PayPal"
   }

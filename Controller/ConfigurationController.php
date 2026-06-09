@@ -29,11 +29,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
-use Thelia\Core\Thelia;
 use Thelia\Core\Translation\Translator;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Tools\URL;
-use Thelia\Tools\Version\Version;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -45,9 +43,6 @@ class ConfigurationController extends BaseAdminController
 {
     /*
      * Checks paypal.configure || paypal.configure.sandbox form and save config into json file
-     */
-    /**
-     * @return mixed|\Symfony\Component\HttpFoundation\Response|\Thelia\Core\HttpFoundation\Response
      */
     #[Route('', name: '_save', methods: 'POST')]
     public function configureAction(RequestStack $requestStack, Translator $translator)
@@ -100,12 +95,7 @@ class ConfigurationController extends BaseAdminController
             $ex
         );
 
-        // Before 2.2, the errored form is not stored in session
-        if (Version::test(Thelia::THELIA_VERSION, '2.2', false, "<")) {
-            return $this->render('module-configure', [ 'module_code' => PayPal::getModuleCode()]);
-        } else {
-            return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/PayPal'));
-        }
+        return $this->generateRedirect(URL::getInstance()->absoluteUrl('/admin/module/PayPal'));
     }
 
     #[Route('/log', name: '_log', methods: ['GET'])]

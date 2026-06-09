@@ -23,6 +23,14 @@
 
 namespace PayPal\Controller;
 
+if (!class_exists(\Front\Controller\OrderController::class)) {
+    // The Front module is an optional runtime dependency.
+    // On installs where it is absent, this controller must not be registered —
+    // autowiring would fail at container compilation. Guard with class_exists
+    // so the class is skipped when the Front module is not loaded.
+    return;
+}
+
 use Front\Controller\OrderController;
 use Monolog\Logger;
 use PayPal\Api\Details;

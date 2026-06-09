@@ -4,10 +4,10 @@
         {% if log.hook %}
             {{ log.hook }}&nbsp;({{ 'See webhook details'|trans({}, 'paypal.bo.default') }})
             <div id="details-{{ log.id }}" class="d-none">
-                {{ log.message|raw }}
+                {{ log.message }}
             </div>
         {% else %}
-            {{ log.message|raw }}
+            {{ log.message }}
         {% endif %}
     </td>
     <td><a title="{{ 'Edit this customer'|trans }}" href="/admin/customer/update?customer_id={{ log.customerId }}">{{ log.customerId }}</a></td>
