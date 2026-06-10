@@ -138,7 +138,8 @@ class OrderListener implements EventSubscriberInterface
         $payPalCartEvent = new PayPalCartEvent($this->payPalPaymentService->getCurrentPayPalCart());
         $this->dispatcher->dispatch($payPalCartEvent, PayPalEvents::PAYPAL_CART_DELETE);
 
-        $postedData = $this->requestStack->getCurrentRequest()->request->all()['thelia_order_payment'] ?? null;
+        $allPosted = $this->requestStack->getCurrentRequest()->request->all();
+        $postedData = $allPosted['thelia_order_payment'] ?? $allPosted['apyfundjar_payment_form'] ?? [];
 
         if (is_array($postedData) &&
             isset($postedData[PayPalFormFields::FIELD_PAYMENT_MODULE]) &&
