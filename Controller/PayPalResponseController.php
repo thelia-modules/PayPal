@@ -23,6 +23,9 @@
 
 namespace PayPal\Controller;
 
+use ApyMyBox\Model\ApyOrder;
+use ApyMyBox\Model\ApyOrderQuery;
+use ApyThemeV3\ApyThemeV3;
 use ApyUtilities\Event\PaymentEventInterface;
 use ApyUtilities\Interfaces\OrderHelperInterface;
 use Front\Controller\OrderController;
@@ -50,6 +53,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Router;
 use Thelia\Core\Event\Address\AddressCreateOrUpdateEvent;
 use Thelia\Core\Event\Customer\CustomerCreateOrUpdateEvent;
@@ -72,7 +76,6 @@ use Thelia\Model\OrderQuery;
 use Thelia\Model\OrderStatusQuery;
 use Thelia\Module\Exception\DeliveryException;
 use Thelia\Tools\URL;
-use Symfony\Component\Routing\Annotation\Route;
 
 /**
  * @Route("", name="paypal")
@@ -82,7 +85,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class PayPalResponseController extends OrderController
 {
     /**
-     * @param $orderId
+     * @param                          $orderId
      * @param EventDispatcherInterface $eventDispatcher
      * @Route("/module/paypal/cancel/{orderId}", name="_cancel", methods="GET")
      */
@@ -188,25 +191,28 @@ class PayPalResponseController extends OrderController
         return $response;
     }
 
-
     /**
-     * @param RequestStack $requestStack
+     * @param RequestStack             $requestStack
      * @param EventDispatcherInterface $dispatcher
-     * @param string $routeId
-     * @param bool $fromCartView
+     * @param string                   $routeId
+     * @param bool                     $fromCartView
      * @return RedirectResponse
      * @Route("/module/paypal/express/checkout", name="_express_checkout", methods="POST")
      */
-    public function expressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $dispatcher, $routeId = 'cart.view', $fromCartView = true)
-    {
+    public function expressCheckoutAction(
+        RequestStack $requestStack,
+        EventDispatcherInterface $dispatcher,
+        $routeId = 'cart.view',
+        $fromCartView = true
+    ) {
         $session = $requestStack->getCurrentRequest()->getSession();
-        $cart = $session->getSessionCart($dispatcher);
+        $cart    = $session->getSessionCart($dispatcher);
 
         if (null !== $cart) {
             /** @var PayPalPaymentService $payPalService */
             $payPalService = $this->getContainer()->get(PayPal::PAYPAL_PAYMENT_SERVICE_ID);
 
-            $payment = $payPalService->makePaymentFromCart(
+            $payment  = $payPalService->makePaymentFromCart(
                 $cart,
                 null,
                 false,
@@ -225,7 +231,7 @@ class PayPalResponseController extends OrderController
      */
     public function invoiceExpressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $dispatcher)
     {
-        return $this->expressCheckoutAction($requestStack,  $dispatcher, 'order.invoice', false);
+        return $this->expressCheckoutAction($requestStack, $dispatcher, 'order.invoice', false);
     }
 
     /**
@@ -235,20 +241,24 @@ class PayPalResponseController extends OrderController
      * @throws \Exception
      * @Route("/module/paypal/invoice/express/checkout/ok/{cartId}", name="_invoice_express_checkout_ok", methods="GET")
      */
-    public function invoiceExpressCheckoutOkAction($cartId, RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext, Translator $translator)
-    {
+    public function invoiceExpressCheckoutOkAction(
+        $cartId,
+        RequestStack $requestStack,
+        EventDispatcherInterface $eventDispatcher,
+        SecurityContext $securityContext,
+        Translator $translator
+    ) {
         $con = Propel::getConnection();
         $con->beginTransaction();
 
         try {
             $this->fillCartWithExpressCheckout($requestStack->getCurrentRequest(), $eventDispatcher, $securityContext);
 
-            $response = $this->executeExpressCheckoutAction($requestStack, $eventDispatcher,$translator,false);
-
+            $response = $this->executeExpressCheckoutAction($requestStack, $eventDispatcher, $translator, false);
         } catch (PayPalConnectionException $e) {
             $con->rollBack();
 
-            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
+            $message    = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
             $customerId = null;
             if (isset($customer)) {
                 $customerId = $customer->getId();
@@ -262,7 +272,7 @@ class PayPalResponseController extends OrderController
                 Logger::CRITICAL
             );
             throw $e;
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $con->rollBack();
 
             $customerId = null;
@@ -281,6 +291,7 @@ class PayPalResponseController extends OrderController
         }
 
         $con->commit();
+
         return $response;
     }
 
@@ -298,8 +309,11 @@ class PayPalResponseController extends OrderController
      * @throws \Exception
      * @Route("/module/paypal/express/checkout/ok/{cartId}", name="_express_checkout_ok", methods="POST")
      */
-    public function expressCheckoutOkAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext)
-    {
+    public function expressCheckoutOkAction(
+        RequestStack $requestStack,
+        EventDispatcherInterface $eventDispatcher,
+        SecurityContext $securityContext
+    ) {
         $con = Propel::getConnection();
         $con->beginTransaction();
 
@@ -307,12 +321,10 @@ class PayPalResponseController extends OrderController
             $this->fillCartWithExpressCheckout($requestStack->getCurrentRequest(), $eventDispatcher, $securityContext);
 
             $response = $this->getUrlFromRouteId('order.delivery');
-
-
         } catch (PayPalConnectionException $e) {
             $con->rollBack();
 
-            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
+            $message    = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
             $customerId = null;
             if (isset($customer)) {
                 $customerId = $customer->getId();
@@ -326,7 +338,7 @@ class PayPalResponseController extends OrderController
                 Logger::CRITICAL
             );
             throw $e;
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $con->rollBack();
 
             $customerId = null;
@@ -345,6 +357,7 @@ class PayPalResponseController extends OrderController
         }
 
         $con->commit();
+
         return $response;
     }
 
@@ -352,8 +365,12 @@ class PayPalResponseController extends OrderController
      * @return RedirectResponse|\Symfony\Component\HttpFoundation\Response
      * @Route("/order/delivery", name="_order_delivery", methods="POST")
      */
-    public function executeExpressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, Translator $translator, $fromCartView = true)
-    {
+    public function executeExpressCheckoutAction(
+        RequestStack $requestStack,
+        EventDispatcherInterface $eventDispatcher,
+        Translator $translator,
+        $fromCartView = true
+    ) {
         if (null === $responseParent = parent::deliver($eventDispatcher)) {
 
             if ($fromCartView) {
@@ -366,30 +383,32 @@ class PayPalResponseController extends OrderController
 
         try {
             $session = $requestStack->getCurrentRequest()->getSession();
-            $cart = $session->getSessionCart($eventDispatcher);
+            $cart    = $session->getSessionCart($eventDispatcher);
 
             if (null === $payPalCart = PaypalCartQuery::create()->findOneById($cart->getId())) {
                 $con->rollBack();
+
                 return $responseParent;
             }
 
             if (null === $payPalCart->getExpressPaymentId() || null === $payPalCart->getExpressPayerId() || null === $payPalCart->getExpressToken()) {
                 $con->rollBack();
+
                 return $responseParent;
             }
 
             /** @var PayPalPaymentService $payPalPaymentService */
             $payPalPaymentService = $this->container->get(PayPal::PAYPAL_PAYMENT_SERVICE_ID);
-            $payment = $payPalPaymentService->getPaymentDetails($payPalCart->getExpressPaymentId());
+            $payment              = $payPalPaymentService->getPaymentDetails($payPalCart->getExpressPaymentId());
 
             $payerInfo = $payment->getPayer()->getPayerInfo();
 
             //Check if invoice adresse already exist
             if (null === $payerInfo->getBillingAddress()) {
-                $line1 = $payerInfo->getShippingAddress()->getLine1();
+                $line1   = $payerInfo->getShippingAddress()->getLine1();
                 $zipCode = $payerInfo->getShippingAddress()->getPostalCode();
             } else {
-                $line1 = $payerInfo->getBillingAddress()->getLine1();
+                $line1   = $payerInfo->getBillingAddress()->getLine1();
                 $zipCode = $payerInfo->getBillingAddress()->getPostalCode();
             }
 
@@ -425,8 +444,7 @@ class PayPalResponseController extends OrderController
                 ->setPayerId($payerInfo->getPayerId())
                 ->setPostalCode($payerInfo->getShippingAddress()->getPostalCode())
                 ->setCountry($payerInfo->getShippingAddress()->getCountryCode())
-                ->setStreetAddress($payerInfo->getShippingAddress()->getLine1() . $payerInfo->getShippingAddress()->getLine2())
-            ;
+                ->setStreetAddress($payerInfo->getShippingAddress()->getLine1() . $payerInfo->getShippingAddress()->getLine2());
 
             $payPalCustomerEvent = new PayPalCustomerEvent($payPalCustomer);
             $eventDispatcher->dispatch($payPalCustomerEvent, PayPalEvents::PAYPAL_CUSTOMER_UPDATE);
@@ -441,7 +459,7 @@ class PayPalResponseController extends OrderController
 
             /** @var \Thelia\Model\Currency $currency */
             $currency = $cart->getCurrency();
-            $lang = $requestStack->getCurrentRequest()->getSession()->getLang();
+            $lang     = $requestStack->getCurrentRequest()->getSession()->getLang();
 
             $order = new Order();
             $order
@@ -451,13 +469,12 @@ class PayPalResponseController extends OrderController
                 ->setStatusId(OrderStatusQuery::getNotPaidStatus()->getId())
                 ->setLangId($lang->getDefaultLanguage()->getId())
                 ->setChoosenDeliveryAddress($deliveryAddress)
-                ->setChoosenInvoiceAddress($invoiceAddress)
-            ;
+                ->setChoosenInvoiceAddress($invoiceAddress);
 
             $orderEvent = new OrderEvent($order);
 
             /* get postage amount */
-            $moduleInstance = $deliveryModule->getDeliveryModuleInstance($this->container);
+            $moduleInstance       = $deliveryModule->getDeliveryModuleInstance($this->container);
             $deliveryPostageEvent = new DeliveryPostageEvent($moduleInstance, $cart, $deliveryAddress);
 
             $eventDispatcher->dispatch(
@@ -499,10 +516,11 @@ class PayPalResponseController extends OrderController
             $order = $orderManualEvent->getPlacedOrder();
 
             $payPalOrderEvent = $payPalPaymentService->generatePayPalOrder($order);
-            $payPalPaymentService->updatePayPalOrder($payPalOrderEvent->getPayPalOrder(), $payment->getState(), $payment->getId());
+            $payPalPaymentService->updatePayPalOrder($payPalOrderEvent->getPayPalOrder(), $payment->getState(),
+                $payment->getId());
             /** @var OrderHelperInterface $orderHelper */
             $orderHelper = $this->getContainer()->get(OrderHelperInterface::ORDER_HELPER_SERVICE_ID);
-            $response = $this->executePayment(
+            $response    = $this->executePayment(
                 $eventDispatcher,
                 $payPalOrderEvent->getPayPalOrder(),
                 $payPalCart->getExpressPaymentId(),
@@ -520,7 +538,7 @@ class PayPalResponseController extends OrderController
         } catch (PayPalConnectionException $e) {
             $con->rollBack();
 
-            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
+            $message    = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
             $customerId = null;
             if (isset($customer)) {
                 $customerId = $customer->getId();
@@ -534,7 +552,7 @@ class PayPalResponseController extends OrderController
                 Logger::CRITICAL
             );
             $response = $responseParent;
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $con->rollBack();
 
             $customerId = null;
@@ -553,6 +571,7 @@ class PayPalResponseController extends OrderController
         }
 
         $con->commit();
+
         return $response;
     }
 
@@ -566,12 +585,13 @@ class PayPalResponseController extends OrderController
             [],
             Logger::WARNING
         );
+
         return $this->getUrlFromRouteId('cart.view');
     }
 
     /**
      * Method called when a customer log in with PayPal.
-     * @param RequestStack $requestStack
+     * @param RequestStack             $requestStack
      * @param EventDispatcherInterface $eventDispatcher
      * @return RedirectResponse
      * @throws \Propel\Runtime\Exception\PropelException
@@ -583,7 +603,7 @@ class PayPalResponseController extends OrderController
 
             /** @var PayPalCustomerService $payPalCustomerService */
             $payPalCustomerService = $this->container->get(PayPal::PAYPAL_CUSTOMER_SERVICE_ID);
-            $openIdUserinfo = $payPalCustomerService->getUserInfoWithAuthorizationCode($authorizationCode);
+            $openIdUserinfo        = $payPalCustomerService->getUserInfoWithAuthorizationCode($authorizationCode);
 
             $payPalCustomer = $payPalCustomerService->getCurrentPayPalCustomer();
             $payPalCustomer
@@ -609,13 +629,13 @@ class PayPalResponseController extends OrderController
                 ->setLocality($openIdUserinfo->getAddress()->getLocality())
                 ->setRegion($openIdUserinfo->getAddress()->getRegion())
                 ->setCountry($openIdUserinfo->getAddress()->getCountry())
-                ->setStreetAddress($openIdUserinfo->getAddress()->getStreetAddress())
-            ;
+                ->setStreetAddress($openIdUserinfo->getAddress()->getStreetAddress());
 
             $payPalCustomerEvent = new PayPalCustomerEvent($payPalCustomer);
             $eventDispatcher->dispatch($payPalCustomerEvent, PayPalEvents::PAYPAL_CUSTOMER_UPDATE);
 
-            $eventDispatcher->dispatch(new CustomerLoginEvent($payPalCustomerEvent->getPayPalCustomer()->getCustomer()), TheliaEvents::CUSTOMER_LOGIN);
+            $eventDispatcher->dispatch(new CustomerLoginEvent($payPalCustomerEvent->getPayPalCustomer()->getCustomer()),
+                TheliaEvents::CUSTOMER_LOGIN);
         }
 
         return new RedirectResponse(URL::getInstance()->absoluteUrl($requestStack->getCurrentRequest()->getSession()->getReturnToUrl()));
@@ -629,7 +649,7 @@ class PayPalResponseController extends OrderController
         $con = Propel::getConnection();
         $con->beginTransaction();
 
-        $token = $requestStack->getCurrentRequest()->query->get('token');
+        $token       = $requestStack->getCurrentRequest()->query->get('token');
         $payPalOrder = PaypalOrderQuery::create()->findOneById($orderId);
 
         if (null !== $payPalOrder && null !== $token) {
@@ -637,14 +657,13 @@ class PayPalResponseController extends OrderController
             try {
                 /** @var PayPalAgreementService $payPalAgreementService */
                 $payPalAgreementService = $this->container->get(PayPal::PAYPAL_AGREEMENT_SERVICE_ID);
-                $agreement = $payPalAgreementService->activateBillingAgreementByToken($token);
+                $agreement              = $payPalAgreementService->activateBillingAgreementByToken($token);
 
                 $payPalOrder
                     ->setState($agreement->getState())
                     ->setAgreementId($agreement->getId())
                     ->setPayerId($agreement->getPayer()->getPayerInfo()->getPayerId())
-                    ->setToken($token)
-                ;
+                    ->setToken($token);
                 $payPalOrderEvent = new PayPalOrderEvent($payPalOrder);
                 $eventDispatcher->dispatch($payPalOrderEvent, PayPalEvents::PAYPAL_ORDER_UPDATE);
 
@@ -662,7 +681,7 @@ class PayPalResponseController extends OrderController
                         PayPal::DOMAIN_NAME
                     ),
                     [
-                        'order_id' => $payPalOrder->getId(),
+                        'order_id'    => $payPalOrder->getId(),
                         'customer_id' => $payPalOrder->getOrder()->getCustomerId()
                     ],
                     Logger::INFO
@@ -691,13 +710,12 @@ class PayPalResponseController extends OrderController
 
                 $response = $this->getPaymentFailurePageUrl($orderId, $e->getMessage());
             }
-
         } else {
             $con->rollBack();
             $message = Translator::getInstance()->trans(
                 'Method agreementOkAction => One of this parameter is invalid : $token = %token, $orderId = %order_id',
                 [
-                    '%token' => $token,
+                    '%token'    => $token,
                     '%order_id' => $orderId
                 ],
                 PayPal::DOMAIN_NAME
@@ -715,6 +733,7 @@ class PayPalResponseController extends OrderController
         }
 
         $con->commit();
+
         return $response;
     }
 
@@ -728,7 +747,7 @@ class PayPalResponseController extends OrderController
         PayPalLoggerService::log(
             print_r($requestStack->getCurrentRequest()->request, true),
             [
-                'hook' => 'guigit',
+                'hook'     => 'guigit',
                 'order_id' => $orderId
             ],
             Logger::DEBUG
@@ -736,7 +755,7 @@ class PayPalResponseController extends OrderController
         PayPalLoggerService::log(
             print_r($this->getRequest()->attributes, true),
             [
-                'hook' => 'guigit',
+                'hook'     => 'guigit',
                 'order_id' => $orderId
             ],
             Logger::DEBUG
@@ -749,38 +768,46 @@ class PayPalResponseController extends OrderController
      * @param $orderId
      * @return RedirectResponse
      */
-    public function getPaymentSuccessPageUrl($orderId)
+    public function getPaymentSuccessPageUrl($orderId): RedirectResponse
     {
-        return $this->getUrlFromRouteId('order.placed', ['order_id' =>  $orderId]);
+        $apyOrder = ApyOrderQuery::create()->findOneByOrderId($orderId);
+        if ($apyOrder instanceof ApyOrder) {
+            return $this->getUrlFromRouteId('order.placed', ['link_token' => $apyOrder->getLinkToken()]);
+        }
     }
 
     /**
      * @throws \Exception
      * @throws \Propel\Runtime\Exception\PropelException
      */
-    protected function fillCartWithExpressCheckout(Request $request, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext)
-    {
+    protected function fillCartWithExpressCheckout(
+        Request $request,
+        EventDispatcherInterface $eventDispatcher,
+        SecurityContext $securityContext
+    ) {
         $paymentId = $request->get('paymentId');
-        $token = $request->get('token');
-        $payerId = $request->get('PayerID');
-        $cartId = $request->get('cartId');
-        $cart = CartQuery::create()->findOneById($request->get('cartId'));
+        $token     = $request->get('token');
+        $payerId   = $request->get('PayerID');
+        $cartId    = $request->get('cartId');
+        $cart      = CartQuery::create()->findOneById($request->get('cartId'));
 
         if (null === $paymentId || null === $token || null === $payerId || null === $cart) {
             PayPalLoggerService::log(
-                Translator::getInstance()->trans('Express checkout failed in expressCheckoutOkAction() function', [], PayPal::DOMAIN_NAME),
+                Translator::getInstance()->trans('Express checkout failed in expressCheckoutOkAction() function', [],
+                    PayPal::DOMAIN_NAME),
                 [],
                 Logger::CRITICAL
             );
         }
 
         PayPalLoggerService::log(
-            Translator::getInstance()->trans('Express checkout begin with cart %id', ['%id' => $cartId], PayPal::DOMAIN_NAME)
+            Translator::getInstance()->trans('Express checkout begin with cart %id', ['%id' => $cartId],
+                PayPal::DOMAIN_NAME)
         );
 
         /** @var PayPalPaymentService $payPalPaymentService */
         $payPalPaymentService = $this->container->get(PayPal::PAYPAL_PAYMENT_SERVICE_ID);
-        $payment = $payPalPaymentService->getPaymentDetails($paymentId);
+        $payment              = $payPalPaymentService->getPaymentDetails($paymentId);
 
         $payerInfo = $payment->getPayer()->getPayerInfo();
         if (null === $customer = CustomerQuery::create()->findOneByEmail($payment->getPayer()->getPayerInfo()->getEmail())) {
@@ -790,7 +817,6 @@ class PayPalResponseController extends OrderController
             $eventDispatcher->dispatch($customerCreateEvent, TheliaEvents::CUSTOMER_CREATEACCOUNT);
 
             $customer = $customerCreateEvent->getCustomer();
-
         }
 
         //Save informations to use them after customer has choosen the delivery method
@@ -802,8 +828,7 @@ class PayPalResponseController extends OrderController
         $payPalCart
             ->setExpressPaymentId($paymentId)
             ->setExpressPayerId($payerId)
-            ->setExpressToken($token)
-        ;
+            ->setExpressToken($token);
         $payPalCartEvent = new PayPalCartEvent($payPalCart);
         $eventDispatcher->dispatch($payPalCartEvent, PayPalEvents::PAYPAL_CART_UPDATE);
 
@@ -818,13 +843,13 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @param $routeId
+     * @param       $routeId
      * @param array $params
      * @return RedirectResponse
      */
     protected function getUrlFromRouteId($routeId, $params = [])
     {
-        $frontOfficeRouter = $this->getContainer()->get('router.front');
+        $frontOfficeRouter = $this->getContainer()->get(ApyThemeV3::ROUTER_NAME);
 
         return new RedirectResponse(
             URL::getInstance()->absoluteUrl(
@@ -846,16 +871,16 @@ class PayPalResponseController extends OrderController
      */
     public function getPaymentFailurePageUrl($orderId, $message)
     {
-        $frontOfficeRouter = $this->getContainer()->get('router.front');
+        $frontOfficeRouter = $this->getContainer()->get(ApyThemeV3::ROUTER_NAME);
 
         return new RedirectResponse(
             URL::getInstance()->absoluteUrl(
                 $frontOfficeRouter->generate(
                     "order.failed",
-                    array(
+                    [
                         "order_id" => $orderId,
-                        "message" => $message
-                    ),
+                        "message"  => $message
+                    ],
                     Router::ABSOLUTE_URL
                 )
             )
@@ -863,25 +888,31 @@ class PayPalResponseController extends OrderController
     }
 
     /**
-     * @param PaypalOrder $payPalOrder
-     * @param $paymentId
-     * @param $payerId
-     * @param $token
-     * @param string $method
+     * @param PaypalOrder  $payPalOrder
+     * @param              $paymentId
+     * @param              $payerId
+     * @param              $token
+     * @param string       $method
      * @param Details|null $details
      * @return RedirectResponse
      */
-    protected function executePayment(EventDispatcherInterface $eventDispatcher, PaypalOrder $payPalOrder, $paymentId, $payerId, $token, $method = PayPal::PAYPAL_METHOD_PAYPAL, Details $details = null)
-    {
+    protected function executePayment(
+        EventDispatcherInterface $eventDispatcher,
+        PaypalOrder $payPalOrder,
+        $paymentId,
+        $payerId,
+        $token,
+        $method = PayPal::PAYPAL_METHOD_PAYPAL,
+        Details $details = null
+    ) {
         /** @var PayPalPaymentService $payPalService */
         $payPalService = $this->getContainer()->get(PayPal::PAYPAL_PAYMENT_SERVICE_ID);
-        $payment = $payPalService->executePayment($paymentId, $payerId, $details);
+        $payment       = $payPalService->executePayment($paymentId, $payerId, $details);
 
         $payPalOrder
             ->setState($payment->getState())
             ->setPayerId($payerId)
-            ->setToken($token)
-        ;
+            ->setToken($token);
         $payPalOrderEvent = new PayPalOrderEvent($payPalOrder);
         $eventDispatcher->dispatch($payPalOrderEvent, PayPalEvents::PAYPAL_ORDER_UPDATE);
 
@@ -900,12 +931,11 @@ class PayPalResponseController extends OrderController
                 PayPal::DOMAIN_NAME
             ),
             [
-                'order_id' => $payPalOrder->getId(),
+                'order_id'    => $payPalOrder->getId(),
                 'customer_id' => $payPalOrder->getOrder()->getCustomerId()
             ],
             Logger::INFO
         );
-
 
         return $response;
     }
@@ -954,16 +984,16 @@ class PayPalResponseController extends OrderController
     {
         if (null !== $payerInfo->getBillingAddress()) {
             $countryCode = $payerInfo->getBillingAddress()->getCountryCode();
-            $line1 = $payerInfo->getBillingAddress()->getLine1();
-            $line2 = $payerInfo->getBillingAddress()->getLine2();
-            $zipCode = $payerInfo->getBillingAddress()->getPostalCode();
-            $city = $payerInfo->getBillingAddress()->getCity();
+            $line1       = $payerInfo->getBillingAddress()->getLine1();
+            $line2       = $payerInfo->getBillingAddress()->getLine2();
+            $zipCode     = $payerInfo->getBillingAddress()->getPostalCode();
+            $city        = $payerInfo->getBillingAddress()->getCity();
         } else {
             $countryCode = $payerInfo->getShippingAddress()->getCountryCode();
-            $line1 = $payerInfo->getShippingAddress()->getLine1();
-            $line2 = $payerInfo->getShippingAddress()->getLine2();
-            $zipCode = $payerInfo->getShippingAddress()->getPostalCode();
-            $city = $payerInfo->getShippingAddress()->getCity();
+            $line1       = $payerInfo->getShippingAddress()->getLine1();
+            $line2       = $payerInfo->getShippingAddress()->getLine2();
+            $zipCode     = $payerInfo->getShippingAddress()->getPostalCode();
+            $city        = $payerInfo->getShippingAddress()->getCity();
         }
 
         if (null === $country = CountryQuery::create()->findOneByIsoalpha2($countryCode)) {
@@ -976,7 +1006,7 @@ class PayPalResponseController extends OrderController
             $payerInfo->getFirstName(),
             $payerInfo->getLastName(),
             $line1,
-            ($line2)?$line2:'',
+            ($line2) ? $line2 : '',
             '',
             $zipCode,
             $city,
