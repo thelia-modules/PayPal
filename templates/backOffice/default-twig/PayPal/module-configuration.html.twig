@@ -15,11 +15,31 @@
                     <i class="bi bi-info-circle"></i>
                 </h3>
 
-                {{ form_row(form.sandbox) }}
-                {{ form_row(form.sandbox_login) }}
-                {{ form_row(form.sandbox_password) }}
-                {{ form_row(form.sandbox_merchant_id) }}
-                {{ form_row(form.allowed_ip_list) }}
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.sandbox, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.sandbox, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.sandbox) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.sandbox_login) }}
+                    {{ form_widget(form.sandbox_login, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.sandbox_login) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.sandbox_password) }}
+                    {{ form_widget(form.sandbox_password, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.sandbox_password) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.sandbox_merchant_id) }}
+                    {{ form_widget(form.sandbox_merchant_id, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.sandbox_merchant_id) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.allowed_ip_list) }}
+                    {{ form_widget(form.allowed_ip_list, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.allowed_ip_list) }}
+                </div>
 
                 <div class="alert alert-info mt-3">
                     <h4 class="text-uppercase">
@@ -45,9 +65,21 @@
                     {{ 'Production configuration'|trans({}, 'paypal.bo.default') }}
                 </h3>
 
-                {{ form_row(form.login) }}
-                {{ form_row(form.password) }}
-                {{ form_row(form.merchant_id) }}
+                <div class="mb-3">
+                    {{ form_label(form.login) }}
+                    {{ form_widget(form.login, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.login) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.password) }}
+                    {{ form_widget(form.password, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.password) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.merchant_id) }}
+                    {{ form_widget(form.merchant_id, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.merchant_id) }}
+                </div>
 
                 <div class="alert alert-info mt-3">
                     <h4 class="text-uppercase">
@@ -65,17 +97,37 @@
                     {{ 'Payment configuration'|trans({}, 'paypal.bo.default') }}
                 </h3>
 
-                {{ form_row(form.method_paypal) }}
-                {{ form_row(form.method_paypal_with_in_context) }}
-                {{ form_row(form.method_express_checkout) }}
-                {{ form_row(form.method_credit_card) }}
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.method_paypal, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.method_paypal, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.method_paypal) }}
+                </div>
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.method_paypal_with_in_context, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.method_paypal_with_in_context, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.method_paypal_with_in_context) }}
+                </div>
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.method_express_checkout, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.method_express_checkout, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.method_express_checkout) }}
+                </div>
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.method_credit_card, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.method_credit_card, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.method_credit_card) }}
+                </div>
 
                 <div class="alert alert-danger">
                     <i class="bi bi-info-circle"></i>
                     {{ 'This method works only with PayPal PRO UK account. Please contact PayPal to upgrade your account if you need this service. For more informations, go <a target="_blank" href="https://developer.paypal.com/docs/integration/direct/payments/accept-credit-cards/">here</a>'|trans({}, 'paypal.bo.default')|raw }}
                 </div>
 
-                {{ form_row(form.method_planified_payment) }}
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.method_planified_payment, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.method_planified_payment, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.method_planified_payment) }}
+                </div>
 
                 <div class="alert alert-danger">
                     <i class="bi bi-info-circle"></i>
@@ -87,18 +139,42 @@
                     {{ 'You can add some planified payment <a href="%url">here</a>.'|trans({'%url': path('configure_planified_render')}, 'paypal.bo.default')|raw }}
                 </div>
 
-                {{ form_row(form.send_confirmation_message_only_if_paid) }}
-                {{ form_row(form.send_payment_confirmation_message) }}
-                {{ form_row(form.send_recursive_message) }}
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.send_confirmation_message_only_if_paid, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.send_confirmation_message_only_if_paid, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.send_confirmation_message_only_if_paid) }}
+                </div>
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.send_payment_confirmation_message, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.send_payment_confirmation_message, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.send_payment_confirmation_message) }}
+                </div>
+                <div class="mb-3 form-check">
+                    {{ form_widget(form.send_recursive_message, {attr: {class: 'form-check-input'}}) }}
+                    {{ form_label(form.send_recursive_message, null, {label_attr: {class: 'form-check-label'}}) }}
+                    {{ form_errors(form.send_recursive_message) }}
+                </div>
 
                 <div class="alert alert-secondary">
                     <i class="bi bi-info-circle"></i>
                     {{ 'You can <a href="%url">edit the payment confirmation email</a> sent to the customer after a successful payment.'|trans({'%url': '/admin/configuration/messages'}, 'paypal.bo.default')|raw }}
                 </div>
 
-                {{ form_row(form.minimum_amount) }}
-                {{ form_row(form.maximum_amount) }}
-                {{ form_row(form.cart_item_count) }}
+                <div class="mb-3">
+                    {{ form_label(form.minimum_amount) }}
+                    {{ form_widget(form.minimum_amount, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.minimum_amount) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.maximum_amount) }}
+                    {{ form_widget(form.maximum_amount, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.maximum_amount) }}
+                </div>
+                <div class="mb-3">
+                    {{ form_label(form.cart_item_count) }}
+                    {{ form_widget(form.cart_item_count, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.cart_item_count) }}
+                </div>
             </div>
         </div>
 
