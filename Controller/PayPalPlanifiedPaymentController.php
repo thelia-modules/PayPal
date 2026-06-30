@@ -147,7 +147,8 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
     {
         /** @var \Thelia\Model\Lang $lang */
         $lang = $parserContext->getSession()->get('thelia.admin.edition.lang');
-        $editLanguageId = $this->getRequest()->get('edit_language_id');
+        $request = $this->getRequest();
+        $editLanguageId = $request->attributes->get('edit_language_id', $request->query->get('edit_language_id', $request->request->get('edit_language_id')));
 
         if (
             null !== $editLanguageId &&
@@ -274,10 +275,12 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      */
     protected function getExistingObject(): ?\Propel\Runtime\ActiveRecord\ActiveRecordInterface
     {
-        if (null === $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findOneById((int)$this->getRequest()->get('planifiedPaymentId'))) {
+        $request = $this->getRequest();
+        $planifiedPaymentId = (int)$request->attributes->get('planifiedPaymentId', $request->query->get('planifiedPaymentId', $request->request->get('planifiedPaymentId')));
+        if (null === $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findOneById($planifiedPaymentId)) {
             throw new \InvalidArgumentException(
                 $this->getTranslator()->trans('Invalid planified payment id : %id',
-                    ['%id' => (int)$this->getRequest()->get('planifiedPaymentId')], PayPal::DOMAIN_NAME)
+                    ['%id' => $planifiedPaymentId], PayPal::DOMAIN_NAME)
             );
         }
 
@@ -409,8 +412,10 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      */
     private function getEditionArguments()
     {
+        $request = $this->getRequest();
+
         return [
-            'planifiedPaymentId' => (int)$this->getRequest()->get('planifiedPaymentId')
+            'planifiedPaymentId' => (int)$request->attributes->get('planifiedPaymentId', $request->query->get('planifiedPaymentId', $request->request->get('planifiedPaymentId')))
         ];
     }
 }

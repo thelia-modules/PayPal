@@ -60,7 +60,7 @@ class PayPalFrontController extends BaseFrontController
         $templateData['order_id'] = $orderId;
 
         if ($orderId) {
-            $order = OrderQuery::create()->filterByCustomerId($this->getSession()->getCustomerUser()->getId())->findPk($request->get('order_id'));
+            $order = OrderQuery::create()->filterByCustomerId($this->getSession()->getCustomerUser()->getId())->findPk($request->attributes->get('order_id', $request->query->get('order_id', $request->request->get('order_id'))));
             $cart = CartQuery::create()->findOneById($order?->getCartId());
             $this->getRequest()->getSession()->setSessionCart($cart);
         }

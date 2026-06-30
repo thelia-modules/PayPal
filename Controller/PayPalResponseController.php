@@ -747,11 +747,11 @@ class PayPalResponseController extends OrderController
      */
     protected function fillCartWithExpressCheckout(Request $request, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext)
     {
-        $paymentId = $request->get('paymentId');
-        $token = $request->get('token');
-        $payerId = $request->get('PayerID');
-        $cartId = $request->get('cartId');
-        $cart = CartQuery::create()->findOneById($request->get('cartId'));
+        $paymentId = $request->attributes->get('paymentId', $request->query->get('paymentId', $request->request->get('paymentId')));
+        $token = $request->attributes->get('token', $request->query->get('token', $request->request->get('token')));
+        $payerId = $request->attributes->get('PayerID', $request->query->get('PayerID', $request->request->get('PayerID')));
+        $cartId = $request->attributes->get('cartId', $request->query->get('cartId', $request->request->get('cartId')));
+        $cart = CartQuery::create()->findOneById($cartId);
 
         if (null === $paymentId || null === $token || null === $payerId || null === $cart) {
             PayPalLoggerService::log(

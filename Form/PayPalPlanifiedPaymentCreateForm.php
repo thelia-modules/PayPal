@@ -50,7 +50,8 @@ class PayPalPlanifiedPaymentCreateForm extends BaseForm
         //$lang = $this->getRequest()->getSession()->get('thelia.current.lang');
         $lang = $this->getRequest()->getSession()->get('thelia.admin.edition.lang');
 
-        $editLanguageId = $this->getRequest()->get('edit_language_id');
+        $request = $this->getRequest();
+        $editLanguageId = $request->attributes->get('edit_language_id', $request->query->get('edit_language_id', $request->request->get('edit_language_id')));
 
         if (
             null !== $editLanguageId &&

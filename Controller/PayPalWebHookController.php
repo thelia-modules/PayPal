@@ -227,8 +227,8 @@ class PayPalWebHookController extends BaseFrontController
         $summary = $request->request->get('summary');
 
         $title = '';
-        if (null !== $request->get('event_type')) {
-            $title .= $request->get('event_type') . ' : ';
+        if (null !== $request->attributes->get('event_type', $request->query->get('event_type', $request->request->get('event_type')))) {
+            $title .= $request->attributes->get('event_type', $request->query->get('event_type', $request->request->get('event_type'))) . ' : ';
         }
         $title .= $summary;
 
