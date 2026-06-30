@@ -1,23 +1,65 @@
-{{ form_row(form.locale) }}
+{{ form_widget(form.locale) }}
 <div class="card mb-3">
     <div class="card-header">
         {{ 'Global informations of this planified payment'|trans({}, 'paypal.bo.default') }}
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-md-4">{{ form_row(form.title) }}</div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.title) }}
+                    {{ form_widget(form.title, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.title) }}
+                </div>
+            </div>
         </div>
         <div class="row">
-            <div class="col-md-12">{{ form_row(form.description) }}</div>
+            <div class="col-md-12">
+                <div class="mb-3">
+                    {{ form_label(form.description) }}
+                    {{ form_widget(form.description, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.description) }}
+                </div>
+            </div>
         </div>
         <div class="row">
-            <div class="col-md-4">{{ form_row(form.frequency_interval) }}</div>
-            <div class="col-md-4">{{ form_row(form.frequency) }}</div>
-            <div class="col-md-4">{{ form_row(form.cycle) }}</div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.frequency_interval) }}
+                    {{ form_widget(form.frequency_interval, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.frequency_interval) }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.frequency) }}
+                    {{ form_widget(form.frequency, {attr: {class: 'form-select'}}) }}
+                    {{ form_errors(form.frequency) }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.cycle) }}
+                    {{ form_widget(form.cycle, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.cycle) }}
+                </div>
+            </div>
         </div>
         <div class="row">
-            <div class="col-md-4">{{ form_row(form.min_amount) }}</div>
-            <div class="col-md-4">{{ form_row(form.max_amount) }}</div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.min_amount) }}
+                    {{ form_widget(form.min_amount, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.min_amount) }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.max_amount) }}
+                    {{ form_widget(form.max_amount, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.max_amount) }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
