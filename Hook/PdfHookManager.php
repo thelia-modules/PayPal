@@ -44,7 +44,7 @@ class PdfHookManager  extends BaseHook
 
         $event->add(
             $this->render(
-                'paypal/after-payment-module.html',
+                'paypal/after-payment-module.html.twig',
                 $templateData
             )
         );

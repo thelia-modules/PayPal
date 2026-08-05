@@ -1,0 +1,10 @@
+{% for row in loop('paypal_order', 'paypal_order', {id: order, limit: 1}) %}
+    {% if row.paypal_order.planifiedCycle > 0 %}
+    <strong>{{ 'Planified payment'|trans({}, 'paypal.pdf.default') }}</strong>&nbsp;:&nbsp;
+    {{ 'Payment in %x times every %frequency_interval %frequency'|trans({
+        '%x': row.paypal_order.planifiedCycle,
+        '%frequency_interval': row.paypal_order.planifiedFrequencyInterval,
+        '%frequency': row.paypal_order.planifiedFrequency|trans({}, 'paypal.pdf.default'),
+    }, 'paypal.pdf.default') }}
+    {% endif %}
+{% endfor %}
