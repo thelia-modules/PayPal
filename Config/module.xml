@@ -15,7 +15,7 @@
         <language>en_US</language>
         <language>fr_FR</language>
     </languages>
-    <version>5.0.4</version>
+    <version>6.0.0</version>
     <authors>
         <author>
             <name>gbarral</name>
@@ -23,6 +23,6 @@
         </author>
     </authors>
     <type>payment</type>
-    <thelia>2.4.0</thelia>
-    <stability>other</stability>
+    <thelia>3.0.0</thelia>
+    <stability>prod</stability>
 </module>
