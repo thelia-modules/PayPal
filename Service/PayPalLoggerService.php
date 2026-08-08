@@ -25,7 +25,6 @@ namespace PayPal\Service;
 
 use Datetime;
 use Monolog\Logger;
-use MySQLHandler\MySQLHandler;
 use PayPal\Model\Map\PaypalLogTableMap;
 use PayPal\Model\PaypalLogQuery;
 use PayPal\PayPal;

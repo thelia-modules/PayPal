@@ -10,7 +10,7 @@
 namespace PayPal\Service;
 
 use Monolog\Logger;
-use MySQLHandler\MySQLHandler;
+use PayPal\Service\Monolog\MySQLHandler;
 use PDO;
 use Propel\Runtime\Connection\ConnectionInterface;
 
