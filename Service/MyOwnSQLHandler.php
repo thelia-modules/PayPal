@@ -16,7 +16,6 @@ use Propel\Runtime\Connection\ConnectionInterface;
 
 /**
  * Created by Franck Allimant, OpenStudio <fallimant@openstudio.fr>
- * Projet: parquets-et-lambris-de-vallereuil.com
  * Date: 16/03/2023
  */
 class MyOwnSQLHandler extends MySQLHandler
