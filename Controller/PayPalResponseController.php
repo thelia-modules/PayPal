@@ -23,15 +23,6 @@
 
 namespace PayPal\Controller;
 
-if (!class_exists(\Front\Controller\OrderController::class)) {
-    // The Front module is an optional runtime dependency.
-    // On installs where it is absent, this controller must not be registered —
-    // autowiring would fail at container compilation. Guard with class_exists
-    // so the class is skipped when the Front module is not loaded.
-    return;
-}
-
-use Front\Controller\OrderController;
 use Monolog\Logger;
 use PayPal\Api\Details;
 use PayPal\Api\PayerInfo;
@@ -57,6 +48,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Router;
+use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Address\AddressCreateOrUpdateEvent;
 use Thelia\Core\Event\Customer\CustomerCreateOrUpdateEvent;
 use Thelia\Core\Event\Customer\CustomerLoginEvent;
@@ -85,7 +77,7 @@ use Symfony\Component\Routing\Attribute\Route;
  * @package PayPal\Controller
  */
 #[Route('', name: 'paypal')]
-class PayPalResponseController extends OrderController
+class PayPalResponseController extends BaseFrontController
 {
     /**
      * @param $orderId
@@ -105,7 +97,7 @@ class PayPalResponseController extends OrderController
         $orderId = $order->getId();
         $message = Translator::getInstance()->trans('Order cancel', [], PayPal::DOMAIN_NAME);
 
-        return $this->generateRedirect(URL::getInstance()->absoluteUrl("/order/failed/$orderId/$message"));
+        return $this->getPaymentFailurePageUrl($orderId, $message);
     }
 
     /**
@@ -176,385 +168,6 @@ class PayPalResponseController extends OrderController
         return $response;
     }
 
-
-    /**
-     * @param RequestStack $requestStack
-     * @param EventDispatcherInterface $dispatcher
-     * @param string $routeId
-     * @param bool $fromCartView
-     * @return RedirectResponse
-     */
-    #[Route('/module/paypal/express/checkout', name: '_express_checkout', methods: ['POST'])]
-    public function expressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $dispatcher, $routeId = 'cart.view', $fromCartView = true)
-    {
-        $session = $requestStack->getCurrentRequest()->getSession();
-        $cart = $session->getSessionCart($dispatcher);
-
-        if (null !== $cart) {
-            /** @var PayPalPaymentService $payPalService */
-            $payPalService = $this->getContainer()->get(PayPal::PAYPAL_PAYMENT_SERVICE_ID);
-
-            $payment = $payPalService->makePaymentFromCart(
-                $cart,
-                null,
-                false,
-                $fromCartView
-            );
-            $response = new RedirectResponse($payment->getApprovalLink());
-
-            return $response;
-        }
-
-        return $this->getUrlFromRouteId('cart.view');
-    }
-
-    /**
-     */
-    #[Route('/module/paypal/invoice/express/checkout', name: '_invoice_express_checkout', methods: ['POST'])]
-    public function invoiceExpressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $dispatcher)
-    {
-        return $this->expressCheckoutAction($requestStack,  $dispatcher, 'order.invoice', false);
-    }
-
-    /**
-     * @param int $cartId
-     * @return RedirectResponse
-     * @throws PayPalConnectionException
-     * @throws \Exception
-     */
-    #[Route('/module/paypal/invoice/express/checkout/ok/{cartId}', name: '_invoice_express_checkout_ok', methods: ['GET'])]
-    public function invoiceExpressCheckoutOkAction($cartId, RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext, Translator $translator)
-    {
-        $con = Propel::getConnection();
-        $con->beginTransaction();
-
-        try {
-            $this->fillCartWithExpressCheckout($requestStack->getCurrentRequest(), $eventDispatcher, $securityContext);
-
-            $response = $this->executeExpressCheckoutAction($requestStack, $eventDispatcher,$translator,false);
-
-        } catch (PayPalConnectionException $e) {
-            $con->rollBack();
-
-            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
-            $customerId = null;
-            if (isset($customer)) {
-                $customerId = $customer->getId();
-            }
-
-            PayPalLoggerService::log(
-                $message,
-                [
-                    'customer_id' => $customerId
-                ],
-                Logger::CRITICAL
-            );
-            throw $e;
-        } catch(\Exception $e) {
-            $con->rollBack();
-
-            $customerId = null;
-            if (isset($customer)) {
-                $customerId = $customer->getId();
-            }
-
-            PayPalLoggerService::log(
-                $e->getMessage(),
-                [
-                    'customer_id' => $customerId
-                ],
-                Logger::CRITICAL
-            );
-            throw $e;
-        }
-
-        $con->commit();
-        return $response;
-    }
-
-    /**
-     */
-    #[Route('/module/paypal/invoice/express/checkout/ko/{cartId}', name: '_invoice_express_checkout_ko', methods: ['GET'])]
-    public function invoiceExpressCheckoutKoAction($cartId)
-    {
-        return $this->getUrlFromRouteId('order.invoice');
-    }
-
-    /**
-     * @return RedirectResponse
-     * @throws PayPalConnectionException
-     * @throws \Exception
-     */
-    #[Route('/module/paypal/express/checkout/ok/{cartId}', name: '_express_checkout_ok', methods: ['POST'])]
-    public function expressCheckoutOkAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext)
-    {
-        $con = Propel::getConnection();
-        $con->beginTransaction();
-
-        try {
-            $this->fillCartWithExpressCheckout($requestStack->getCurrentRequest(), $eventDispatcher, $securityContext);
-
-            $response = $this->getUrlFromRouteId('order.delivery');
-
-
-        } catch (PayPalConnectionException $e) {
-            $con->rollBack();
-
-            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
-            $customerId = null;
-            if (isset($customer)) {
-                $customerId = $customer->getId();
-            }
-
-            PayPalLoggerService::log(
-                $message,
-                [
-                    'customer_id' => $customerId
-                ],
-                Logger::CRITICAL
-            );
-            throw $e;
-        } catch(\Exception $e) {
-            $con->rollBack();
-
-            $customerId = null;
-            if (isset($customer)) {
-                $customerId = $customer->getId();
-            }
-
-            PayPalLoggerService::log(
-                $e->getMessage(),
-                [
-                    'customer_id' => $customerId
-                ],
-                Logger::CRITICAL
-            );
-            throw $e;
-        }
-
-        $con->commit();
-        return $response;
-    }
-
-    /**
-     * @return RedirectResponse|\Symfony\Component\HttpFoundation\Response
-     */
-    #[Route('/order/delivery', name: '_order_delivery', methods: ['POST'])]
-    public function executeExpressCheckoutAction(RequestStack $requestStack, EventDispatcherInterface $eventDispatcher, Translator $translator, $fromCartView = true)
-    {
-        if (null === $responseParent = parent::deliver($eventDispatcher)) {
-
-            if ($fromCartView) {
-                return $responseParent;
-            }
-        }
-
-        $con = Propel::getConnection();
-        $con->beginTransaction();
-
-        try {
-            $session = $requestStack->getCurrentRequest()->getSession();
-            $cart = $session->getSessionCart($eventDispatcher);
-
-            if (null === $payPalCart = PaypalCartQuery::create()->findOneById($cart->getId())) {
-                $con->rollBack();
-                return $responseParent;
-            }
-
-            if (null === $payPalCart->getExpressPaymentId() || null === $payPalCart->getExpressPayerId() || null === $payPalCart->getExpressToken()) {
-                $con->rollBack();
-                return $responseParent;
-            }
-
-            /** @var PayPalPaymentService $payPalPaymentService */
-            $payPalPaymentService = $this->container->get(PayPal::PAYPAL_PAYMENT_SERVICE_ID);
-            $payment = $payPalPaymentService->getPaymentDetails($payPalCart->getExpressPaymentId());
-
-            $payerInfo = $payment->getPayer()->getPayerInfo();
-
-            //Check if invoice adresse already exist
-            if (null === $payerInfo->getBillingAddress()) {
-                $line1 = $payerInfo->getShippingAddress()->getLine1();
-                $zipCode = $payerInfo->getShippingAddress()->getPostalCode();
-            } else {
-                $line1 = $payerInfo->getBillingAddress()->getLine1();
-                $zipCode = $payerInfo->getBillingAddress()->getPostalCode();
-            }
-
-            /** @var \Thelia\Model\Address $invoiceAddress */
-            if (null === $invoiceAddress = AddressQuery::create()
-                    ->filterByCustomerId($cart->getCustomerId())
-                    ->filterByIsDefault(0)
-                    ->filterByAddress1($line1)
-                    ->filterByZipcode($zipCode)
-                    ->findOne()) {
-
-                $event = $this->createAddressEvent($payerInfo);
-                $event->setCustomer($cart->getCustomer());
-
-                $eventDispatcher->dispatch($event, TheliaEvents::ADDRESS_CREATE);
-                $invoiceAddress = $event->getAddress();
-            }
-
-            if (null === $payPalCustomer = PaypalCustomerQuery::create()->findOneById($cart->getCustomerId())) {
-                $payPalCustomer = new PaypalCustomer();
-                $payPalCustomer->setId($cart->getCustomerId());
-            }
-
-            $payPalCustomer
-                ->setPaypalUserId($payerInfo->getPayerId())
-                ->setName($payerInfo->getFirstName())
-                ->setGivenName($payerInfo->getFirstName() . ' ' . $payerInfo->getLastName())
-                ->setFamilyName($payerInfo->getLastName())
-                ->setMiddleName($payerInfo->getMiddleName())
-                ->setBirthday($payerInfo->getBirthDate())
-                ->setLocale($requestStack->getCurrentRequest()->getSession()->getLang()->getLocale())
-                ->setPhoneNumber($payerInfo->getPhone())
-                ->setPayerId($payerInfo->getPayerId())
-                ->setPostalCode($payerInfo->getShippingAddress()->getPostalCode())
-                ->setCountry($payerInfo->getShippingAddress()->getCountryCode())
-                ->setStreetAddress($payerInfo->getShippingAddress()->getLine1() . $payerInfo->getShippingAddress()->getLine2())
-            ;
-
-            $payPalCustomerEvent = new PayPalCustomerEvent($payPalCustomer);
-            $eventDispatcher->dispatch($payPalCustomerEvent, PayPalEvents::PAYPAL_CUSTOMER_UPDATE);
-
-            /** @var \Thelia\Model\Address $deliveryAddress */
-            $deliveryAddress = $cart->getCustomer()->getDefaultAddress();
-
-            /** @var \Thelia\Model\Module $deliveryModule */
-            $deliveryModule = ModuleQuery::create()->filterByActivate(1)->findOne();
-            /** @var \Thelia\Model\Module $paymentModule */
-            $paymentModule = ModuleQuery::create()->findPk(PayPal::getModuleId());
-
-            /** @var \Thelia\Model\Currency $currency */
-            $currency = $cart->getCurrency();
-            $lang = $requestStack->getCurrentRequest()->getSession()->getLang();
-
-            $order = new Order();
-            $order
-                ->setCustomerId($cart->getCustomerId())
-                ->setCurrencyId($currency->getId())
-                ->setCurrencyRate($currency->getRate())
-                ->setStatusId(OrderStatusQuery::getNotPaidStatus()->getId())
-                ->setLangId($lang->getDefaultLanguage()->getId())
-                ->setChoosenDeliveryAddress($deliveryAddress)
-                ->setChoosenInvoiceAddress($invoiceAddress)
-            ;
-
-            $orderEvent = new OrderEvent($order);
-
-            /* get postage amount */
-            $moduleInstance = $deliveryModule->getDeliveryModuleInstance($this->container);
-            $deliveryPostageEvent = new DeliveryPostageEvent($moduleInstance, $cart, $deliveryAddress);
-
-            $eventDispatcher->dispatch(
-                $deliveryPostageEvent,
-                TheliaEvents::MODULE_DELIVERY_GET_POSTAGE
-            );
-
-            if (!$deliveryPostageEvent->isValidModule() || null === $deliveryPostageEvent->getPostage()) {
-                throw new DeliveryException(
-                    $translator->trans('The delivery module is not valid.', [], PayPal::DOMAIN_NAME)
-                );
-            }
-
-            $postage = $deliveryPostageEvent->getPostage();
-
-            $orderEvent->setPostage($postage->getAmount());
-            $orderEvent->setPostageTax($postage->getAmountTax());
-            $orderEvent->setPostageTaxRuleTitle($postage->getTaxRuleTitle());
-            $orderEvent->setDeliveryAddress($deliveryAddress->getId());
-            $orderEvent->setInvoiceAddress($invoiceAddress->getId());
-            $orderEvent->setDeliveryModule($deliveryModule->getId());
-            $orderEvent->setPaymentModule($paymentModule->getId());
-
-            $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_DELIVERY_ADDRESS);
-            $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_INVOICE_ADDRESS);
-            $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_POSTAGE);
-            $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_DELIVERY_MODULE);
-            $eventDispatcher->dispatch($orderEvent, TheliaEvents::ORDER_SET_PAYMENT_MODULE);
-
-            $orderManualEvent = new OrderManualEvent(
-                $orderEvent->getOrder(),
-                $orderEvent->getOrder()->getCurrency(),
-                $orderEvent->getOrder()->getLang(),
-                $cart,
-                $cart->getCustomer()
-            );
-
-            $eventDispatcher->dispatch($orderManualEvent, TheliaEvents::ORDER_CREATE_MANUAL);
-            $order = $orderManualEvent->getPlacedOrder();
-
-            $payPalOrderEvent = $payPalPaymentService->generatePayPalOrder($order);
-            $payPalPaymentService->updatePayPalOrder($payPalOrderEvent->getPayPalOrder(), $payment->getState(), $payment->getId());
-
-            $response = $this->executePayment(
-                $eventDispatcher,
-                $payPalOrderEvent->getPayPalOrder(),
-                $payPalCart->getExpressPaymentId(),
-                $payPalCart->getExpressPayerId(),
-                $payPalCart->getExpressToken(),
-                PayPal::PAYPAL_METHOD_EXPRESS_CHECKOUT,
-                $payPalPaymentService->createDetails(
-                    $order->getPostage(),
-                    $order->getPostageTax(),
-                    $order->getTotalAmount($tax, false)
-                )
-            );
-
-            $con->commit();
-        } catch (PayPalConnectionException $e) {
-            $con->rollBack();
-
-            $message = sprintf('url : %s. data : %s. message : %s', $e->getUrl(), $e->getData(), $e->getMessage());
-            $customerId = null;
-            if (isset($customer)) {
-                $customerId = $customer->getId();
-            }
-
-            PayPalLoggerService::log(
-                $message,
-                [
-                    'customer_id' => $customerId
-                ],
-                Logger::CRITICAL
-            );
-            $response = $responseParent;
-        } catch(\Exception $e) {
-            $con->rollBack();
-
-            $customerId = null;
-            if (isset($customer)) {
-                $customerId = $customer->getId();
-            }
-
-            PayPalLoggerService::log(
-                $e->getMessage(),
-                [
-                    'customer_id' => $customerId
-                ],
-                Logger::CRITICAL
-            );
-            $response = $responseParent;
-        }
-
-        $con->commit();
-        return $response;
-    }
-
-    /**
-     */
-    #[Route('/module/paypal/express/checkout/ko/{cartId}', name: '_express_checkout_ko', methods: ['POST'])]
-    public function expressCheckoutKoAction()
-    {
-        PayPalLoggerService::log(
-            Translator::getInstance()->trans('Express Checkout login failed', [], PayPal::DOMAIN_NAME),
-            [],
-            Logger::WARNING
-        );
-        return $this->getUrlFromRouteId('cart.view');
-    }
 
     /**
      * Method called when a customer log in with PayPal.
@@ -738,70 +351,7 @@ class PayPalResponseController extends OrderController
      */
     public function getPaymentSuccessPageUrl($orderId)
     {
-        return $this->getUrlFromRouteId('order.placed', ['order_id' =>  $orderId]);
-    }
-
-    /**
-     * @throws \Exception
-     * @throws \Propel\Runtime\Exception\PropelException
-     */
-    protected function fillCartWithExpressCheckout(Request $request, EventDispatcherInterface $eventDispatcher, SecurityContext $securityContext)
-    {
-        $paymentId = $request->attributes->get('paymentId', $request->query->get('paymentId', $request->request->get('paymentId')));
-        $token = $request->attributes->get('token', $request->query->get('token', $request->request->get('token')));
-        $payerId = $request->attributes->get('PayerID', $request->query->get('PayerID', $request->request->get('PayerID')));
-        $cartId = $request->attributes->get('cartId', $request->query->get('cartId', $request->request->get('cartId')));
-        $cart = CartQuery::create()->findOneById($cartId);
-
-        if (null === $paymentId || null === $token || null === $payerId || null === $cart) {
-            PayPalLoggerService::log(
-                Translator::getInstance()->trans('Express checkout failed in expressCheckoutOkAction() function', [], PayPal::DOMAIN_NAME),
-                [],
-                Logger::CRITICAL
-            );
-        }
-
-        PayPalLoggerService::log(
-            Translator::getInstance()->trans('Express checkout begin with cart %id', ['%id' => $cartId], PayPal::DOMAIN_NAME)
-        );
-
-        /** @var PayPalPaymentService $payPalPaymentService */
-        $payPalPaymentService = $this->container->get(PayPal::PAYPAL_PAYMENT_SERVICE_ID);
-        $payment = $payPalPaymentService->getPaymentDetails($paymentId);
-
-        $payerInfo = $payment->getPayer()->getPayerInfo();
-        if (null === $customer = CustomerQuery::create()->findOneByEmail($payment->getPayer()->getPayerInfo()->getEmail())) {
-
-            $customerCreateEvent = $this->createEventInstance($payerInfo, $request);
-
-            $eventDispatcher->dispatch($customerCreateEvent, TheliaEvents::CUSTOMER_CREATEACCOUNT);
-
-            $customer = $customerCreateEvent->getCustomer();
-
-        }
-
-        //Save informations to use them after customer has choosen the delivery method
-        if (null === $payPalCart = PaypalCartQuery::create()->findOneById($cartId)) {
-            $payPalCart = new PaypalCart();
-            $payPalCart->setId($cartId);
-        }
-
-        $payPalCart
-            ->setExpressPaymentId($paymentId)
-            ->setExpressPayerId($payerId)
-            ->setExpressToken($token)
-        ;
-        $payPalCartEvent = new PayPalCartEvent($payPalCart);
-        $eventDispatcher->dispatch($payPalCartEvent, PayPalEvents::PAYPAL_CART_UPDATE);
-
-        $cart->setCustomerId($customer->getId())->save();
-        $clonedCart = clone $cart;
-        $this->dispatch(TheliaEvents::CUSTOMER_LOGIN, new CustomerLoginEvent($customer));
-
-        //In case of the current customer has changed, re affect the correct cart and customer session
-        $securityContext->setCustomerUser($customer);
-        $clonedCart->save();
-        $request->getSession()->set("thelia.cart_id", $clonedCart->getId());
+        return $this->getUrlFromRouteId('checkout_confirm', ['order_id' =>  $orderId]);
     }
 
     /**
@@ -811,7 +361,7 @@ class PayPalResponseController extends OrderController
      */
     protected function getUrlFromRouteId($routeId, $params = [])
     {
-        $frontOfficeRouter = $this->getContainer()->get('router.front');
+        $frontOfficeRouter = $this->getContainer()->get('router');
 
         return new RedirectResponse(
             URL::getInstance()->absoluteUrl(
@@ -833,12 +383,12 @@ class PayPalResponseController extends OrderController
      */
     public function getPaymentFailurePageUrl($orderId, $message)
     {
-        $frontOfficeRouter = $this->getContainer()->get('router.front');
+        $frontOfficeRouter = $this->getContainer()->get('router');
 
         return new RedirectResponse(
             URL::getInstance()->absoluteUrl(
                 $frontOfficeRouter->generate(
-                    "order.failed",
+                    "checkout_failed",
                     array(
                         "order_id" => $orderId,
                         "message" => $message
@@ -897,82 +447,4 @@ class PayPalResponseController extends OrderController
         return $response;
     }
 
-    /**
-     * @param PayerInfo $payerInfo
-     * @return \Thelia\Core\Event\Customer\CustomerCreateOrUpdateEvent
-     */
-    protected function createEventInstance(PayerInfo $payerInfo, Request $request)
-    {
-        if (null === $country = CountryQuery::create()->findOneByIsoalpha2($payerInfo->getShippingAddress()->getCountryCode())) {
-            $country = Country::getDefaultCountry();
-        }
-
-        $customerCreateEvent = new CustomerCreateOrUpdateEvent(
-            CustomerTitleQuery::create()->findOne()->getId(),
-            $payerInfo->getFirstName(),
-            $payerInfo->getLastName(),
-            $payerInfo->getShippingAddress()->getLine1(),
-            $payerInfo->getShippingAddress()->getLine2(),
-            null,
-            $payerInfo->getPhone(),
-            null,
-            $payerInfo->getShippingAddress()->getPostalCode(),
-            $payerInfo->getShippingAddress()->getCity(),
-            $country->getId(),
-            $payerInfo->getEmail(),
-            'random',
-            $request->getSession()->getLang()->getId(),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        );
-
-        return $customerCreateEvent;
-    }
-
-    /**
-     * @param PayerInfo $payerInfo
-     * @return AddressCreateOrUpdateEvent
-     */
-    protected function createAddressEvent(PayerInfo $payerInfo)
-    {
-        if (null !== $payerInfo->getBillingAddress()) {
-            $countryCode = $payerInfo->getBillingAddress()->getCountryCode();
-            $line1 = $payerInfo->getBillingAddress()->getLine1();
-            $line2 = $payerInfo->getBillingAddress()->getLine2();
-            $zipCode = $payerInfo->getBillingAddress()->getPostalCode();
-            $city = $payerInfo->getBillingAddress()->getCity();
-        } else {
-            $countryCode = $payerInfo->getShippingAddress()->getCountryCode();
-            $line1 = $payerInfo->getShippingAddress()->getLine1();
-            $line2 = $payerInfo->getShippingAddress()->getLine2();
-            $zipCode = $payerInfo->getShippingAddress()->getPostalCode();
-            $city = $payerInfo->getShippingAddress()->getCity();
-        }
-
-        if (null === $country = CountryQuery::create()->findOneByIsoalpha2($countryCode)) {
-            $country = Country::getDefaultCountry();
-        }
-
-        return new AddressCreateOrUpdateEvent(
-            'Express checkout PayPal',
-            CustomerTitleQuery::create()->findOne()->getId(),
-            $payerInfo->getFirstName(),
-            $payerInfo->getLastName(),
-            $line1,
-            ($line2)?$line2:'',
-            '',
-            $zipCode,
-            $city,
-            $country->getId(),
-            $payerInfo->getPhone(),
-            $payerInfo->getPhone(),
-            '',
-            0,
-            null
-        );
-    }
 }

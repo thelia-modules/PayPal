@@ -171,7 +171,7 @@ class PayPalWebHookController extends BaseFrontController
 
                     case self::RESOURCE_TYPE_SALE:
                         if (isset($resource['parent_payment'])) {
-                            $params = $this->getParamsForSale($resource['parent_payment'], $params, $eventType);
+                            $params = $this->getParamsForSale($eventDispatcher, $resource['parent_payment'], $params, $eventType);
                         }
                         if (isset($resource['billing_agreement_id'])) {
                             $params = $this->getParamsForAgreement($eventDispatcher, $resource['billing_agreement_id'], $params);
@@ -241,7 +241,7 @@ class PayPalWebHookController extends BaseFrontController
      * @param null $eventType
      * @return array
      */
-    protected function getParamsForSale($paymentId = null, $params = [], $eventType = null)
+    protected function getParamsForSale(EventDispatcherInterface $eventDispatcher, $paymentId = null, $params = [], $eventType = null)
     {
         if (null !== $payPalOrder = PaypalOrderQuery::create()->findOneByPaymentId($paymentId)) {
             $params['order_id'] = $payPalOrder->getId();
@@ -250,7 +250,7 @@ class PayPalWebHookController extends BaseFrontController
             if ($eventType === self::HOOK_PAYMENT_SALE_DENIED) {
                 $event = new OrderEvent($payPalOrder->getOrder());
                 $event->setStatus(OrderStatusQuery::getCancelledStatus()->getId());
-                $this->dispatch(TheliaEvents::ORDER_UPDATE_STATUS, $event);
+                $eventDispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
             }
         }
 
