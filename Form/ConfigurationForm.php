@@ -320,6 +320,15 @@ class ConfigurationForm extends BaseForm
                     ]
                 ]
             )
+            ->add(
+                'keep_order',
+                CheckboxType::class,
+                [
+                    'value' => 1,
+                    'required' => false,
+                    'label' => $this->translator->trans('Do not cancel the order if the payment failed or was canceled', [], PayPal::DOMAIN_NAME),
+                ]
+            )
         ;
     }
 
