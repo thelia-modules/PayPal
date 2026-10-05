@@ -23,6 +23,6 @@
         </author>
     </authors>
     <type>payment</type>
-    <thelia>3.0.0</thelia>
+    <thelia>3.2.0</thelia>
     <stability>prod</stability>
 </module>
