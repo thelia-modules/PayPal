@@ -113,7 +113,8 @@
 <div class="modal fade" id="delete_dialog" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="post" action="{{ path('configure_planified_delete') }}?_token={{ assignToken() }}">
+            <form method="post" action="{{ path('configure_planified_delete') }}">
+                <input type="hidden" name="_token" value="{{ assignToken() }}">
                 <div class="modal-header">
                     <h5 class="modal-title">{{ 'Delete planified payment'|trans({}, 'paypal.bo.default') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
