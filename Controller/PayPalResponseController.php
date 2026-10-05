@@ -38,6 +38,7 @@ use PayPal\Model\PaypalCustomerQuery;
 use PayPal\Model\PaypalOrder;
 use PayPal\Model\PaypalOrderQuery;
 use PayPal\PayPal;
+use PayPal\Service\OrderOwnerGuard;
 use PayPal\Service\PayPalAgreementService;
 use PayPal\Service\PayPalCustomerService;
 use PayPal\Service\PayPalLoggerService;
@@ -86,7 +87,9 @@ class PayPalResponseController extends BaseFrontController
     #[Route('/module/paypal/cancel/{orderId}', name: '_cancel', methods: 'GET')]
     public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher)
     {
-        if (!$order = OrderQuery::create()->findOneById($orderId)) {
+        $order = OrderQuery::create()->findOneById($orderId);
+
+        if (!(new OrderOwnerGuard())->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
             return $this->pageNotFound();
         }
 
