@@ -122,7 +122,8 @@ class OrderListener implements EventSubscriberInterface
 
             // Send confirmation email if required.
             if (Paypal::getConfigValue('send_confirmation_message_only_if_paid')) {
-                $this->dispatcher->dispatch($event, TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL);
+                // A copy: a listener of the confirmation that stops it must not stop the status change too.
+                $this->dispatcher->dispatch(clone $event, TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL);
             }
         }
     }
@@ -263,7 +264,8 @@ class OrderListener implements EventSubscriberInterface
         return [
             TheliaEvents::ORDER_UPDATE_STATUS => [
                 ['CancelPayPalTransaction', 128],
-                ['updateStatus', 128],
+                // After the core (Thelia\Action\Order, 128) has written the new status: isPaid() reads it.
+                ['updateStatus', 126],
             ],
             TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL => ['sendConfirmationEmail', 129],
             TheliaEvents::ORDER_SEND_NOTIFICATION_EMAIL => ['sendConfirmationEmail', 129],
