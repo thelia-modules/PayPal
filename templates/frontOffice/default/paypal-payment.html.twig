@@ -89,8 +89,8 @@
                 }
             }
 
-            const orderId = {{ order_id }};
-            const planifiedPaymentId = {{ planified_payment_id }};
+            const orderId = {{ order_id|json_encode|raw }};
+            const planifiedPaymentId = {{ planified_payment_id|json_encode|raw }};
 
             createPaypalPlanifiedOrder(orderId, planifiedPaymentId).then(planId => {
                 if (planId) {
@@ -113,7 +113,7 @@
         </script>
     {% else %}
         <script>
-            const orderId = {{ order_id }};
+            const orderId = {{ order_id|json_encode|raw }};
 
             async function createPaypalOrder(orderId)
             {

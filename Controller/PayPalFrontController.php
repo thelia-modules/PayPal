@@ -4,6 +4,7 @@ namespace PayPal\Controller;
 
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
+use PayPal\Service\OrderOwnerGuard;
 use PayPal\Service\Base\PayPalBaseService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -24,7 +25,7 @@ class PayPalFrontController extends BaseFrontController
     private const PAYMENT_MODULE_OPTION_CHOICES_SESSION_KEY = 'payment_module_option_choices';
 
     #[Route("/pay", name: "pay")]
-    public function showPayPalPaymentPage(Request $request)
+    public function showPayPalPaymentPage(Request $request, OrderOwnerGuard $orderOwnerGuard)
     {
         $templateData = [];
         $templateData['paypal_mode'] = PayPalBaseService::getMode();
@@ -55,15 +56,15 @@ class PayPalFrontController extends BaseFrontController
             $templateData['plan_cycle'] = $plan->getCycle();
         }
 
-        $orderId = $request->query->get('order_id');
+        // The order id lands in the page's script: an integer only, and an order of the signed-in customer only.
+        $order = OrderQuery::create()->findPk($request->query->getInt('order_id'));
 
-        $templateData['order_id'] = $orderId;
-
-        if ($orderId) {
-            $order = OrderQuery::create()->filterByCustomerId($this->getSession()->getCustomerUser()->getId())->findPk($request->attributes->get('order_id', $request->query->get('order_id', $request->request->get('order_id'))));
-            $cart = CartQuery::create()->findOneById($order?->getCartId());
-            $this->getRequest()->getSession()->setSessionCart($cart);
+        if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
+            return $this->pageNotFound();
         }
+
+        $templateData['order_id'] = $order->getId();
+        $this->getSession()->setSessionCart(CartQuery::create()->findOneById($order->getCartId()));
 
         return $this->render("paypal-payment", $templateData);
     }

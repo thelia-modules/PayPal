@@ -85,11 +85,11 @@ class PayPalResponseController extends BaseFrontController
      * @param EventDispatcherInterface $eventDispatcher
      */
     #[Route('/module/paypal/cancel/{orderId}', name: '_cancel', methods: 'GET')]
-    public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher)
+    public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher, OrderOwnerGuard $orderOwnerGuard)
     {
         $order = OrderQuery::create()->findOneById($orderId);
 
-        if (!(new OrderOwnerGuard())->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
+        if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
             return $this->pageNotFound();
         }
 

