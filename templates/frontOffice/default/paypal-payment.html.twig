@@ -4,17 +4,8 @@
     {{ 'Finalisation Paiement - PayPal'|trans }}
 {% endblock %}
 
-{% block checkoutSteps %}
-    {% set current = 1 %}
-    {{ component('Flexy:Checkout:CheckoutSteps',{
-        steps: [
-            {
-                text: "Finalisation Paiement - PayPal"|trans
-            }
-        ],
-        current
-    } ) }}
-{% endblock %}
+{# No checkoutSteps override: checkout-base.html.twig draws the bar from `steps`, and this page
+   is a stop of the payment step. #}
 
 {% block checkoutContent %}
     <section class="Paypal">
@@ -65,8 +56,8 @@
                         },
                         body: JSON.stringify({
                             order_id: orderId,
-                            return_url: "{{ absolute_url('/checkout/pay') }}",
-                            cancel_url: "{{ absolute_url('/checkout/pay') }}",
+                            return_url: "{{ url('checkout_confirm') }}",
+                            cancel_url: "{{ url('checkout_failed', {order_id: order_id}) }}",
                             planified_payment_id: planifiedPaymentId
                         }),
                     });
@@ -100,7 +91,7 @@
                             });
                         },
                         onApprove: function (data, actions) {
-                            window.location.href = `/order/placed/{{ order_id }}`;
+                            window.location.href = "{{ path('checkout_confirm') }}";
                         }
                     }).render('#paypal-button-container'); // Renders the PayPal button
 
@@ -123,8 +114,8 @@
                         },
                         body: JSON.stringify({
                             order_id: orderId,
-                            return_url: "{{ absolute_url('/checkout/pay') }}",
-                            cancel_url: "{{ absolute_url('/checkout/pay') }}",
+                            return_url: "{{ url('checkout_confirm') }}",
+                            cancel_url: "{{ url('checkout_failed', {order_id: order_id}) }}",
                         }),
                     });
 
@@ -167,9 +158,9 @@
                     const parsedOrder = JSON.parse(order);
 
                     if (parsedOrder.status === "COMPLETED") {
-                        window.location.href = `/order/placed/{{ order_id }}`;
+                        window.location.href = "{{ path('checkout_confirm') }}";
                     } else {
-                        window.location.href = `/order-failed`;
+                        window.location.href = "{{ path('checkout_failed', {order_id: order_id}) }}";
                     }
 
                 } catch (error) {
@@ -189,13 +180,4 @@
 
         </script>
     {% endif %}
-{% endblock %}
-
-{% block checkoutSummary %}
-    {%- if not emptyCart -%}
-        {{ component('Flexy:Checkout:Summary', {
-            style: 'light',
-            hasPromoCode: false,
-        }) }}
-    {%- endif -%}
 {% endblock %}

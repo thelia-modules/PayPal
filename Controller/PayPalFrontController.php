@@ -55,12 +55,14 @@ class PayPalFrontController extends BaseFrontController
             $templateData['plan_cycle'] = $plan->getCycle();
         }
 
-        $orderId = $request->query->get('order_id');
+        // An integer, never the raw query value: the template prints it inside a <script> block,
+        // where HTML escaping does not stop "1;alert(1)" (MySQL would still find order 1).
+        $orderId = $request->query->getInt('order_id');
 
         $templateData['order_id'] = $orderId;
 
-        if ($orderId) {
-            $order = OrderQuery::create()->filterByCustomerId($this->getSession()->getCustomerUser()->getId())->findPk($request->attributes->get('order_id', $request->query->get('order_id', $request->request->get('order_id'))));
+        if ($orderId > 0) {
+            $order = OrderQuery::create()->filterByCustomerId($this->getSession()->getCustomerUser()?->getId())->findPk($orderId);
             $cart = CartQuery::create()->findOneById($order?->getCartId());
             $this->getRequest()->getSession()->setSessionCart($cart);
         }

@@ -25,4 +25,5 @@
     <type>payment</type>
     <thelia>3.2.0</thelia>
     <stability>prod</stability>
+    <enabled-by-default>0</enabled-by-default>
 </module>
