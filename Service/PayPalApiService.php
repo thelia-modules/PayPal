@@ -18,7 +18,11 @@ class PayPalApiService
     }
 
 
-    public function sendPostResquest($body, $url)
+    /**
+     * @param string|null $requestId sent as PayPal-Request-Id, so that PayPal answers a retried call
+     *                               with the outcome of the first one instead of doing it twice
+     */
+    public function sendPostResquest($body, $url, ?string $requestId = null)
     {
         $clientId = PayPalBaseService::getLogin();
         $clientSecret = PayPalBaseService::getPassword();
@@ -33,7 +37,8 @@ class PayPalApiService
             'POST',
             $url,
             $authToken,
-            $body
+            $body,
+            $requestId
         );
 
     }
@@ -51,7 +56,7 @@ class PayPalApiService
         return $content['access_token'];
     }
 
-    public function sendApiRequest($method, $url, $authToken, $body)
+    public function sendApiRequest($method, $url, $authToken, $body, ?string $requestId = null)
     {
         $param = [];
 
@@ -61,6 +66,10 @@ class PayPalApiService
                 //'PayPal-Request-Id' => $paypalRequestId,
                 'Authorization' => 'Bearer '.$authToken,
             ];
+
+            if (null !== $requestId) {
+                $param['headers']['PayPal-Request-Id'] = $requestId;
+            }
 
             $param['body'] = json_encode($body);
         }
