@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Run from the shop the module is installed in:
+        vendor/bin/phpunit -c local/modules/PayPal
+    The tests of tests/Integration boot Thelia: run them with the shop's own configuration:
+        vendor/bin/phpunit -c phpunit.xml.dist local/modules/PayPal/tests/Integration
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="PayPal">
+            <directory>tests</directory>
+            <exclude>tests/Integration</exclude>
+        </testsuite>
+    </testsuites>
+</phpunit>
