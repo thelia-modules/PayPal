@@ -8,6 +8,7 @@ use PayPal\Model\PaypalOrderQuery;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
 use PayPal\Service\PayPalApiService;
+use PayPal\Service\PayPalDeferredCapture;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -55,7 +56,7 @@ class PayPalApiController extends BaseFrontController
             $eventDispatcher->dispatch($orderPayEvent, TheliaEvents::ORDER_PAY_GET_TOTAL);
 
             $body = [
-                'intent' => 'CAPTURE',
+                'intent' => PayPal::orderIntent(),
                 'purchase_units' => [
                     [
                         'reference_id' => $order->getRef(),
@@ -122,12 +123,20 @@ class PayPalApiController extends BaseFrontController
     }
 
     #[Route("/capture", name: "capture", methods: "POST")]
-    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher)
+    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher, PayPalDeferredCapture $deferredCapture)
     {
         try {
             $data = json_decode($request->getContent(), true);
 
             $paypalOrder = PaypalOrderQuery::create()->findPk($data['order_id']);
+
+            // Authorizing first, the approved order is authorized, not captured: the authorization is
+            // written to Thelia's payment journal, which holds the order for its capture.
+            if (PayPal::authorizesFirst()) {
+                $answer = $deferredCapture->authorize($paypalOrder->getOrder(), (string) $paypalOrder->getPaymentId());
+
+                return new JsonResponse(json_encode($answer));
+            }
 
             $response = $payPalApiService->sendPostResquest(
                 null,

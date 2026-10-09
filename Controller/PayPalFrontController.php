@@ -33,7 +33,8 @@ class PayPalFrontController extends BaseFrontController
         $paymentOptions = $request->getSession()->get(self::PAYMENT_MODULE_OPTION_CHOICES_SESSION_KEY);
         $lang = $request->getSession()->getLang();
 
-        $templateData['intent'] = "capture";
+        // The JavaScript SDK has to be loaded with the intent of the order the checkout creates.
+        $templateData['intent'] = strtolower(PayPal::orderIntent());
         $templateData['planified_payment_id'] = null;
         $templateData['currency'] = CurrencyQuery::create()->findOneByByDefault(1)->getCode();
 
