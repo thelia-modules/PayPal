@@ -95,6 +95,12 @@ class PayPal extends AbstractPaymentModule implements BalanceChargingPaymentModu
         return self::CAPTURE_MODE_AUTHORIZE === self::getConfigValue('capture_mode', self::CAPTURE_MODE_CAPTURE);
     }
 
+    /** The intent of the PayPal order the checkout creates: AUTHORIZE when the shop captures later. */
+    public static function orderIntent(): string
+    {
+        return self::authorizesFirst() ? 'AUTHORIZE' : 'CAPTURE';
+    }
+
     public function supportsDeferredCapture(): bool
     {
         return self::authorizesFirst();
