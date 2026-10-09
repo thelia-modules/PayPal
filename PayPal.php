@@ -13,25 +13,29 @@
 namespace PayPal;
 
 use PayPal\Service\Base\PayPalBaseService;
+use PayPal\Service\PayPalDeferredCapture;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Core\Install\Database;
+use Thelia\Domain\Payment\DTO\PaymentOperationResult;
 use Thelia\Model\Base\ModuleI18nQuery;
 use Thelia\Model\Message;
 use Thelia\Model\MessageQuery;
 use Thelia\Model\ModuleImageQuery;
 use Thelia\Model\Order;
+use Thelia\Model\OrderPaymentTransaction;
 use Thelia\Module\AbstractPaymentModule;
 use Thelia\Module\BalanceChargingPaymentModuleInterface;
+use Thelia\Module\PaymentModuleWithCaptureInterface;
 use Thelia\Tools\URL;
 
 /**
  * Charges the balance left by the instant means of the order (a gift card, for one), never the total of the order: every
  * amount sent to PayPal comes from PayPal\Service\ChargedAmount, which reads AbstractPaymentModule::getAmountToCharge().
  */
-class PayPal extends AbstractPaymentModule implements BalanceChargingPaymentModuleInterface
+class PayPal extends AbstractPaymentModule implements BalanceChargingPaymentModuleInterface, PaymentModuleWithCaptureInterface
 {
     /** @var string */
     const DOMAIN_NAME = 'paypal';
@@ -81,6 +85,31 @@ class PayPal extends AbstractPaymentModule implements BalanceChargingPaymentModu
      * @return RedirectResponse
      * @throws \Exception
      */
+    /** The buyer's money is only authorized, and captured later from Thelia: see PayPalDeferredCapture. */
+    public const CAPTURE_MODE_AUTHORIZE = 'authorize';
+
+    public const CAPTURE_MODE_CAPTURE = 'capture';
+
+    public static function authorizesFirst(): bool
+    {
+        return self::CAPTURE_MODE_AUTHORIZE === self::getConfigValue('capture_mode', self::CAPTURE_MODE_CAPTURE);
+    }
+
+    public function supportsDeferredCapture(): bool
+    {
+        return self::authorizesFirst();
+    }
+
+    public function capture(Order $order, float $amount, OrderPaymentTransaction $transaction): PaymentOperationResult
+    {
+        return $this->getContainer()->get(PayPalDeferredCapture::class)->capture($order, $amount, $transaction);
+    }
+
+    public function voidAuthorization(Order $order, OrderPaymentTransaction $transaction): PaymentOperationResult
+    {
+        return $this->getContainer()->get(PayPalDeferredCapture::class)->release($order, $transaction);
+    }
+
     public function pay(Order $order): ?\Symfony\Component\HttpFoundation\Response
     {
         $platformUrl = URL::getInstance()->absoluteUrl('/order/paypal/pay', ["order_id" => $order->getId()]);
