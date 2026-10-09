@@ -56,6 +56,15 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         self::assertFalse((new PayPal())->supportsDeferredCapture());
     }
 
+    public function testTheCheckoutAsksPayPalToAuthorizeOnlyWhenConfiguredTo(): void
+    {
+        self::assertSame('AUTHORIZE', PayPal::orderIntent());
+
+        PayPal::setConfigValue('capture_mode', 'capture');
+
+        self::assertSame('CAPTURE', PayPal::orderIntent());
+    }
+
     public function testTheAuthorizationTheCheckoutObtainsIsWrittenAndHoldsTheOrder(): void
     {
         $order = $this->order();

@@ -10,6 +10,7 @@ use PayPal\PayPal;
 use PayPal\Service\ChargedAmount;
 use PayPal\Service\OrderOwnerGuard;
 use PayPal\Service\PayPalApiService;
+use PayPal\Service\PayPalDeferredCapture;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -128,7 +129,7 @@ class PayPalApiController extends BaseFrontController
     public function orderRequestBody(?string $reference, ?string $currencyCode, float $amount): array
     {
         return [
-            'intent' => 'CAPTURE',
+            'intent' => PayPal::orderIntent(),
             'purchase_units' => [
                 [
                     'reference_id' => $reference,
@@ -142,7 +143,7 @@ class PayPalApiController extends BaseFrontController
     }
 
     #[Route("/capture", name: "capture", methods: "POST")]
-    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher, OrderOwnerGuard $orderOwnerGuard)
+    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher, OrderOwnerGuard $orderOwnerGuard, PayPalDeferredCapture $deferredCapture)
     {
         try {
             $data = json_decode($request->getContent(), true);
@@ -152,6 +153,14 @@ class PayPalApiController extends BaseFrontController
             if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())
                 || null === $paypalOrder = PaypalOrderQuery::create()->findPk($order->getId())) {
                 return $this->errorResponse('Order not found', 404);
+            }
+
+            // Authorizing first, the approved order is authorized, not captured: the authorization is
+            // written to Thelia's payment journal, which holds the order for its capture.
+            if (PayPal::authorizesFirst()) {
+                $answer = $deferredCapture->authorize($paypalOrder->getOrder(), (string) $paypalOrder->getPaymentId());
+
+                return new JsonResponse(json_encode($answer));
             }
 
             $response = $payPalApiService->sendPostResquest(
