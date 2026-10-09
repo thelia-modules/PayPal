@@ -25,6 +25,7 @@ namespace PayPal\Form;
 
 use PayPal\PayPal;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
@@ -186,6 +187,26 @@ class ConfigurationForm extends BaseForm
                     'label_attr' => [
                         'help' => $this->translator->trans(
                             'Maximum number of items in the customer cart for which this payment method is available.',
+                            [],
+                            PayPal::DOMAIN_NAME
+                        )
+                    ]
+                ]
+            )
+            ->add(
+                'capture_mode',
+                ChoiceType::class,
+                [
+                    'choices' => [
+                        $this->translator->trans('Take the payment at once', [], PayPal::DOMAIN_NAME) => PayPal::CAPTURE_MODE_CAPTURE,
+                        $this->translator->trans('Authorize first, capture from the order page', [], PayPal::DOMAIN_NAME) => PayPal::CAPTURE_MODE_AUTHORIZE,
+                    ],
+                    'required' => true,
+                    'empty_data' => PayPal::CAPTURE_MODE_CAPTURE,
+                    'label' => $this->translator->trans('Capture of the payment', [], PayPal::DOMAIN_NAME),
+                    'label_attr' => [
+                        'help' => $this->translator->trans(
+                            'Authorizing first, PayPal only holds the amount: the order waits for its capture, made in full or in part from the payment card of the order page or with the admin API.',
                             [],
                             PayPal::DOMAIN_NAME
                         )
