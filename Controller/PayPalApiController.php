@@ -48,9 +48,7 @@ class PayPalApiController extends BaseFrontController
     public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data, OrderOwnerGuard $orderOwnerGuard)
     {
         try {
-            if (null === $order = $this->findPayableOrder($data['order_id'] ?? null)) {
-                return $this->errorResponse('Order not found', 404);
-            }
+            $order = $this->findOrder($data);
 
             if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
                 return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
@@ -134,16 +132,15 @@ class PayPalApiController extends BaseFrontController
     }
 
     #[Route("/capture", name: "capture", methods: "POST")]
-    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher)
+    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher, OrderOwnerGuard $orderOwnerGuard)
     {
         try {
             $data = json_decode($request->getContent(), true);
 
-            $paypalOrder = \is_array($data) && null !== $this->findPayableOrder($data['order_id'] ?? null)
-                ? PaypalOrderQuery::create()->findPk($data['order_id'])
-                : null;
+            $order = \is_array($data) ? $this->findOrder($data) : null;
 
-            if (null === $paypalOrder) {
+            if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())
+                || null === $paypalOrder = PaypalOrderQuery::create()->findPk($order->getId())) {
                 return $this->errorResponse('Order not found', 404);
             }
 
@@ -171,9 +168,7 @@ class PayPalApiController extends BaseFrontController
         try {
             $lang = $request->getSession()->getLang();
 
-            if (null === $order = $this->findPayableOrder($data['order_id'] ?? null)) {
-                return $this->errorResponse('Order not found', 404);
-            }
+            $order = $this->findOrder($data);
 
             if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
                 return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
@@ -224,24 +219,11 @@ class PayPalApiController extends BaseFrontController
 
     }
 
-    /**
-     * The order the caller may pay. A signed-in customer only reaches their own orders. A guest
-     * is no longer attached to the session once the order is placed, so there is nothing to
-     * compare with: the lookup stays by id, as before.
-     */
-    private function findPayableOrder(mixed $orderId): ?Order
+    private function findOrder(array $data): ?Order
     {
-        if (!is_numeric($orderId)) {
-            return null;
-        }
+        $orderId = $data['order_id'] ?? null;
 
-        $query = OrderQuery::create();
-
-        if (null !== $customer = $this->getSecurityContext()->getCustomerUser()) {
-            $query->filterByCustomerId($customer->getId());
-        }
-
-        return $query->findPk((int) $orderId);
+        return is_numeric($orderId) ? OrderQuery::create()->findPk((int) $orderId) : null;
     }
 
     /**
