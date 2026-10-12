@@ -4,10 +4,15 @@
     {{ 'Finalisation Paiement - PayPal'|trans }}
 {% endblock %}
 
-{# No checkoutSteps override: checkout-base.html.twig draws the bar from `steps`, and this page
-   is a stop of the payment step. #}
+{# The step bar of the theme (checkout-base.html.twig), on the payment step: the components
+   Flexy:Checkout:CheckoutSteps and Flexy:Checkout:Summary this page used to render no longer exist. #}
+{% block checkoutSteps %}
+    {% set current = 'payment' %}
+    {{ parent() }}
+{% endblock %}
 
 {% block checkoutContent %}
+    {% block paypalContent %}
     <section class="Paypal">
          <div class="flex flex-col gap-5 container">
             <div class="Paypal-headers">
@@ -41,7 +46,13 @@
             </div>
         </div>
     </section>
+    {% endblock %}
 
+    {{ block('paypalScript') }}
+{% endblock %}
+
+{# The PayPal buttons and their returns, kept apart so that a theme overriding paypalContent keeps them. #}
+{% block paypalScript %}
     <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency={{ currency }}&intent={{ intent }}&components=buttons&enable-funding=paylater,card{% if intent == 'subscription' %}&vault=true{% endif %}"></script>
 
     {% if intent == 'subscription' %}
@@ -78,8 +89,8 @@
                 }
             }
 
-            const orderId = {{ order_id }};
-            const planifiedPaymentId = {{ planified_payment_id }};
+            const orderId = {{ order_id|json_encode|raw }};
+            const planifiedPaymentId = {{ planified_payment_id|json_encode|raw }};
 
             createPaypalPlanifiedOrder(orderId, planifiedPaymentId).then(planId => {
                 if (planId) {
@@ -91,7 +102,7 @@
                             });
                         },
                         onApprove: function (data, actions) {
-                            window.location.href = "{{ path('checkout_confirm') }}";
+                            window.location.href = '{{ path('checkout_confirm') }}';
                         }
                     }).render('#paypal-button-container'); // Renders the PayPal button
 
@@ -102,7 +113,7 @@
         </script>
     {% else %}
         <script>
-            const orderId = {{ order_id }};
+            const orderId = {{ order_id|json_encode|raw }};
 
             async function createPaypalOrder(orderId)
             {
@@ -158,9 +169,9 @@
                     const parsedOrder = JSON.parse(order);
 
                     if (parsedOrder.status === "COMPLETED") {
-                        window.location.href = "{{ path('checkout_confirm') }}";
+                        window.location.href = '{{ path('checkout_confirm') }}';
                     } else {
-                        window.location.href = "{{ path('checkout_failed', {order_id: order_id}) }}";
+                        window.location.href = '{{ path('checkout_failed', {order_id: order_id}) }}';
                     }
 
                 } catch (error) {
@@ -175,9 +186,18 @@
                 },
                 onApprove: function (data, actions) {
                     capturePaypalOrder(orderId);
+                },
+                // The buyer closed PayPal without paying, or PayPal could not take the payment: the failure page
+                // of the theme, which tells them and gives the cart back for another attempt.
+                onCancel: function () {
+                    window.location.href = '{{ path('paypal_cancel', {orderId: order_id}) }}';
+                },
+                onError: function () {
+                    window.location.href = '{{ path('checkout_failed', {order_id: order_id}) }}';
                 }
             }).render('#paypal-button-container');
 
         </script>
     {% endif %}
 {% endblock %}
+
