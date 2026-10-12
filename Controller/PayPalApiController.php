@@ -7,6 +7,7 @@ use PayPal\Event\PayPalOrderEvent;
 use PayPal\Model\PaypalOrderQuery;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
+use PayPal\Service\OrderOwnerGuard;
 use PayPal\Service\PayPalApiService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,22 +28,26 @@ class PayPalApiController extends BaseFrontController
 {
 
     #[Route("/pay", name: "pay", methods: "POST")]
-    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher)
+    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, OrderOwnerGuard $orderOwnerGuard)
     {
         $data = json_decode($request->getContent(), true);
 
         if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
-            return $this->createPlan($request, $payPalApiService, $data);
+            return $this->createPlan($request, $payPalApiService, $data, $orderOwnerGuard);
         }
 
-        return $this->createOrder($request, $payPalApiService, $eventDispatcher, $data);
+        return $this->createOrder($request, $payPalApiService, $eventDispatcher, $data, $orderOwnerGuard);
     }
 
 
-    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data)
+    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data, OrderOwnerGuard $orderOwnerGuard)
     {
         try {
             $order = OrderQuery::create()->findPk($data['order_id']);
+
+            if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
+                return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
+            }
 
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
 
@@ -148,12 +153,16 @@ class PayPalApiController extends BaseFrontController
         }
     }
 
-    public function createPlan(Request $request, PayPalApiService $payPalApiService, $data)
+    public function createPlan(Request $request, PayPalApiService $payPalApiService, $data, OrderOwnerGuard $orderOwnerGuard)
     {
         try {
             $lang = $request->getSession()->getLang();
 
             $order = OrderQuery::create()->findPk($data['order_id']);
+
+            if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
+                return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
+            }
 
             $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findPk($data["planified_payment_id"]);
             $planifiedPayment->setLocale($lang?->getLocale());

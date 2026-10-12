@@ -38,6 +38,7 @@ use PayPal\Model\PaypalCustomerQuery;
 use PayPal\Model\PaypalOrder;
 use PayPal\Model\PaypalOrderQuery;
 use PayPal\PayPal;
+use PayPal\Service\OrderOwnerGuard;
 use PayPal\Service\PayPalAgreementService;
 use PayPal\Service\PayPalCustomerService;
 use PayPal\Service\PayPalLoggerService;
@@ -84,16 +85,19 @@ class PayPalResponseController extends BaseFrontController
      * @param EventDispatcherInterface $eventDispatcher
      */
     #[Route('/module/paypal/cancel/{orderId}', name: '_cancel', methods: 'GET')]
-    public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher)
+    public function cancelAction($orderId, EventDispatcherInterface $eventDispatcher, OrderOwnerGuard $orderOwnerGuard)
     {
-        if (!$order = OrderQuery::create()->findOneById($orderId)) {
+        $order = OrderQuery::create()->findOneById($orderId);
+
+        if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
             return $this->pageNotFound();
         }
 
-        $event = new OrderEvent($order);
-        $event->setStatus(OrderStatusQuery::getCancelledStatus()->getId());
-        $eventDispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
-
+        // The buyer left PayPal without paying: back to the failure page of the theme, as every payment module of
+        // the core does (BasePaymentModuleController::redirectToFailurePage()). Cancelling the order is that page's
+        // job (Flexy: CheckoutFacade::cancelOrder(), an order of the session still waiting for its payment only):
+        // cancelled here as well, the page would find nothing left to cancel and could not tell the buyer which
+        // order failed, and a paid order reached by this address was cancelled with it.
         $orderId = $order->getId();
         $message = Translator::getInstance()->trans('Order cancel', [], PayPal::DOMAIN_NAME);
 
