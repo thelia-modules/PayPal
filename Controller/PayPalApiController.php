@@ -7,6 +7,7 @@ use PayPal\Event\PayPalOrderEvent;
 use PayPal\Model\PaypalOrderQuery;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
+use PayPal\Service\OrderOwnerGuard;
 use PayPal\Service\PayPalApiService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -43,6 +44,10 @@ class PayPalApiController extends BaseFrontController
     {
         try {
             $order = OrderQuery::create()->findPk($data['order_id']);
+
+            if (!(new OrderOwnerGuard())->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
+                return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
+            }
 
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
 
