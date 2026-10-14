@@ -20,6 +20,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Model\Customer;
+use Thelia\Model\ModuleQuery;
 use Thelia\Model\OrderQuery;
 use Thelia\Model\OrderStatus;
 use Thelia\Test\IntegrationTestCase;
@@ -33,6 +34,40 @@ use Thelia\Test\IntegrationTestCase;
  */
 final class CheckoutReturnsTest extends IntegrationTestCase
 {
+    /**
+     * PayPal ships inactive (enabled-by-default 0) and an inactive module declares no route: when the container of
+     * the test kernel has no PayPal route, activate the module in the test database and rebuild that container,
+     * whatever bootstrap runs the suite.
+     */
+    public static function setUpBeforeClass(): void
+    {
+        self::bootKernel();
+        $kernel = self::$kernel;
+        $routesLoaded = null !== static::getContainer()->get('router')->getRouteCollection()->get('paypal_front_pay');
+        self::ensureKernelShutdown();
+
+        if ($routesLoaded) {
+            return;
+        }
+
+        $console = escapeshellarg(\PHP_BINARY).' '.escapeshellarg($kernel->getProjectDir().'/bin/console');
+        $environment = ' --env='.escapeshellarg($kernel->getEnvironment());
+
+        exec($console.' module:activate PayPal'.$environment.' 2>&1', $activationOutput, $activationStatus);
+
+        if (0 !== $activationStatus && !str_contains(implode("\n", $activationOutput), 'already activated')) {
+            throw new \RuntimeException("Could not activate PayPal in the test database:\n".implode("\n", $activationOutput));
+        }
+
+        exec($console.' cache:clear'.$environment.' 2>&1', $cacheClearOutput, $cacheClearStatus);
+
+        if (0 !== $cacheClearStatus) {
+            throw new \RuntimeException("Could not rebuild the test container after activating PayPal:\n".implode("\n", $cacheClearOutput));
+        }
+
+        ModuleQuery::resetActivated();
+    }
+
     public function testLeavingPayPalReachesTheFailurePageWithTheOrderStillToCancel(): void
     {
         $customer = $this->createFixtureFactory()->customer($this->createFixtureFactory()->customerTitle());
