@@ -18,8 +18,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\Process\Process;
 use Thelia\Core\HttpFoundation\Session\Session;
 use Thelia\Model\Customer;
+use Thelia\Model\ModuleQuery;
 use Thelia\Model\OrderQuery;
 use Thelia\Model\OrderStatus;
 use Thelia\Test\IntegrationTestCase;
@@ -33,6 +35,43 @@ use Thelia\Test\IntegrationTestCase;
  */
 final class CheckoutReturnsTest extends IntegrationTestCase
 {
+    /**
+     * PayPal ships inactive (enabled-by-default 0) and an inactive module declares no route: when the container of
+     * the test kernel has no PayPal route, activate the module in the test database and rebuild that container,
+     * whatever bootstrap runs the suite. The console runs with the database and debug mode of the test kernel, so
+     * that neither the activation nor the rebuilt container reach another database set in the shell.
+     */
+    public static function setUpBeforeClass(): void
+    {
+        self::bootKernel();
+        $kernel = self::$kernel;
+        $container = static::getContainer();
+        $routesLoaded = null !== $container->get('router')->getRouteCollection()->get('paypal_front_pay');
+        $environment = [];
+        foreach (['host', 'port', 'name', 'user', 'password'] as $setting) {
+            $environment['DATABASE_'.strtoupper($setting)] = (string) $container->getParameter('thelia.database_'.$setting);
+        }
+        self::ensureKernelShutdown();
+
+        if ($routesLoaded) {
+            return;
+        }
+
+        $console = [\PHP_BINARY, $kernel->getProjectDir().'/bin/console'];
+        $options = ['--env='.$kernel->getEnvironment(), ...($kernel->isDebug() ? [] : ['--no-debug'])];
+
+        $activation = new Process([...$console, 'module:activate', 'PayPal', ...$options], $kernel->getProjectDir(), $environment);
+        $activation->run();
+
+        if (!$activation->isSuccessful() && !str_contains($activation->getOutput(), 'already activated')) {
+            throw new \RuntimeException("Could not activate PayPal in the test database:\n".$activation->getOutput().$activation->getErrorOutput());
+        }
+
+        (new Process([...$console, 'cache:clear', ...$options], $kernel->getProjectDir(), $environment))->setTimeout(null)->mustRun();
+
+        ModuleQuery::resetActivated();
+    }
+
     public function testLeavingPayPalReachesTheFailurePageWithTheOrderStillToCancel(): void
     {
         $customer = $this->createFixtureFactory()->customer($this->createFixtureFactory()->customerTitle());

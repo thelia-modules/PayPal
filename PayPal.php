@@ -96,6 +96,12 @@ class PayPal extends AbstractPaymentModule
     {
         $isValid = false;
 
+        // Without the client id and secret of the selected mode (live or sandbox) the payment page
+        // can neither load the PayPal SDK nor reach the API: the module is not offered at all.
+        if ('' === (string) PayPalBaseService::getLogin() || '' === (string) PayPalBaseService::getPassword()) {
+            return false;
+        }
+
         // Check if total order amount is within the module's limits
         $order_total = $this->getCurrentOrderTotalAmount();
 

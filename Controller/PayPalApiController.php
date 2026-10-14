@@ -20,6 +20,7 @@ use Thelia\Core\Event\TheliaEvents;
 use Thelia\Log\Tlog;
 use Thelia\Model\Base\OrderStatusQuery;
 use Thelia\Model\CurrencyQuery;
+use Thelia\Model\Order;
 use Thelia\Model\OrderQuery;
 use Thelia\Model\OrderStatus;
 
@@ -32,6 +33,10 @@ class PayPalApiController extends BaseFrontController
     {
         $data = json_decode($request->getContent(), true);
 
+        if (!\is_array($data)) {
+            return $this->errorResponse('Invalid request body', 400);
+        }
+
         if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
             return $this->createPlan($request, $payPalApiService, $data, $orderOwnerGuard);
         }
@@ -43,7 +48,7 @@ class PayPalApiController extends BaseFrontController
     public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data, OrderOwnerGuard $orderOwnerGuard)
     {
         try {
-            $order = OrderQuery::create()->findPk($data['order_id']);
+            $order = $this->findOrder($data);
 
             if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
                 return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
@@ -121,18 +126,23 @@ class PayPalApiController extends BaseFrontController
             return new JsonResponse($responseContent);
         } catch (\Exception $exception) {
             Tlog::getInstance()->error($exception->getMessage());
-            return new JsonResponse(json_encode(['error' => $exception->getMessage()]), $exception->getCode());
+            return $this->errorResponse($exception->getMessage(), $this->errorStatus($exception));
         }
 
     }
 
     #[Route("/capture", name: "capture", methods: "POST")]
-    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher)
+    public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher, OrderOwnerGuard $orderOwnerGuard)
     {
         try {
             $data = json_decode($request->getContent(), true);
 
-            $paypalOrder = PaypalOrderQuery::create()->findPk($data['order_id']);
+            $order = \is_array($data) ? $this->findOrder($data) : null;
+
+            if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())
+                || null === $paypalOrder = PaypalOrderQuery::create()->findPk($order->getId())) {
+                return $this->errorResponse('Order not found', 404);
+            }
 
             $response = $payPalApiService->sendPostResquest(
                 null,
@@ -149,7 +159,7 @@ class PayPalApiController extends BaseFrontController
             return new JsonResponse($responseContent);
         } catch (\Exception $exception) {
             Tlog::getInstance()->error($exception->getMessage());
-            return new JsonResponse(json_encode(['error' => $exception->getMessage()]), $exception->getCode());
+            return $this->errorResponse($exception->getMessage(), $this->errorStatus($exception));
         }
     }
 
@@ -158,7 +168,7 @@ class PayPalApiController extends BaseFrontController
         try {
             $lang = $request->getSession()->getLang();
 
-            $order = OrderQuery::create()->findPk($data['order_id']);
+            $order = $this->findOrder($data);
 
             if (!$orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
                 return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
@@ -204,9 +214,30 @@ class PayPalApiController extends BaseFrontController
             return new JsonResponse($responseContent);
         } catch (\Exception $exception) {
             Tlog::getInstance()->error($exception->getMessage());
-            return new JsonResponse(json_encode(['error' => $exception->getMessage()]), $exception->getCode());
+            return $this->errorResponse($exception->getMessage(), $this->errorStatus($exception));
         }
 
     }
 
+    private function findOrder(array $data): ?Order
+    {
+        $orderId = $data['order_id'] ?? null;
+
+        return is_numeric($orderId) ? OrderQuery::create()->findPk((int) $orderId) : null;
+    }
+
+    /**
+     * An exception code is not an HTTP status (most are 0): only a real error status is kept.
+     */
+    private function errorStatus(\Throwable $exception): int
+    {
+        $code = $exception->getCode();
+
+        return \is_int($code) && $code >= 400 && $code <= 599 ? $code : 500;
+    }
+
+    private function errorResponse(string $message, int $status): JsonResponse
+    {
+        return new JsonResponse(json_encode(['error' => $message]), $status);
+    }
 }
