@@ -378,7 +378,12 @@ class PayPalPaymentService extends PayPalBaseService
     {
         $redirectUrls = new RedirectUrls();
         $urlOk = URL::getInstance()->absoluteUrl('/module/paypal/ok/' . $order->getId());
-        $urlCancel = URL::getInstance()->absoluteUrl('/module/paypal/cancel/' . $order->getId());
+        if ((bool) PayPal::getConfigValue('keep_order') === true) {
+            $message = rawurlencode(Translator::getInstance()->trans('Order cancel', [], PayPal::DOMAIN_NAME));
+            $urlCancel = URL::getInstance()->absoluteUrl('/order/failed/'.$order->getId().'/'.$message);
+        }else{
+            $urlCancel = URL::getInstance()->absoluteUrl('/module/paypal/cancel/'.$order->getId());
+        }
         $redirectUrls->setReturnUrl($urlOk);
         $redirectUrls->setCancelUrl($urlCancel);
 
