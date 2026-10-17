@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: thelia-modules/ReusableWorkflow/.github/workflows/module_ci.yml@main
