@@ -64,7 +64,7 @@ class ConfigurationController extends BaseAdminController
                     $value = implode(';', $value);
                 }
 
-                Paypal::setConfigValue($name, $value);
+                PayPal::setConfigValue($name, $value);
             }
 
             $this->adminLogAppend(

@@ -105,8 +105,8 @@ class PayPal extends AbstractPaymentModule
         // Check if total order amount is within the module's limits
         $order_total = $this->getCurrentOrderTotalAmount();
 
-        $min_amount = Paypal::getConfigValue('minimum_amount', 0);
-        $max_amount = Paypal::getConfigValue('maximum_amount', 0);
+        $min_amount = PayPal::getConfigValue('minimum_amount', 0);
+        $max_amount = PayPal::getConfigValue('maximum_amount', 0);
 
         if (
             ($order_total > 0)
@@ -118,12 +118,12 @@ class PayPal extends AbstractPaymentModule
             // Check cart item count
             $cartItemCount = $this->getRequest()->getSession()->getSessionCart($this->getDispatcher())->countCartItems();
 
-            if ($cartItemCount <= Paypal::getConfigValue('cart_item_count', 9)) {
+            if ($cartItemCount <= PayPal::getConfigValue('cart_item_count', 9)) {
                 $isValid = true;
 
                 if (PayPalBaseService::isSandboxMode()) {
                     // In sandbox mode, check the current IP
-                    $raw_ips = explode("\n", Paypal::getConfigValue('allowed_ip_list', ''));
+                    $raw_ips = explode("\n", PayPal::getConfigValue('allowed_ip_list', ''));
 
                     $allowed_client_ips = array();
 

@@ -93,7 +93,7 @@ class OrderListener implements EventSubscriberInterface
             // We send the order confirmation email only if the order is paid
             $order = $event->getOrder();
 
-            if (! $order->isPaid() && $order->getPaymentModuleId() == Paypal::getModuleId()) {
+            if (! $order->isPaid() && $order->getPaymentModuleId() == PayPal::getModuleId()) {
                 $event->stopPropagation();
             }
         }
@@ -108,8 +108,8 @@ class OrderListener implements EventSubscriberInterface
     {
         $order = $event->getOrder();
 
-        if ($order->isPaid() && $order->getPaymentModuleId() === Paypal::getModuleId()) {
-            if (Paypal::getConfigValue('send_payment_confirmation_message')) {
+        if ($order->isPaid() && $order->getPaymentModuleId() === PayPal::getModuleId()) {
+            if (PayPal::getConfigValue('send_payment_confirmation_message')) {
                 $this->mailer->sendEmailToCustomer(
                     PayPal::CONFIRMATION_MESSAGE_NAME,
                     $order->getCustomer(),
@@ -121,7 +121,7 @@ class OrderListener implements EventSubscriberInterface
             }
 
             // Send confirmation email if required.
-            if (Paypal::getConfigValue('send_confirmation_message_only_if_paid')) {
+            if (PayPal::getConfigValue('send_confirmation_message_only_if_paid')) {
                 // A copy: a listener of the confirmation that stops it must not stop the status change too.
                 $this->dispatcher->dispatch(clone $event, TheliaEvents::ORDER_SEND_CONFIRMATION_EMAIL);
             }
