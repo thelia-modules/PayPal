@@ -3,17 +3,30 @@
 declare(strict_types=1);
 
 /*
- * Run from the root of the Thelia project the module is installed in, against a disposable
- * database whose name ends with `_test` (see the Readme):
+ * Run from the root of a Thelia checkout (thelia/thelia) the module is installed in, against a
+ * disposable database (see the Readme):
  *   php bin/test-prepare
- *   vendor/bin/phpunit --no-configuration --bootstrap vendor/thelia/modules/PayPal/Tests/bootstrap.php vendor/thelia/modules/PayPal/Tests
+ *   vendor/bin/phpunit -c phpunit.xml.dist --bootstrap local/modules/PayPal/Tests/bootstrap.php local/modules/PayPal/Tests
  */
 
 use Symfony\Component\Dotenv\Dotenv;
 
 $projectRoot = getcwd();
 
-require $projectRoot.'/bootstrap.php';
-require $projectRoot.'/vendor/autoload.php';
+// The bootstrap of Thelia wires what the integration tests read: the generated Propel models and
+// the database variables of the test environment.
+if (is_file($projectRoot.'/tests/bootstrap.php')) {
+    require $projectRoot.'/tests/bootstrap.php';
+
+    return;
+}
+
+$loader = require $projectRoot.'/vendor/autoload.php';
+
+$propelDirectory = $projectRoot.'/var/propel/test';
+if (is_dir($propelDirectory.'/model')) {
+    $loader->addPsr4('', $propelDirectory.'/model');
+    $loader->addPsr4('TheliaMain\\', $propelDirectory.'/database/TheliaMain');
+}
 
 (new Dotenv())->bootEnv($projectRoot.'/.env');
