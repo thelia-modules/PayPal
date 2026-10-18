@@ -40,11 +40,15 @@ class PayPalFrontController extends BaseFrontController
 
         $templateData['infos'] = PayPal::getInfo($lang->getLocale());
 
-        if (!empty($paymentOptions) && 'paypal' !== $paymentType = $paymentOptions['code']) {
-            $planifiedPaymentId = explode('_', $paymentType)[1];
+        $paymentType = $this->chosenPaymentType($paymentOptions);
+        $plan = null;
 
+        if (null !== $paymentType && str_starts_with($paymentType, 'PaypalPlanifiedPayment_')) {
+            $planifiedPaymentId = (int) substr($paymentType, \strlen('PaypalPlanifiedPayment_'));
+            $plan = PaypalPlanifiedPaymentQuery::create()->findPk($planifiedPaymentId);
+        }
 
-            $plan =  PaypalPlanifiedPaymentQuery::create()->findPk($planifiedPaymentId);
+        if (null !== $plan) {
             $plan->setLocale($lang->getLocale());
 
             $templateData['intent'] = "subscription";
@@ -67,5 +71,29 @@ class PayPalFrontController extends BaseFrontController
         $this->getSession()->setSessionCart(CartQuery::create()->findOneById($order->getCartId()));
 
         return $this->render("paypal-payment", $templateData);
+    }
+
+    /**
+     * The option of the `paypal_type` group the buyer picked. A front stores the choices
+     * as the core's PaymentModuleOptionChoice entries, `[{group, values}]`; an older one
+     * stored a single `{code}`. Null when nothing was picked: the plain PayPal payment.
+     */
+    private function chosenPaymentType(mixed $paymentOptions): ?string
+    {
+        if (!\is_array($paymentOptions)) {
+            return null;
+        }
+
+        if (\is_string($paymentOptions['code'] ?? null)) {
+            return $paymentOptions['code'];
+        }
+
+        foreach ($paymentOptions as $choice) {
+            if (\is_array($choice) && 'paypal_type' === ($choice['group'] ?? null) && \is_string($choice['values'][0] ?? null)) {
+                return $choice['values'][0];
+            }
+        }
+
+        return null;
     }
 }
