@@ -9,9 +9,11 @@ use PayPal\Service\Capture\PayPalAnswer;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Thelia\Domain\Payment\DTO\PaymentOperationResult;
+use Thelia\Domain\Payment\Exception\PaymentAnnouncementFailedException;
 use Thelia\Domain\Payment\Exception\PaymentRefusedException;
 use Thelia\Domain\Payment\Service\CurrencyMinorUnit;
 use Thelia\Domain\Payment\Service\PaymentTransactionRecorder;
+use Thelia\Log\Tlog;
 use Thelia\Model\Order;
 use Thelia\Model\OrderPaymentTransaction;
 use Thelia\Model\OrderPaymentTransactionQuery;
@@ -49,13 +51,29 @@ final readonly class PayPalDeferredCapture
         $answer = $this->call(
             PayPal::getBaseUrl().PayPal::PAYPAL_API_CREATE_ORDER_URL.'/'.rawurlencode($payPalOrderId).'/authorize',
             new \stdClass(),
-            'thelia-authorize-'.$order->getId(),
+            // One per PayPal order: a buyer who pays again opens another, which PayPal must not
+            // answer with the authorization of the first.
+            'thelia-authorize-'.$order->getId().'-'.$payPalOrderId,
         );
 
         $authorization = PayPalAnswer::authorizationOf($answer);
 
-        if (null !== $authorization) {
+        if (null === $authorization) {
+            Tlog::getInstance()->warning(\sprintf('PayPal answered the authorization of order %s (PayPal order %s) without an authorization: nothing is written to the journal.', (string) $order->getRef(), $payPalOrderId));
+
+            return $answer;
+        }
+
+        try {
             $this->recorder->recordAuthorization($order, $authorization->amount, $authorization->id, moduleCode: PayPal::getModuleCode());
+        } catch (PaymentAnnouncementFailedException) {
+            // The line is written; a listener that broke afterwards is logged by the recorder.
+        } catch (\Throwable $failure) {
+            // PayPal holds the buyer's money and Thelia does not know it: said with what the
+            // merchant needs to find it. Paying again asks PayPal the same, and writes it then.
+            Tlog::getInstance()->error(\sprintf('PayPal authorized order %s (PayPal order %s, authorization %s), but the payment journal could not write it: %s', (string) $order->getRef(), $payPalOrderId, $authorization->id, $failure->getMessage()));
+
+            throw $failure;
         }
 
         return $answer;
@@ -115,12 +133,24 @@ final readonly class PayPalDeferredCapture
         /** @var ResponseInterface $response */
         $response = $this->api->sendPostResquest($body, $url, $requestId);
         $code = $response->getStatusCode();
-        $answer = json_decode($response->getContent(false) ?: '{}', true);
-        $answer = \is_array($answer) ? $answer : [];
 
         if ($code >= 500) {
             throw new \RuntimeException(\sprintf('PayPal did not process the call (HTTP %d).', $code));
         }
+
+        try {
+            $answer = json_decode($response->getContent(false) ?: '{}', true, 512, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException $unreadable) {
+            // A refusal in words the module cannot read is still a refusal; an acceptance in such
+            // words may have moved the money, and is no outcome Thelia can write.
+            if ($code >= 400) {
+                throw PayPalAnswer::refusalOf([]);
+            }
+
+            throw new \RuntimeException(\sprintf('PayPal answered the call (HTTP %d) in words the module cannot read.', $code), 0, $unreadable);
+        }
+
+        $answer = \is_array($answer) ? $answer : [];
 
         if ($code >= 400) {
             throw PayPalAnswer::refusalOf($answer);

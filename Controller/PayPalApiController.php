@@ -18,6 +18,7 @@ use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\Order\OrderPayTotalEvent;
 use Thelia\Core\Event\TheliaEvents;
+use Thelia\Domain\Payment\Exception\PaymentRefusedException;
 use Thelia\Log\Tlog;
 use Thelia\Model\Base\OrderStatusQuery;
 use Thelia\Model\CurrencyQuery;
@@ -148,9 +149,21 @@ class PayPalApiController extends BaseFrontController
             // Authorizing first, the approved order is authorized, not captured: the authorization is
             // written to Thelia's payment journal, which holds the order for its capture.
             if (PayPal::authorizesFirst()) {
-                $answer = $deferredCapture->authorize($paypalOrder->getOrder(), (string) $paypalOrder->getPaymentId());
+                try {
+                    $answer = $deferredCapture->authorize($paypalOrder->getOrder(), (string) $paypalOrder->getPaymentId());
+                } catch (PaymentRefusedException $refused) {
+                    Tlog::getInstance()->error(sprintf('PayPal refused the authorization of order %s: %s', $paypalOrder->getOrder()->getRef(), $refused->getMessage()));
 
-                return new JsonResponse(json_encode($answer));
+                    return $this->errorResponse('PayPal refused the payment.', 422);
+                } catch (\Throwable $failure) {
+                    // The cause is in the log, written by the service: the buyer is not shown the
+                    // words of the journal or of the database.
+                    Tlog::getInstance()->error(sprintf('The authorization of order %s failed: %s', $paypalOrder->getOrder()->getRef(), $failure->getMessage()));
+
+                    return $this->errorResponse('The payment could not be authorized: please try again.', 502);
+                }
+
+                return new JsonResponse(json_encode($answer, \JSON_THROW_ON_ERROR));
             }
 
             $response = $payPalApiService->sendPostResquest(

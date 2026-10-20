@@ -10,6 +10,7 @@ use PayPal\Service\PayPalDeferredCapture;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Thelia\Domain\Payment\Enum\PaymentTransactionState;
+use Thelia\Domain\Payment\Exception\PaymentException;
 use Thelia\Domain\Payment\Exception\PaymentRefusedException;
 use Thelia\Domain\Payment\Service\PaymentTransactionRecorder;
 use Thelia\Domain\Payment\Service\PaymentTransactionTotalsReader;
@@ -78,6 +79,7 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         self::assertSame('COMPLETED', $answer['status']);
         self::assertSame('POST', $this->requests[1]['method']);
         self::assertStringEndsWith('/v2/checkout/orders/ORDER-1/authorize', $this->requests[1]['url']);
+        self::assertContains('PayPal-Request-Id: thelia-authorize-'.$order->getId().'-ORDER-1', $this->requests[1]['options']['headers'], 'Paying again opens another PayPal order, which PayPal must not answer with the first.');
         $totals = $this->getService(PaymentTransactionTotalsReader::class)->forOrder((int) $order->getId());
         self::assertSame('120.000000', $totals->authorized);
         self::assertSame(OrderStatus::CODE_AWAITING_CAPTURE, $this->statusOf($order));
@@ -127,6 +129,45 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         } catch (\RuntimeException) {
             $this->addToAssertionCount(1);
         }
+    }
+
+    public function testAnAcceptanceInWordsTheModuleCannotReadIsNoOutcome(): void
+    {
+        $order = $this->authorizedOrder();
+        $line = $this->recorder->recordCapture($order, 40, null, PaymentTransactionState::PENDING);
+
+        try {
+            $this->service([new MockResponse('<html>gateway</html>', ['http_code' => 201])])->capture($order, 40.0, $line);
+            self::fail('An answer the module cannot read is no outcome.');
+        } catch (PaymentRefusedException) {
+            self::fail('PayPal may have taken the money: it is not a refusal.');
+        } catch (\RuntimeException $unknown) {
+            self::assertStringContainsString('cannot read', $unknown->getMessage());
+        }
+    }
+
+    public function testARefusalInWordsTheModuleCannotReadIsStillARefusal(): void
+    {
+        $order = $this->authorizedOrder();
+        $line = $this->recorder->recordCapture($order, 40, null, PaymentTransactionState::PENDING);
+
+        $this->expectException(PaymentRefusedException::class);
+
+        $this->service([new MockResponse('<html>bad request</html>', ['http_code' => 400])])->capture($order, 40.0, $line);
+    }
+
+    public function testAnAuthorizationTheJournalCannotWriteFailsTheCheckout(): void
+    {
+        // PayPal holds the money: the checkout must not tell the buyer the payment went through.
+        $order = $this->order();
+
+        $this->expectException(PaymentException::class);
+
+        $this->service([$this->json(201, [
+            'id' => 'ORDER-2',
+            'status' => 'COMPLETED',
+            'purchase_units' => [['payments' => ['authorizations' => [['id' => str_repeat('A', 101), 'status' => 'CREATED', 'amount' => ['currency_code' => 'EUR', 'value' => '120.00']]]]]],
+        ])])->authorize($order, 'ORDER-2');
     }
 
     public function testTheReleaseVoidsTheAuthorization(): void
