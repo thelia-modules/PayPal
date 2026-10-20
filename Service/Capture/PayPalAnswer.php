@@ -42,6 +42,7 @@ final class PayPalAnswer
      * @param array<string, mixed> $capture the answer to POST /v2/payments/authorizations/{id}/capture
      *
      * @throws PaymentRefusedException when PayPal declined the capture
+     * @throws \RuntimeException       when the answer does not say the outcome
      */
     public static function captureResult(array $capture): PaymentOperationResult
     {
@@ -51,7 +52,10 @@ final class PayPalAnswer
         return match ($status) {
             'COMPLETED' => PaymentOperationResult::succeeded($id),
             'PENDING' => PaymentOperationResult::pending($id),
-            default => throw PaymentRefusedException::withProviderCode(\sprintf('PayPal did not capture the payment: %s', '' !== $status ? $status : 'no status'), $status),
+            'DECLINED', 'FAILED' => throw PaymentRefusedException::withProviderCode(\sprintf('PayPal did not capture the payment: %s', $status), $status),
+            // Anything else may have taken the money: Thelia keeps the line pending until
+            // PayPal says, instead of offering a second capture.
+            default => throw new \RuntimeException(\sprintf('PayPal answered the capture without saying its outcome (%s).', '' !== $status ? $status : 'no status')),
         };
     }
 
