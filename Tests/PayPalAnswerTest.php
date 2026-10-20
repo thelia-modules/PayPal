@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PayPal\Tests;
 
 use PayPal\Service\Capture\PayPalAnswer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Thelia\Domain\Payment\Enum\PaymentTransactionState;
 use Thelia\Domain\Payment\Exception\PaymentRefusedException;
@@ -60,6 +61,42 @@ final class PayPalAnswerTest extends TestCase
         } catch (PaymentRefusedException $refusal) {
             self::assertStringContainsString('DECLINED', $refusal->getMessage());
             self::assertSame('DECLINED', $refusal->getProviderCode());
+        }
+    }
+
+    public function testAFailedCaptureIsARefusal(): void
+    {
+        $this->expectException(PaymentRefusedException::class);
+
+        PayPalAnswer::captureResult(['id' => 'CAP-3', 'status' => 'FAILED']);
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function unreadableAnswers(): iterable
+    {
+        yield 'empty body' => [[]];
+        yield 'no status' => [['id' => 'CAP-3']];
+        yield 'status PayPal never answers a capture with' => [['id' => 'CAP-3', 'status' => 'VOIDED']];
+    }
+
+    /**
+     * A 2xx answer that does not say the capture was refused may have taken the money: the
+     * line stays pending until PayPal says, and a second capture is not offered meanwhile.
+     *
+     * @param array<string, mixed> $answer
+     */
+    #[DataProvider('unreadableAnswers')]
+    public function testAnAnswerThatDoesNotSayTheOutcomeIsNoRefusal(array $answer): void
+    {
+        try {
+            PayPalAnswer::captureResult($answer);
+            self::fail('An answer without an outcome is not a result.');
+        } catch (PaymentRefusedException) {
+            self::fail('An answer without an outcome is not a refusal.');
+        } catch (\RuntimeException $unknown) {
+            self::assertStringContainsString('PayPal', $unknown->getMessage());
         }
     }
 
