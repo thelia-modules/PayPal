@@ -161,13 +161,23 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         // PayPal holds the money: the checkout must not tell the buyer the payment went through.
         $order = $this->order();
 
-        $this->expectException(PaymentException::class);
+        $id = str_repeat('A', 101);
 
-        $this->service([$this->json(201, [
-            'id' => 'ORDER-2',
-            'status' => 'COMPLETED',
-            'purchase_units' => [['payments' => ['authorizations' => [['id' => str_repeat('A', 101), 'status' => 'CREATED', 'amount' => ['currency_code' => 'EUR', 'value' => '120.00']]]]]],
-        ])])->authorize($order, 'ORDER-2');
+        try {
+            $this->service([
+                $this->json(201, [
+                    'id' => 'ORDER-2',
+                    'status' => 'COMPLETED',
+                    'purchase_units' => [['payments' => ['authorizations' => [['id' => $id, 'status' => 'CREATED', 'amount' => ['currency_code' => 'EUR', 'value' => '120.00']]]]]],
+                ]),
+                $this->json(200, ['access_token' => 'token']),
+                new MockResponse('', ['http_code' => 204]),
+            ])->authorize($order, 'ORDER-2');
+            self::fail('The checkout fails.');
+        } catch (PaymentException) {
+            // The authorization Thelia could not write is voided: paying again holds nothing twice.
+            self::assertStringEndsWith('/v2/payments/authorizations/'.$id.'/void', end($this->requests)['url']);
+        }
     }
 
     public function testAnOrderAlreadyAuthorizedIsNotAuthorizedAgain(): void
@@ -201,6 +211,20 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         }
 
         self::assertSame('0.000000', $this->getService(PaymentTransactionTotalsReader::class)->forOrder((int) $order->getId())->authorized);
+    }
+
+    public function testAPayPalOrderIsAuthorizedOrCapturedAsItWasCreated(): void
+    {
+        $service = $this->service([]);
+        $service->rememberIntent('ORDER-5', 'AUTHORIZE');
+        PayPal::setConfigValue('capture_mode', 'capture');
+
+        self::assertSame('AUTHORIZE', $service->intentOf('ORDER-5'), 'The capture mode changed during the checkout.');
+        self::assertSame('CAPTURE', $service->intentOf('ORDER-UNKNOWN'), 'One created before the intent was kept follows the capture mode.');
+
+        $service->forgetIntent('ORDER-5');
+
+        self::assertSame('CAPTURE', $service->intentOf('ORDER-5'));
     }
 
     public function testTheReleaseVoidsTheAuthorization(): void

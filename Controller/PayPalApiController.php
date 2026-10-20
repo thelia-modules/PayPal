@@ -32,7 +32,7 @@ class PayPalApiController extends BaseFrontController
 {
 
     #[Route("/pay", name: "pay", methods: "POST")]
-    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, OrderOwnerGuard $orderOwnerGuard, ChargedAmount $chargedAmount)
+    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, OrderOwnerGuard $orderOwnerGuard, ChargedAmount $chargedAmount, PayPalDeferredCapture $deferredCapture)
     {
         $data = json_decode($request->getContent(), true);
 
@@ -40,15 +40,22 @@ class PayPalApiController extends BaseFrontController
             return $this->errorResponse('Invalid request body', 400);
         }
 
+        // An order already paid, or authorized, waits for no payment, whatever the way it is paid.
+        $order = $this->findOrder($data);
+
+        if (null !== $order && $orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser()) && $order->isPaymentSecured()) {
+            return $this->errorResponse('This order is already paid.', 409);
+        }
+
         if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
             return $this->createPlan($request, $payPalApiService, $data, $orderOwnerGuard, $chargedAmount);
         }
 
-        return $this->createOrder($request, $payPalApiService, $eventDispatcher, $data, $orderOwnerGuard, $chargedAmount);
+        return $this->createOrder($request, $payPalApiService, $eventDispatcher, $data, $orderOwnerGuard, $chargedAmount, $deferredCapture);
     }
 
 
-    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data, OrderOwnerGuard $orderOwnerGuard, ChargedAmount $chargedAmount)
+    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data, OrderOwnerGuard $orderOwnerGuard, ChargedAmount $chargedAmount, PayPalDeferredCapture $deferredCapture)
     {
         try {
             $order = $this->findOrder($data);
@@ -73,6 +80,7 @@ class PayPalApiController extends BaseFrontController
             }
 
             $body = $this->orderRequestBody($order->getRef(), $currency?->getCode(), $amount);
+            $intent = $body['intent'];
 
             $body['payment_source'] = [
                 'paypal' => [
@@ -106,6 +114,8 @@ class PayPalApiController extends BaseFrontController
                 ->findOneOrCreate();
 
             $paypalOrder->setPaymentId($responseInfo['id']);
+            // The buyer comes back to this order: it is then authorized or captured as created.
+            $deferredCapture->rememberIntent((string) $responseInfo['id'], $intent);
 
             $paypalOrder
                 ->setPlanifiedTitle("")
@@ -162,8 +172,9 @@ class PayPalApiController extends BaseFrontController
             }
 
             // Authorizing first, the approved order is authorized, not captured: the authorization is
-            // written to Thelia's payment journal, which holds the order for its capture.
-            if (PayPal::authorizesFirst()) {
+            // written to Thelia's payment journal, which holds the order for its capture. Decided on
+            // the intent the PayPal order was created with, which the capture mode may have left since.
+            if ('AUTHORIZE' === $deferredCapture->intentOf((string) $paypalOrder->getPaymentId())) {
                 try {
                     $answer = $deferredCapture->authorize($paypalOrder->getOrder(), (string) $paypalOrder->getPaymentId());
                 } catch (PaymentRefusedException $refused) {
@@ -178,6 +189,8 @@ class PayPalApiController extends BaseFrontController
                     return $this->errorResponse('The payment could not be authorized: please try again.', 502);
                 }
 
+                $deferredCapture->forgetIntent((string) $paypalOrder->getPaymentId());
+
                 return new JsonResponse(json_encode($answer, \JSON_THROW_ON_ERROR));
             }
 
@@ -187,6 +200,7 @@ class PayPalApiController extends BaseFrontController
             );
 
             $responseContent = $response->getContent();
+            $deferredCapture->forgetIntent((string) $paypalOrder->getPaymentId());
             $status = json_decode($responseContent, true)['status'];
             if ("COMPLETED" === $status) {
                 $event = new OrderEvent($paypalOrder->getOrder());
