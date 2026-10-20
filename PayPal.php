@@ -67,19 +67,6 @@ class PayPal extends AbstractPaymentModule implements PaymentModuleWithCaptureIn
     const PAYPAL_API_CREATE_PLAN_URL = "/v1/billing/plans";
     const PAYPAL_API_CREATE_PRODUCT_URL = "/v1/catalogs/products";
 
-    /**
-     *  Method used by payment gateway.
-     *
-     *  If this method return a \Thelia\Core\HttpFoundation\Response instance, this response is send to the
-     *  browser.
-     *
-     *  In many cases, it's necessary to send a form to the payment gateway. On your response you can return this form already
-     *  completed, ready to be sent
-     *
-     * @param Order $order
-     * @return RedirectResponse
-     * @throws \Exception
-     */
     /** The buyer's money is only authorized, and captured later from Thelia: see PayPalDeferredCapture. */
     public const CAPTURE_MODE_AUTHORIZE = 'authorize';
 
@@ -111,6 +98,19 @@ class PayPal extends AbstractPaymentModule implements PaymentModuleWithCaptureIn
         return $this->getContainer()->get(PayPalDeferredCapture::class)->release($order, $transaction);
     }
 
+    /**
+     *  Method used by payment gateway.
+     *
+     *  If this method return a \Thelia\Core\HttpFoundation\Response instance, this response is send to the
+     *  browser.
+     *
+     *  In many cases, it's necessary to send a form to the payment gateway. On your response you can return this form already
+     *  completed, ready to be sent
+     *
+     * @param Order $order
+     * @return RedirectResponse
+     * @throws \Exception
+     */
     public function pay(Order $order): ?\Symfony\Component\HttpFoundation\Response
     {
         $platformUrl = URL::getInstance()->absoluteUrl('/order/paypal/pay', ["order_id" => $order->getId()]);
