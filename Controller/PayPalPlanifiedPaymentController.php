@@ -404,7 +404,7 @@ class PayPalPlanifiedPaymentController extends AbstractCrudController
      */
     protected function redirectToListTemplate(): \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\RedirectResponse
     {
-        return $this->generateRedirectFromRoute('paypal.admin.configuration.planified');
+        return $this->generateRedirectFromRoute('configure_planified_render');
     }
 
     /**
