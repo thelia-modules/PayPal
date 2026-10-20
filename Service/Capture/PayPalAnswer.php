@@ -51,7 +51,7 @@ final class PayPalAnswer
         return match ($status) {
             'COMPLETED' => PaymentOperationResult::succeeded($id),
             'PENDING' => PaymentOperationResult::pending($id),
-            default => throw new PaymentRefusedException(\sprintf('PayPal did not capture the payment: %s', '' !== $status ? $status : 'no status')),
+            default => throw PaymentRefusedException::withProviderCode(\sprintf('PayPal did not capture the payment: %s', '' !== $status ? $status : 'no status'), $status),
         };
     }
 
@@ -62,12 +62,30 @@ final class PayPalAnswer
      */
     public static function errorOf(array $error): string
     {
-        $detail = $error['details'][0] ?? [];
-        $issue = (string) ($detail['issue'] ?? $error['name'] ?? 'UNKNOWN_ERROR');
-        $description = (string) ($detail['description'] ?? $error['message'] ?? '');
+        $issue = self::issueOf($error);
+        $description = (string) ($error['details'][0]['description'] ?? $error['message'] ?? '');
 
         return '' === $description
             ? \sprintf('PayPal refused: %s', $issue)
             : \sprintf('PayPal refused: %s (%s)', $issue, $description);
+    }
+
+    /**
+     * The refusal Thelia writes on the journal line: the error worded for the merchant, and the
+     * issue PayPal named as the code of the provider.
+     *
+     * @param array<string, mixed> $error a PayPal error body
+     */
+    public static function refusalOf(array $error): PaymentRefusedException
+    {
+        return PaymentRefusedException::withProviderCode(self::errorOf($error), self::issueOf($error));
+    }
+
+    /**
+     * @param array<string, mixed> $error a PayPal error body
+     */
+    private static function issueOf(array $error): string
+    {
+        return (string) ($error['details'][0]['issue'] ?? $error['name'] ?? 'UNKNOWN_ERROR');
     }
 }
