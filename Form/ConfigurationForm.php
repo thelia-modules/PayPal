@@ -202,7 +202,9 @@ class ConfigurationForm extends BaseForm
                         $this->translator->trans('Authorize first, capture from the order page', [], PayPal::DOMAIN_NAME) => PayPal::CAPTURE_MODE_AUTHORIZE,
                     ],
                     'required' => true,
-                    'empty_data' => PayPal::CAPTURE_MODE_CAPTURE,
+                    // A configuration page that does not show the field (the Smarty back office)
+                    // keeps the mode the shop chose, instead of switching it back to the default.
+                    'empty_data' => PayPal::getConfigValue('capture_mode', PayPal::CAPTURE_MODE_CAPTURE),
                     'label' => $this->translator->trans('Capture of the payment', [], PayPal::DOMAIN_NAME),
                     'label_attr' => [
                         'help' => $this->translator->trans(
