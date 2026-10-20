@@ -56,6 +56,11 @@ class PayPalApiController extends BaseFrontController
                 return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
             }
 
+            // An order already paid, or authorized, waits for no payment.
+            if ($order->isPaymentSecured()) {
+                return $this->errorResponse('This order is already paid.', 409);
+            }
+
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
 
             $orderPayEvent = new OrderPayTotalEvent($order);

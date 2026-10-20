@@ -35,7 +35,7 @@ final class PayPalAnswer
             return null;
         }
 
-        return new PayPalAuthorization($id, $amount);
+        return new PayPalAuthorization($id, $amount, strtoupper(trim((string) ($authorization['amount']['currency_code'] ?? ''))));
     }
 
     /**
