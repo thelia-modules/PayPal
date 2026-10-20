@@ -75,8 +75,10 @@ for its capture.
   which releases it: Thelia offers no separate release of the rest yet.
 - Every call carries a `PayPal-Request-Id`, so a retried capture is never taken twice; the authorization's names the
   PayPal order too, so that a buyer who pays again is not answered with the first order.
-- An authorization PayPal granted that the journal could not write fails the checkout, and the log names the Thelia
-  order, the PayPal order and the authorization: paying again writes it.
+- An authorization PayPal granted that the journal could not write fails the checkout and is voided, so that paying
+  again does not hold the amount twice; the log names the Thelia order, the PayPal order and the authorization, and
+  says when the void failed too, for the merchant to void it from the PayPal dashboard.
+- A PayPal order is authorized or captured as it was created, whatever the capture mode became during the checkout.
 
 PayPal keeps an authorization valid for a limited time (see its documentation): capture before it expires. The
 webhook does not report expirations, captures PayPal leaves `PENDING` (under review), or captures made from the PayPal
