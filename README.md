@@ -63,13 +63,21 @@ for its capture.
 
 - The authorization is written to the payment journal of the order, which moves to "Awaiting capture".
 - The capture, in full or in part, is made from the payment card of the order page (right "Order payment capture") or
-  with Thelia's admin API (`POST /v2/payments/authorizations/{id}/capture`, `final_capture: false`, so the rest stays
-  open for a later capture). Cancelling the order voids what the authorization still holds.
+  with Thelia's admin API (`POST /api/admin/orders/{orderId}/capture`). The module asks PayPal's Payments API
+  (`POST /v2/payments/authorizations/{id}/capture`, `final_capture: false`, so the rest stays open for a later
+  capture). Cancelling the order voids what the authorization still holds.
 - PayPal's refusal of a capture or a void is shown to the merchant and written to the journal; a call PayPal did not
-  answer leaves the movement pending.
-- Every call carries a `PayPal-Request-Id`, so a retried capture is never taken twice.
+  answer, or answered in words the module cannot read, leaves the movement pending.
+- Every call carries a `PayPal-Request-Id`, so a retried capture is never taken twice; the authorization's names the
+  PayPal order too, so that a buyer who pays again is not answered with the first order.
+- An authorization PayPal granted that the journal could not write fails the checkout, and the log names the Thelia
+  order, the PayPal order and the authorization: paying again writes it.
 
 PayPal keeps an authorization valid for a limited time (see its documentation): capture before it expires. The
-webhook does not report expirations or captures made from the PayPal dashboard yet.
+webhook does not report expirations, captures PayPal leaves `PENDING` (under review), or captures made from the PayPal
+dashboard yet: such a line stays pending in the journal, and holds what it asked for, until the merchant records the
+outcome read in the PayPal dashboard from the payment card of the order page (same right as the capture).
+
+Only the Twig back office shows the capture mode: saving the configuration from the Smarty one keeps the mode chosen.
 
 With "Take the payment at once" (the default), nothing changes.
