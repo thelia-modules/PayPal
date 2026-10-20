@@ -10,11 +10,13 @@ namespace PayPal\Service\Capture;
 final readonly class PayPalAuthorization
 {
     /**
-     * @param string $amount in the major unit, as PayPal writes it
+     * @param string $amount       in the major unit, as PayPal writes it
+     * @param string $currencyCode as PayPal writes it, empty when it names none
      */
     public function __construct(
         public string $id,
         public string $amount,
+        public string $currencyCode = '',
     ) {
     }
 }
