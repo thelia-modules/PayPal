@@ -12,6 +12,7 @@ use Thelia\Domain\Payment\DTO\PaymentOperationResult;
 use Thelia\Domain\Payment\Exception\PaymentAnnouncementFailedException;
 use Thelia\Domain\Payment\Exception\PaymentRefusedException;
 use Thelia\Domain\Payment\Service\CurrencyMinorUnit;
+use Thelia\Domain\Payment\Service\PaymentAmount;
 use Thelia\Domain\Payment\Service\PaymentTransactionRecorder;
 use Thelia\Log\Tlog;
 use Thelia\Model\Order;
@@ -48,6 +49,12 @@ final readonly class PayPalDeferredCapture
      */
     public function authorize(Order $order, string $payPalOrderId): array
     {
+        // An order already paid, or authorized, waits for no payment: a second authorization would
+        // hold the buyer's money twice and open a second capture.
+        if ($order->isPaymentSecured()) {
+            throw new PaymentRefusedException(\sprintf('Order %s is already paid or authorized.', (string) $order->getRef()));
+        }
+
         $answer = $this->call(
             PayPal::getBaseUrl().PayPal::PAYPAL_API_CREATE_ORDER_URL.'/'.rawurlencode($payPalOrderId).'/authorize',
             new \stdClass(),
@@ -62,6 +69,22 @@ final readonly class PayPalDeferredCapture
             Tlog::getInstance()->warning(\sprintf('PayPal answered the authorization of order %s (PayPal order %s) without an authorization: nothing is written to the journal.', (string) $order->getRef(), $payPalOrderId));
 
             return $answer;
+        }
+
+        $currencyCode = strtoupper((string) $order->getCurrency()->getCode());
+
+        // The journal writes the amount in the currency of the order: an authorization in another
+        // one is not this order's payment.
+        if ('' !== $authorization->currencyCode && $authorization->currencyCode !== $currencyCode) {
+            Tlog::getInstance()->error(\sprintf('PayPal authorized order %s (PayPal order %s, authorization %s) in %s, not in the order currency %s: nothing is written.', (string) $order->getRef(), $payPalOrderId, $authorization->id, $authorization->currencyCode, $currencyCode));
+
+            throw new PaymentRefusedException(\sprintf('PayPal authorized order %s in another currency than the order\'s.', (string) $order->getRef()));
+        }
+
+        // What PayPal holds is what the journal writes; an amount other than the order total is
+        // said, for the merchant to look at.
+        if (0 !== PaymentAmount::compare(PaymentAmount::normalize($authorization->amount), PaymentAmount::normalize(round((float) $order->getTotalAmount(), CurrencyMinorUnit::decimalsOf($currencyCode))))) {
+            Tlog::getInstance()->warning(\sprintf('PayPal authorized %s %s on order %s (authorization %s), not its total.', $authorization->amount, $currencyCode, (string) $order->getRef(), $authorization->id));
         }
 
         try {

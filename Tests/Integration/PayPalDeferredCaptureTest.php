@@ -170,6 +170,39 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         ])])->authorize($order, 'ORDER-2');
     }
 
+    public function testAnOrderAlreadyAuthorizedIsNotAuthorizedAgain(): void
+    {
+        // A second authorization would hold the buyer's money twice and open a second capture.
+        $order = $this->authorizedOrder();
+
+        try {
+            $this->service([])->authorize($order, 'ORDER-3');
+            self::fail('The second authorization is refused.');
+        } catch (PaymentRefusedException) {
+            self::assertSame([], $this->requests, 'PayPal is not asked.');
+        }
+
+        self::assertSame('120.000000', $this->getService(PaymentTransactionTotalsReader::class)->forOrder((int) $order->getId())->authorized);
+    }
+
+    public function testAnAuthorizationInAnotherCurrencyIsNotThisOrdersPayment(): void
+    {
+        $order = $this->order();
+
+        try {
+            $this->service([$this->json(201, [
+                'id' => 'ORDER-4',
+                'status' => 'COMPLETED',
+                'purchase_units' => [['payments' => ['authorizations' => [['id' => 'AUTH-USD', 'status' => 'CREATED', 'amount' => ['currency_code' => 'USD', 'value' => '120.00']]]]]],
+            ])])->authorize($order, 'ORDER-4');
+            self::fail('An authorization in another currency is refused.');
+        } catch (PaymentRefusedException) {
+            $this->addToAssertionCount(1);
+        }
+
+        self::assertSame('0.000000', $this->getService(PaymentTransactionTotalsReader::class)->forOrder((int) $order->getId())->authorized);
+    }
+
     public function testTheReleaseVoidsTheAuthorization(): void
     {
         $order = $this->authorizedOrder();

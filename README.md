@@ -66,8 +66,13 @@ for its capture.
   with Thelia's admin API (`POST /api/admin/orders/{orderId}/capture`). The module asks PayPal's Payments API
   (`POST /v2/payments/authorizations/{id}/capture`, `final_capture: false`, so the rest stays open for a later
   capture). Cancelling the order voids what the authorization still holds.
-- PayPal's refusal of a capture or a void is shown to the merchant and written to the journal; a call PayPal did not
-  answer, or answered in words the module cannot read, leaves the movement pending.
+- PayPal's refusal of a capture is shown to the merchant and written to the journal; the refusal of a void (asked when
+  the order is cancelled) is written to the journal and logged. A call PayPal did not answer, or answered in words the
+  module cannot read, leaves the movement pending.
+- An order already paid or authorized is neither paid again nor authorized a second time, and an authorization in
+  another currency than the order's is refused; one of another amount is written as PayPal holds it, and logged.
+- What a partial capture leaves on the authorization stays held until it is captured, or until the order is cancelled,
+  which releases it: Thelia offers no separate release of the rest yet.
 - Every call carries a `PayPal-Request-Id`, so a retried capture is never taken twice; the authorization's names the
   PayPal order too, so that a buyer who pays again is not answered with the first order.
 - An authorization PayPal granted that the journal could not write fails the checkout, and the log names the Thelia
