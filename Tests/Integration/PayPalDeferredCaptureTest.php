@@ -105,10 +105,13 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         $order = $this->authorizedOrder();
         $line = $this->recorder->recordCapture($order, 40, null, PaymentTransactionState::PENDING);
 
-        $this->expectException(PaymentRefusedException::class);
-        $this->expectExceptionMessage('AUTHORIZATION_EXPIRED');
-
-        $this->service([$this->json(422, ['name' => 'UNPROCESSABLE_ENTITY', 'details' => [['issue' => 'AUTHORIZATION_EXPIRED', 'description' => 'Authorization has expired.']]])])->capture($order, 40.0, $line);
+        try {
+            $this->service([$this->json(422, ['name' => 'UNPROCESSABLE_ENTITY', 'details' => [['issue' => 'AUTHORIZATION_EXPIRED', 'description' => 'Authorization has expired.']]])])->capture($order, 40.0, $line);
+            self::fail('The refusal of PayPal must reach Thelia.');
+        } catch (PaymentRefusedException $refusal) {
+            self::assertStringContainsString('AUTHORIZATION_EXPIRED', $refusal->getMessage());
+            self::assertSame('AUTHORIZATION_EXPIRED', $refusal->getProviderCode(), 'The issue PayPal named is written on the journal line as its code.');
+        }
     }
 
     public function testACaptureWithoutAnswerFromPayPalIsLeftToSurface(): void

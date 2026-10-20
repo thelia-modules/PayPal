@@ -123,7 +123,7 @@ final readonly class PayPalDeferredCapture
         }
 
         if ($code >= 400) {
-            throw new PaymentRefusedException(PayPalAnswer::errorOf($answer));
+            throw PayPalAnswer::refusalOf($answer);
         }
 
         return $answer;

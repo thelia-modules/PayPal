@@ -54,10 +54,25 @@ final class PayPalAnswerTest extends TestCase
 
     public function testADeclinedCaptureIsARefusal(): void
     {
-        $this->expectException(PaymentRefusedException::class);
-        $this->expectExceptionMessage('DECLINED');
+        try {
+            PayPalAnswer::captureResult(['id' => 'CAP-3', 'status' => 'DECLINED']);
+            self::fail('A declined capture is a refusal.');
+        } catch (PaymentRefusedException $refusal) {
+            self::assertStringContainsString('DECLINED', $refusal->getMessage());
+            self::assertSame('DECLINED', $refusal->getProviderCode());
+        }
+    }
 
-        PayPalAnswer::captureResult(['id' => 'CAP-3', 'status' => 'DECLINED']);
+    public function testARefusalCarriesTheIssuePayPalNamed(): void
+    {
+        $refusal = PayPalAnswer::refusalOf([
+            'name' => 'UNPROCESSABLE_ENTITY',
+            'details' => [['issue' => 'AUTHORIZATION_EXPIRED', 'description' => 'Authorization has expired.']],
+        ]);
+
+        self::assertSame('PayPal refused: AUTHORIZATION_EXPIRED (Authorization has expired.)', $refusal->getMessage());
+        self::assertSame('AUTHORIZATION_EXPIRED', $refusal->getProviderCode());
+        self::assertSame('UNPROCESSABLE_ENTITY', PayPalAnswer::refusalOf(['name' => 'UNPROCESSABLE_ENTITY'])->getProviderCode(), 'Without details, the name of the error is the code.');
     }
 
     public function testTheErrorPayPalAnswersIsWordedForTheMerchant(): void
