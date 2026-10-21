@@ -116,7 +116,14 @@ class PayPalApiController extends BaseFrontController
 
             $response = $payPalApiService->sendPostResquest($body, PayPal::getBaseUrl() . PayPal::PAYPAL_API_CREATE_ORDER_URL);
             $responseContent = $response->getContent();
-            $responseInfo = json_decode($responseContent, true);
+            $responseInfo = json_decode($responseContent, true, 512, \JSON_THROW_ON_ERROR);
+
+            // Without the id of the order PayPal created, the buyer could never come back to it.
+            if (!\is_array($responseInfo) || '' === (string) ($responseInfo['id'] ?? '')) {
+                Tlog::getInstance()->error(sprintf('PayPal answered the creation of the payment of order %s without its id.', $order->getRef()));
+
+                return $this->errorResponse('The payment could not be created: please try again.', 502);
+            }
 
             $paypalOrder = PaypalOrderQuery::create()
                 ->filterById($order->getId())
@@ -124,7 +131,7 @@ class PayPalApiController extends BaseFrontController
 
             $paypalOrder->setPaymentId($responseInfo['id']);
             // The buyer comes back to this order: it is then authorized or captured as created.
-            $deferredCapture->rememberIntent((string) $responseInfo['id'], $intent);
+            $deferredCapture->rememberIntent($this->getSession(), (string) $responseInfo['id'], $intent);
 
             $paypalOrder
                 ->setPlanifiedTitle("")
@@ -163,7 +170,7 @@ class PayPalApiController extends BaseFrontController
             // Authorizing first, the approved order is authorized, not captured: the authorization is
             // written to Thelia's payment journal, which holds the order for its capture. Decided on
             // the intent the PayPal order was created with, which the capture mode may have left since.
-            if ('AUTHORIZE' === $deferredCapture->intentOf((string) $paypalOrder->getPaymentId())) {
+            if ('AUTHORIZE' === $deferredCapture->intentOf($this->getSession(), (string) $paypalOrder->getPaymentId())) {
                 try {
                     $answer = $deferredCapture->authorize($paypalOrder->getOrder(), (string) $paypalOrder->getPaymentId());
                 } catch (PaymentRefusedException $refused) {
@@ -178,7 +185,7 @@ class PayPalApiController extends BaseFrontController
                     return $this->errorResponse('The payment could not be authorized: please try again.', 502);
                 }
 
-                $deferredCapture->forgetIntent((string) $paypalOrder->getPaymentId());
+                $deferredCapture->forgetIntent($this->getSession(), (string) $paypalOrder->getPaymentId());
 
                 return new JsonResponse(json_encode($answer, \JSON_THROW_ON_ERROR));
             }
@@ -189,9 +196,10 @@ class PayPalApiController extends BaseFrontController
             );
 
             $responseContent = $response->getContent();
-            $deferredCapture->forgetIntent((string) $paypalOrder->getPaymentId());
             $status = json_decode($responseContent, true)['status'];
             if ("COMPLETED" === $status) {
+                // Kept otherwise: a retry of this order is captured as it was created.
+                $deferredCapture->forgetIntent($this->getSession(), (string) $paypalOrder->getPaymentId());
                 $event = new OrderEvent($paypalOrder->getOrder());
                 $event->setStatus(OrderStatusQuery::create()->filterByCode(OrderStatus::CODE_PAID)->findOne()?->getId());
                 $dispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);

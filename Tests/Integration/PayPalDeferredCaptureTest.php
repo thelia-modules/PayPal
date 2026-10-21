@@ -9,12 +9,15 @@ use PayPal\Service\PayPalApiService;
 use PayPal\Service\PayPalDeferredCapture;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Thelia\Domain\Payment\Enum\PaymentTransactionState;
 use Thelia\Domain\Payment\Exception\PaymentException;
 use Thelia\Domain\Payment\Exception\PaymentRefusedException;
 use Thelia\Domain\Payment\Service\PaymentTransactionRecorder;
 use Thelia\Domain\Payment\Service\PaymentTransactionTotalsReader;
 use Thelia\Model\Module;
+use Thelia\Model\ModuleConfigQuery;
 use Thelia\Model\ModuleQuery;
 use Thelia\Model\Order;
 use Thelia\Model\OrderStatus;
@@ -213,18 +216,50 @@ final class PayPalDeferredCaptureTest extends ActionIntegrationTestCase
         self::assertSame('0.000000', $this->getService(PaymentTransactionTotalsReader::class)->forOrder((int) $order->getId())->authorized);
     }
 
+    public function testAnAuthorizationTheJournalAlreadyHoldsIsNeverVoided(): void
+    {
+        // A second click wrote the authorization while this request asked PayPal; this one cannot
+        // write it (another amount under the same reference): the authorization stays at PayPal.
+        $order = $this->order();
+        $answer = $this->json(201, [
+            'id' => 'ORDER-6',
+            'status' => 'COMPLETED',
+            'purchase_units' => [['payments' => ['authorizations' => [['id' => 'AUTH-KNOWN', 'status' => 'CREATED', 'amount' => ['currency_code' => 'EUR', 'value' => '120.00']]]]]],
+        ]);
+        $responses = [$this->json(200, ['access_token' => 'token']), $answer, $this->json(200, ['access_token' => 'token']), new MockResponse('', ['http_code' => 204])];
+        $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$responses, $order): MockResponse {
+            $this->requests[] = ['method' => $method, 'url' => $url, 'options' => $options];
+
+            if (str_ends_with($url, '/authorize')) {
+                $this->recorder->recordAuthorization($order, 50, 'AUTH-KNOWN', moduleCode: PayPal::getModuleCode());
+            }
+
+            return array_shift($responses);
+        });
+
+        try {
+            (new PayPalDeferredCapture(new PayPalApiService($client), $this->recorder))->authorize($order, 'ORDER-6');
+            self::fail('The journal refuses the answer.');
+        } catch (PaymentException) {
+            self::assertSame([], array_filter($this->requests, static fn (array $request): bool => str_ends_with($request['url'], '/void')), 'The authorization the journal holds is not voided.');
+        }
+    }
+
     public function testAPayPalOrderIsAuthorizedOrCapturedAsItWasCreated(): void
     {
         $service = $this->service([]);
-        $service->rememberIntent('ORDER-5', 'AUTHORIZE');
+        $session = new Session(new MockArraySessionStorage());
+        $service->rememberIntent($session, 'ORDER-5', 'AUTHORIZE');
         PayPal::setConfigValue('capture_mode', 'capture');
 
-        self::assertSame('AUTHORIZE', $service->intentOf('ORDER-5'), 'The capture mode changed during the checkout.');
-        self::assertSame('CAPTURE', $service->intentOf('ORDER-UNKNOWN'), 'One created before the intent was kept follows the capture mode.');
+        self::assertSame('AUTHORIZE', $service->intentOf($session, 'ORDER-5'), 'The capture mode changed during the checkout.');
+        self::assertSame('CAPTURE', $service->intentOf($session, 'ORDER-UNKNOWN'), 'An order the session does not know follows the capture mode.');
+        self::assertSame('CAPTURE', $service->intentOf(new Session(new MockArraySessionStorage()), 'ORDER-5'), 'Another session knows nothing of it.');
 
-        $service->forgetIntent('ORDER-5');
+        $service->forgetIntent($session, 'ORDER-5');
 
-        self::assertSame('CAPTURE', $service->intentOf('ORDER-5'));
+        self::assertSame('CAPTURE', $service->intentOf($session, 'ORDER-5'));
+        self::assertSame(0, ModuleConfigQuery::create()->filterByModuleId(PayPal::getModuleId())->filterByName('%intent%', \Propel\Runtime\ActiveQuery\Criteria::LIKE)->count(), 'Nothing is left in the module configuration.');
     }
 
     public function testTheReleaseVoidsTheAuthorization(): void
