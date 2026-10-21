@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PayPal\Tests\Integration;
 
+use PayPal\Model\PaypalOrder;
 use PayPal\PayPal;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Model\Module;
@@ -16,7 +17,8 @@ use Thelia\Tests\Support\Flexy\CustomerSessionInjector;
 
 /**
  * The checkout asks PayPal for nothing on an order that waits for no payment: one already paid
- * or authorized, or one the shop cancelled.
+ * or authorized, or one the shop cancelled, neither when it creates the PayPal order nor when the
+ * buyer comes back from approving it.
  */
 final class PayApiTest extends WebIntegrationTestCase
 {
@@ -72,6 +74,26 @@ final class PayApiTest extends WebIntegrationTestCase
         $this->injector->setCustomer($order->getCustomer());
 
         $this->client->request('POST', '/paypal/api/pay', content: json_encode(['order_id' => $order->getId()], \JSON_THROW_ON_ERROR));
+
+        self::assertSame(409, $this->client->getResponse()->getStatusCode());
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('ordersWaitingForNoPayment')]
+    public function testAnOrderWaitingForNoPaymentIsNotCapturedOnTheReturnOfTheBuyer(string $statusCode): void
+    {
+        $order = $this->factory->order(null, ['statusCode' => $statusCode, 'paymentModuleCode' => PayPal::getModuleCode()]);
+        (new PaypalOrder())
+            ->setId($order->getId())
+            ->setPaymentId('PAYPAL-ORDER-1')
+            ->setAmount('0')
+            ->setPlanifiedTitle('')
+            ->setPlanifiedFrequency('')
+            ->setPlanifiedFrequencyInterval(0)
+            ->setPlanifiedCycle(0)
+            ->save($this->getPropelConnection());
+        $this->injector->setCustomer($order->getCustomer());
+
+        $this->client->request('POST', '/paypal/api/capture', content: json_encode(['order_id' => $order->getId()], \JSON_THROW_ON_ERROR));
 
         self::assertSame(409, $this->client->getResponse()->getStatusCode());
     }
