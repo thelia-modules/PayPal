@@ -174,6 +174,16 @@ class PayPalApiController extends BaseFrontController
                 return $this->errorResponse('Order not found', 404);
             }
 
+            // The buyer approves at PayPal after the order was created there: the shop may have paid
+            // or cancelled it meanwhile, and the money is then taken from them no more.
+            if ($order->isPaymentSecured()) {
+                return $this->errorResponse('This order is already paid.', 409);
+            }
+
+            if ($order->isCancelled(false)) {
+                return $this->errorResponse('This order is cancelled and can no longer be paid.', 409);
+            }
+
             // Authorizing first, the approved order is authorized, not captured: the authorization is
             // written to Thelia's payment journal, which holds the order for its capture. Decided on
             // the intent the PayPal order was created with, which the capture mode may have left since.
