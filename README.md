@@ -88,4 +88,5 @@ outcome read in the PayPal dashboard from the payment card of the order page (sa
 
 Only the Twig back office shows the capture mode: saving the configuration from the Smarty one keeps the mode chosen.
 
-With "Take the payment at once" (the default), nothing changes.
+With "Take the payment at once" (the default), the order is still paid at once; an order already paid or cancelled is no
+longer paid again.
