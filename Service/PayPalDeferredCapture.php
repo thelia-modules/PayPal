@@ -7,15 +7,16 @@ namespace PayPal\Service;
 use PayPal\PayPal;
 use PayPal\Service\Capture\PayPalAnswer;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Thelia\Domain\Payment\DTO\PaymentOperationResult;
+use Thelia\Domain\Payment\Enum\PaymentTransactionType;
 use Thelia\Domain\Payment\Exception\PaymentAnnouncementFailedException;
 use Thelia\Domain\Payment\Exception\PaymentRefusedException;
 use Thelia\Domain\Payment\Service\CurrencyMinorUnit;
 use Thelia\Domain\Payment\Service\PaymentAmount;
 use Thelia\Domain\Payment\Service\PaymentTransactionRecorder;
 use Thelia\Log\Tlog;
-use Thelia\Model\ModuleConfigQuery;
 use Thelia\Model\Order;
 use Thelia\Model\OrderPaymentTransaction;
 use Thelia\Model\OrderPaymentTransactionQuery;
@@ -37,8 +38,8 @@ final readonly class PayPalDeferredCapture
 {
     private const AUTHORIZATIONS_URL = '/v2/payments/authorizations/';
 
-    /** The module configuration key, completed with the PayPal order id, of the intent it was created with. */
-    private const INTENT_KEY = 'order_intent_';
+    /** The session key, completed with the PayPal order id, of the intent it was created with. */
+    private const INTENT_KEY = 'paypal.order_intent.';
 
     public function __construct(
         private PayPalApiService $api,
@@ -47,26 +48,26 @@ final readonly class PayPalDeferredCapture
     }
 
     /**
-     * The intent a PayPal order was created with, kept until the buyer comes back: the capture
-     * mode may change in between, and the order is then authorized or captured as it was created.
+     * The intent a PayPal order was created with, kept in the buyer's session until they come
+     * back: the capture mode may change in between, and the order is then authorized or captured
+     * as it was created. A checkout given up on leaves nothing behind but the session.
      */
-    public function rememberIntent(string $payPalOrderId, string $intent): void
+    public function rememberIntent(SessionInterface $session, string $payPalOrderId, string $intent): void
     {
-        PayPal::setConfigValue(self::INTENT_KEY.$payPalOrderId, $intent);
+        $session->set(self::INTENT_KEY.$payPalOrderId, $intent);
     }
 
-    /** The intent the PayPal order was created with; the capture mode for one created before this was kept. */
-    public function intentOf(string $payPalOrderId): string
+    /** The intent the PayPal order was created with; the capture mode when the session does not know it. */
+    public function intentOf(SessionInterface $session, string $payPalOrderId): string
     {
-        $intent = (string) PayPal::getConfigValue(self::INTENT_KEY.$payPalOrderId, '');
+        $intent = (string) $session->get(self::INTENT_KEY.$payPalOrderId, '');
 
         return 'AUTHORIZE' === $intent || 'CAPTURE' === $intent ? $intent : PayPal::orderIntent();
     }
 
-    /** Deleted, not emptied: one row per order would be left behind for good. */
-    public function forgetIntent(string $payPalOrderId): void
+    public function forgetIntent(SessionInterface $session, string $payPalOrderId): void
     {
-        ModuleConfigQuery::create()->deleteConfigValue(PayPal::getModuleId(), self::INTENT_KEY.$payPalOrderId);
+        $session->remove(self::INTENT_KEY.$payPalOrderId);
     }
 
     /**
@@ -165,6 +166,18 @@ final readonly class PayPalDeferredCapture
 
     private function voidUnrecorded(Order $order, string $authorizationId): void
     {
+        // Another request may have written it meanwhile (a second click waiting on the journal):
+        // the authorization the journal holds is never voided.
+        if (OrderPaymentTransactionQuery::create()
+            ->filterByOrderId((int) $order->getId())
+            ->filterByType(PaymentTransactionType::AUTHORIZATION->value)
+            ->filterByPspReference($authorizationId)
+            ->exists()) {
+            Tlog::getInstance()->warning(\sprintf('The authorization %s of order %s is in the journal after all: it is not voided.', $authorizationId, (string) $order->getRef()));
+
+            return;
+        }
+
         try {
             $this->call(PayPal::getBaseUrl().self::AUTHORIZATIONS_URL.rawurlencode($authorizationId).'/void', new \stdClass(), 'thelia-void-unrecorded-'.$authorizationId);
         } catch (\Throwable $voidFailure) {

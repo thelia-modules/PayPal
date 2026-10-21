@@ -78,7 +78,8 @@ for its capture.
 - An authorization PayPal granted that the journal could not write fails the checkout and is voided, so that paying
   again does not hold the amount twice; the log names the Thelia order, the PayPal order and the authorization, and
   says when the void failed too, for the merchant to void it from the PayPal dashboard.
-- A PayPal order is authorized or captured as it was created, whatever the capture mode became during the checkout.
+- A PayPal order is authorized or captured as it was created, whatever the capture mode became during the checkout:
+  the intent is kept in the buyer's session, so a checkout given up on leaves nothing behind.
 
 PayPal keeps an authorization valid for a limited time (see its documentation): capture before it expires. The
 webhook does not report expirations, captures PayPal leaves `PENDING` (under review), or captures made from the PayPal
