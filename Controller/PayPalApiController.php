@@ -39,11 +39,18 @@ class PayPalApiController extends BaseFrontController
             return $this->errorResponse('Invalid request body', 400);
         }
 
-        // An order already paid, or authorized, waits for no payment, whatever the way it is paid.
+        // An order already paid, or authorized, waits for no payment, whatever the way it is paid;
+        // a cancelled one is paid no more: the money would be taken on an order the shop dropped.
         $order = $this->findOrder($data);
 
-        if (null !== $order && $orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser()) && $order->isPaymentSecured()) {
-            return $this->errorResponse('This order is already paid.', 409);
+        if (null !== $order && $orderOwnerGuard->isOwnedBy($order, $this->getSession()->getCustomerUser())) {
+            if ($order->isPaymentSecured()) {
+                return $this->errorResponse('This order is already paid.', 409);
+            }
+
+            if ($order->isCancelled(false)) {
+                return $this->errorResponse('This order is cancelled and can no longer be paid.', 409);
+            }
         }
 
         if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
