@@ -8,6 +8,9 @@
     "cqfdev/paypal-rest-api-sdk-php": "1.*",
     "symfony/http-client": "^7.0"
   },
+  "conflict": {
+    "thelia/core": "<3.3.0"
+  },
   "extra": {
     "installer-name": "PayPal"
   }

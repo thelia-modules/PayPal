@@ -24,9 +24,14 @@ use Thelia\Model\MessageQuery;
 use Thelia\Model\ModuleImageQuery;
 use Thelia\Model\Order;
 use Thelia\Module\AbstractPaymentModule;
+use Thelia\Module\BalanceChargingPaymentModuleInterface;
 use Thelia\Tools\URL;
 
-class PayPal extends AbstractPaymentModule
+/**
+ * Charges the balance left by the instant means of the order (a gift card, for one), never the total of the order: every
+ * amount sent to PayPal comes from PayPal\Service\ChargedAmount, which reads AbstractPaymentModule::getAmountToCharge().
+ */
+class PayPal extends AbstractPaymentModule implements BalanceChargingPaymentModuleInterface
 {
     /** @var string */
     const DOMAIN_NAME = 'paypal';

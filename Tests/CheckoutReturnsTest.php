@@ -14,6 +14,9 @@ declare(strict_types=1);
 
 namespace PayPal\Tests;
 
+// The tests are found by their path, not by an autoload: the shared fixtures are loaded the same way.
+require_once __DIR__.'/PaymentPartsFixtures.php';
+
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +38,8 @@ use Thelia\Test\IntegrationTestCase;
  */
 final class CheckoutReturnsTest extends IntegrationTestCase
 {
+    use PaymentPartsFixtures;
+
     /**
      * PayPal ships inactive (enabled-by-default 0) and an inactive module declares no route: when the container of
      * the test kernel has no PayPal route, activate the module in the test database and rebuild that container,
@@ -100,6 +105,32 @@ final class CheckoutReturnsTest extends IntegrationTestCase
         self::assertStringNotContainsString('/order-failed', $html);
     }
 
+    public function testARecurringPaymentIsRefusedForAnOrderPaidInParts(): void
+    {
+        $fixtures = $this->createFixtureFactory();
+        $customer = $fixtures->customer($fixtures->customerTitle());
+        $order = $this->orderOf100($customer);
+        $this->payInParts($order, '30.000000', '70.000000');
+
+        $response = $this->postJson('/paypal/api/pay', ['order_id' => $order->getId(), 'planified_payment_id' => 1], $customer);
+
+        self::assertSame(Response::HTTP_CONFLICT, $response->getStatusCode());
+        self::assertStringContainsString('recurring payment', (string) $response->getContent());
+    }
+
+    public function testNothingIsSentToPayPalWhenThePartsLeaveNothingToPay(): void
+    {
+        $fixtures = $this->createFixtureFactory();
+        $customer = $fixtures->customer($fixtures->customerTitle());
+        $order = $this->orderOf100($customer);
+        $this->payInParts($order, '100.000000', '0.000000');
+
+        $response = $this->postJson('/paypal/api/pay', ['order_id' => $order->getId(), 'return_url' => '/checkout/confirm', 'cancel_url' => '/checkout/failed'], $customer);
+
+        self::assertSame(Response::HTTP_CONFLICT, $response->getStatusCode());
+        self::assertStringContainsString('Nothing left to pay', (string) $response->getContent());
+    }
+
     /** @return iterable<string, array{string, string}> */
     public static function scriptInjections(): iterable
     {
@@ -141,7 +172,19 @@ final class CheckoutReturnsTest extends IntegrationTestCase
 
     private function request(string $uri, ?Customer $customer): Response
     {
-        $request = Request::create($uri);
+        return $this->handle(Request::create($uri), $customer);
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    private function postJson(string $uri, array $body, ?Customer $customer): Response
+    {
+        return $this->handle(Request::create($uri, 'POST', [], [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($body, \JSON_THROW_ON_ERROR)), $customer);
+    }
+
+    private function handle(Request $request, ?Customer $customer): Response
+    {
         $session = static::getContainer()->get('request_stack')->getCurrentRequest()?->getSession();
         self::assertInstanceOf(Session::class, $session);
         null === $customer ? $session->clearCustomerUser() : $session->setCustomerUser($customer);

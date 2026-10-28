@@ -100,13 +100,20 @@ class PayPalAgreementService extends PayPalBaseService
             $description = 'Thelia order ' . $order->getId();
         }
 
+        $chargedAmount = new ChargedAmount($this->dispatcher);
+
+        // Each cycle of the plan would charge a share of the balance while the order, copied at each cycle, keeps its
+        // full prices and no part: a recurring payment is not combined with another payment means.
+        if ($chargedAmount->isPaidInParts($order)) {
+            throw new Exception(Translator::getInstance()->trans('A recurring payment cannot be combined with another payment means', [], PayPal::DOMAIN_NAME));
+        }
+
         $payPalOrderEvent = $this->generatePayPalOrder($order, null, $planifiedPayment);
 
         $merchantPreferences = $this->createMerchantPreferences($order);
         $chargeModel = $this->createChargeModel($order);
 
-        $totalAmount = $order->getTotalAmount();
-        $cycleAmount = round($totalAmount / $planifiedPayment->getCycle(), 2);
+        $cycleAmount = round($chargedAmount->forPayPal($order) / $planifiedPayment->getCycle(), 2);
 
         $paymentDefinition = $this->createPaymentDefinition(
             $order,
@@ -621,8 +628,7 @@ class PayPalAgreementService extends PayPalBaseService
         $paymentDefinition = new PaymentDefinition();
 
         if (null === $cycleAmount) {
-            $totalAmount = $order->getTotalAmount();
-            $cycleAmount = round($totalAmount / $cycles, 2);
+            $cycleAmount = round((new ChargedAmount($this->dispatcher))->forPayPal($order) / $cycles, 2);
         }
 
         $paymentDefinition
