@@ -1,6 +1,7 @@
 <?php
 
 return array(
+    'A recurring payment cannot be combined with another payment means' => 'Un paiement récurrent ne peut pas être combiné avec un autre moyen de paiement',
     'Activate Express Checkout payment with PayPal' => 'Activer le paiement : "PAYPAL EXPRESS"',
     'Activate payment with PayPal account' => 'Activer le paiement par : "PAYPAL"',
     'Activate payment with credit card' => 'Activer le paiement par : "CARTE BANCAIRE"',

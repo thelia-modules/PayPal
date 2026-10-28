@@ -254,6 +254,7 @@ class PayPalResponseController extends BaseFrontController
 
                 $event = new OrderEvent($payPalOrder->getOrder());
                 $event->setStatus(OrderStatusQuery::getPaidStatus()->getId());
+                $event->setSourceModuleCode(PayPal::getModuleCode());
                 $eventDispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
 
                 $response = $this->getPaymentSuccessPageUrl($orderId);
@@ -428,6 +429,7 @@ class PayPalResponseController extends BaseFrontController
 
         $event = new OrderEvent($payPalOrder->getOrder());
         $event->setStatus(OrderStatusQuery::getPaidStatus()->getId());
+        $event->setSourceModuleCode(PayPal::getModuleCode());
         $eventDispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
 
         $response = $this->getPaymentSuccessPageUrl($payPalOrder->getId());

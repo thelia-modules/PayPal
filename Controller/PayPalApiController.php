@@ -7,6 +7,7 @@ use PayPal\Event\PayPalOrderEvent;
 use PayPal\Model\PaypalOrderQuery;
 use PayPal\Model\PaypalPlanifiedPaymentQuery;
 use PayPal\PayPal;
+use PayPal\Service\ChargedAmount;
 use PayPal\Service\OrderOwnerGuard;
 use PayPal\Service\PayPalApiService;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,8 +16,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Order\OrderEvent;
-use Thelia\Core\Event\Order\OrderPayTotalEvent;
 use Thelia\Core\Event\TheliaEvents;
+use Thelia\Core\Translation\Translator;
 use Thelia\Log\Tlog;
 use Thelia\Model\Base\OrderStatusQuery;
 use Thelia\Model\CurrencyQuery;
@@ -29,7 +30,7 @@ class PayPalApiController extends BaseFrontController
 {
 
     #[Route("/pay", name: "pay", methods: "POST")]
-    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, OrderOwnerGuard $orderOwnerGuard)
+    public function createPaypalOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, OrderOwnerGuard $orderOwnerGuard, ChargedAmount $chargedAmount)
     {
         $data = json_decode($request->getContent(), true);
 
@@ -38,14 +39,14 @@ class PayPalApiController extends BaseFrontController
         }
 
         if (array_key_exists('planified_payment_id', $data) && !empty($data['planified_payment_id'])) {
-            return $this->createPlan($request, $payPalApiService, $data, $orderOwnerGuard);
+            return $this->createPlan($request, $payPalApiService, $data, $orderOwnerGuard, $chargedAmount);
         }
 
-        return $this->createOrder($request, $payPalApiService, $eventDispatcher, $data, $orderOwnerGuard);
+        return $this->createOrder($request, $payPalApiService, $eventDispatcher, $data, $orderOwnerGuard, $chargedAmount);
     }
 
 
-    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data, OrderOwnerGuard $orderOwnerGuard)
+    public function createOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $eventDispatcher, $data, OrderOwnerGuard $orderOwnerGuard, ChargedAmount $chargedAmount)
     {
         try {
             $order = $this->findOrder($data);
@@ -56,26 +57,15 @@ class PayPalApiController extends BaseFrontController
 
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
 
-            $orderPayEvent = new OrderPayTotalEvent($order);
-            $orderPayEvent
-                ->setTax(0)
-                ->setIncludePostage(true)
-                ->setIncludeDiscount(true);
+            $amount = $chargedAmount->forPayPal($order);
 
-            $eventDispatcher->dispatch($orderPayEvent, TheliaEvents::ORDER_PAY_GET_TOTAL);
+            // PayPal refuses an amount of nothing: an order whose parts cover everything is paid by the core and never
+            // reaches this route, so a request that does is not one to send on.
+            if ($amount <= 0) {
+                return $this->errorResponse('Nothing left to pay on this order', 409);
+            }
 
-            $body = [
-                'intent' => 'CAPTURE',
-                'purchase_units' => [
-                    [
-                        'reference_id' => $order->getRef(),
-                        'amount' => [
-                            'currency_code' => $currency?->getCode(),
-                            'value' => round($orderPayEvent->getTotal(), 2)
-                        ]
-                    ]
-                ]
-            ];
+            $body = $this->orderRequestBody($order->getRef(), $currency?->getCode(), $amount);
 
             $body['payment_source'] = [
                 'paypal' => [
@@ -131,6 +121,26 @@ class PayPalApiController extends BaseFrontController
 
     }
 
+    /**
+     * The order sent to PayPal: the balance of the order as its only amount, with no breakdown (items, shipping, tax,
+     * discount) that could disagree with it.
+     */
+    public function orderRequestBody(?string $reference, ?string $currencyCode, float $amount): array
+    {
+        return [
+            'intent' => 'CAPTURE',
+            'purchase_units' => [
+                [
+                    'reference_id' => $reference,
+                    'amount' => [
+                        'currency_code' => $currencyCode,
+                        'value' => $amount,
+                    ],
+                ],
+            ],
+        ];
+    }
+
     #[Route("/capture", name: "capture", methods: "POST")]
     public function captureOrder(Request $request, PayPalApiService $payPalApiService, EventDispatcherInterface $dispatcher, OrderOwnerGuard $orderOwnerGuard)
     {
@@ -154,6 +164,7 @@ class PayPalApiController extends BaseFrontController
             if ("COMPLETED" === $status) {
                 $event = new OrderEvent($paypalOrder->getOrder());
                 $event->setStatus(OrderStatusQuery::create()->filterByCode(OrderStatus::CODE_PAID)->findOne()?->getId());
+                $event->setSourceModuleCode(PayPal::getModuleCode());
                 $dispatcher->dispatch($event, TheliaEvents::ORDER_UPDATE_STATUS);
             }
             return new JsonResponse($responseContent);
@@ -163,7 +174,7 @@ class PayPalApiController extends BaseFrontController
         }
     }
 
-    public function createPlan(Request $request, PayPalApiService $payPalApiService, $data, OrderOwnerGuard $orderOwnerGuard)
+    public function createPlan(Request $request, PayPalApiService $payPalApiService, $data, OrderOwnerGuard $orderOwnerGuard, ChargedAmount $chargedAmount)
     {
         try {
             $lang = $request->getSession()->getLang();
@@ -174,11 +185,20 @@ class PayPalApiController extends BaseFrontController
                 return new JsonResponse(json_encode(['error' => 'Order not found']), 404);
             }
 
+            // Each cycle of the plan would charge a share of the balance while the order, copied at each cycle, keeps
+            // its full prices and no part: a recurring payment is not combined with another payment means. The order
+            // is left unpaid, and its cancellation gives the parts back.
+            if ($chargedAmount->isPaidInParts($order)) {
+                return $this->errorResponse(
+                    Translator::getInstance()->trans('A recurring payment cannot be combined with another payment means', [], PayPal::DOMAIN_NAME),
+                    409
+                );
+            }
+
             $planifiedPayment = PaypalPlanifiedPaymentQuery::create()->findPk($data["planified_payment_id"]);
             $planifiedPayment->setLocale($lang?->getLocale());
 
-            $totalAmount = $order->getTotalAmount();
-            $cycleAmount = round($totalAmount / $planifiedPayment->getCycle(), 2);
+            $cycleAmount = round($chargedAmount->forPayPal($order) / $planifiedPayment->getCycle(), 2);
 
             $currency = CurrencyQuery::create()->findPk($order->getCurrencyId());
 

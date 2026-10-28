@@ -40,6 +40,7 @@ use PayPal\Model\PaypalOrder;
 use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\PayPal;
 use PayPal\Rest\ApiContext;
+use PayPal\Service\ChargedAmount;
 use PayPal\Service\PayPalLoggerService;
 use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -97,7 +98,7 @@ class PayPalBaseService
         $payPalOrder = new PaypalOrder();
         $payPalOrder
             ->setId($order->getId())
-            ->setAmount($order->getTotalAmount())
+            ->setAmount((new ChargedAmount($this->dispatcher))->forPayPal($order))
         ;
 
         if (null !== $creditCardId) {
@@ -267,7 +268,8 @@ class PayPalBaseService
         // Specify the payment amount.
         $amount = new Amount();
         $amount->setCurrency($currency->getCode());
-        $amount->setTotal($order->getTotalAmount());
+        // The balance PayPal charges, with no breakdown: there is no detail left to disagree with the total.
+        $amount->setTotal((new ChargedAmount($this->dispatcher))->forPayPal($order));
 
         return $amount;
     }
