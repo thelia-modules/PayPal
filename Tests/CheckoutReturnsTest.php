@@ -17,6 +17,9 @@ namespace PayPal\Tests;
 // The tests are found by their path, not by an autoload: the shared fixtures are loaded the same way.
 require_once __DIR__.'/PaymentPartsFixtures.php';
 
+use PayPal\Event\PayPalEvents;
+use PayPal\Event\PayPalOrderEvent;
+use PayPal\Service\Base\PayPalBaseService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -103,6 +106,27 @@ final class CheckoutReturnsTest extends IntegrationTestCase
         self::assertStringContainsString("window.location.href = '/module/paypal/cancel/".$order->getId()."'", $html);
         self::assertStringNotContainsString('/order/placed/', $html);
         self::assertStringNotContainsString('/order-failed', $html);
+    }
+
+    /**
+     * Needs the models of the module, generated when setUpBeforeClass() activates it.
+     */
+    public function testThePayPalOrderRecordsWhatPayPalIsAskedFor(): void
+    {
+        $order = $this->orderOf100();
+        $this->payInParts($order, '30.000000', '70.000000');
+        $dispatcher = static::getContainer()->get('event_dispatcher');
+        $recorded = null;
+        $dispatcher->addListener(PayPalEvents::PAYPAL_ORDER_CREATE, static function (PayPalOrderEvent $event) use (&$recorded): void {
+            $recorded = $event->getPayPalOrder()->getAmount();
+            $event->stopPropagation();
+        }, 1024);
+        $service = (new \ReflectionClass(PayPalBaseService::class))->newInstanceWithoutConstructor();
+        (new \ReflectionProperty(PayPalBaseService::class, 'dispatcher'))->setValue($service, $dispatcher);
+
+        $service->generatePayPalOrder($order);
+
+        self::assertSame(70.0, (float) $recorded);
     }
 
     public function testARecurringPaymentIsRefusedForAnOrderPaidInParts(): void

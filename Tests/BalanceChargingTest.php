@@ -8,8 +8,6 @@ namespace PayPal\Tests;
 require_once __DIR__.'/PaymentPartsFixtures.php';
 
 use PayPal\Controller\PayPalApiController;
-use PayPal\Event\PayPalEvents;
-use PayPal\Event\PayPalOrderEvent;
 use PayPal\PayPal;
 use PayPal\Service\Base\PayPalBaseService;
 use PayPal\Service\ChargedAmount;
@@ -21,7 +19,8 @@ use Thelia\Test\IntegrationTestCase;
 /**
  * An order of 100 paid with a part of 30 (a gift card) is charged 70 by PayPal, and an order with no part 100: what
  * PayPal is asked for is the answer of the core (ORDER_PAY_GET_TOTAL, the balance of the primary part), never the
- * total of the order. Nothing here calls PayPal.
+ * total of the order. Nothing here calls PayPal. No test here needs the models of the module (PaypalOrder), which exist
+ * only once PayPal is active: CheckoutReturnsTest activates it, and the classes run in alphabetical order.
  *
  * Run from the root of the Thelia project the module is installed in, against a disposable database (see bootstrap.php).
  */
@@ -72,21 +71,6 @@ final class BalanceChargingTest extends IntegrationTestCase
 
         self::assertSame(100.0, (float) $amount->getTotal());
         self::assertNull($amount->getDetails());
-    }
-
-    public function testThePayPalOrderRecordsWhatPayPalIsAskedFor(): void
-    {
-        $order = $this->orderOf100();
-        $this->payInParts($order, '30.000000', '70.000000');
-        $recorded = null;
-        $this->dispatcher()->addListener(PayPalEvents::PAYPAL_ORDER_CREATE, static function (PayPalOrderEvent $event) use (&$recorded): void {
-            $recorded = $event->getPayPalOrder()->getAmount();
-            $event->stopPropagation();
-        }, 1024);
-
-        $this->service()->generatePayPalOrder($order);
-
-        self::assertSame(70.0, (float) $recorded);
     }
 
     public function testTheOrderSentToPayPalCarriesTheBalanceAndNothingElse(): void
