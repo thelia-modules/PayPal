@@ -1,4 +1,4 @@
 <?php
 return array(
-    'Paiement direct avec Paypal' => 'Direct payment with PayPal',
+    // 'an english string' => 'The displayed english string',
 );
