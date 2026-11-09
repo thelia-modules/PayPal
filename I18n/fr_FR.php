@@ -8,6 +8,8 @@ return array(
     'Activate payment with planified payment' => 'Activer le paiement par : "PAIEMENT RECURRENT"',
     'Activate sandbox mode' => 'Activer le mode Bac à Sable',
     'Choose a payment option' => 'Choisissez une option de paiement',
+    'Paiement direct avec Paypal' => 'Paiement direct avec PayPal',
+    'Paypal' => 'PayPal',
     'Allowed IPs in test mode' => 'IP autorisées pour le mode Bac à sable',
     'CVV' => 'Code secret (3 chiffres)',
     'Card number' => 'Numéro de la carte',
