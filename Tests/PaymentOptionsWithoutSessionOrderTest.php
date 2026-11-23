@@ -18,8 +18,12 @@ namespace PayPal\Tests;
 require_once __DIR__.'/ActivatedPayPal.php';
 
 use PayPal\EventListeners\PaymentModuleOptionListener;
+use PayPal\Model\Map\PaypalCartTableMap;
+use PayPal\Model\Map\PaypalPlanifiedPaymentI18nTableMap;
+use PayPal\Model\Map\PaypalPlanifiedPaymentTableMap;
 use PayPal\Model\PaypalPlanifiedPayment;
 use PayPal\PayPal;
+use Propel\Runtime\Propel;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -48,6 +52,15 @@ final class PaymentOptionsWithoutSessionOrderTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Activated by another process (ActivatedPayPal) once this one had loaded the map of the database: the tables of
+        // the planified payments, read with their translations, are declared here when it lacks them.
+        $map = Propel::getServiceContainer()->getDatabaseMap('TheliaMain');
+        foreach ([PaypalPlanifiedPaymentTableMap::class, PaypalPlanifiedPaymentI18nTableMap::class, PaypalCartTableMap::class] as $tableMap) {
+            if (!$map->hasTable($tableMap::TABLE_NAME)) {
+                $map->addTableFromMapClass($tableMap);
+            }
+        }
 
         $this->planifiedPayments = PayPal::getConfigValue('method_planified_payment');
         PayPal::setConfigValue('method_planified_payment', 1);
