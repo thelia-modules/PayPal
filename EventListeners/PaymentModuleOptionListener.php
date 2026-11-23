@@ -72,28 +72,30 @@ class PaymentModuleOptionListener implements EventSubscriberInterface
 
         $paymentModuleOptionGroup->appendPaymentModuleOption($option);
 
-        if (null === $cart || null === $order || null === $country) {
-            return;
-        }
+        // The direct payment is offered whatever the session holds: the Thelia 3 checkout keeps no order in the
+        // session, and the planified payments only need the total of the cart to be offered.
+        if (null !== $cart && null !== $country) {
+            // The postage of the order of the session when there is one, otherwise the one the checkout set on the cart.
+            $postage = null !== $order ? (float) $order->getPostage() : (float) $cart->getPostage();
+            $totalAmount = $cart->getTaxedAmount($country) + $postage;
 
-        $totalAmount = $cart->getTaxedAmount($country) + (float) $order->getPostage();
+            /** @var PaypalPlanifiedPayment $planifiedPayment */
+            foreach ($planifiedPayments as $planifiedPayment) {
+                if ($planifiedPayment->getMinAmount() > 0 && $planifiedPayment->getMinAmount() > $totalAmount) {
+                    continue;
+                }
 
-        /** @var PaypalPlanifiedPayment $planifiedPayment */
-        foreach ($planifiedPayments as $planifiedPayment) {
-            if ($planifiedPayment->getMinAmount() > 0 && $planifiedPayment->getMinAmount() > $totalAmount) {
-                continue;
+                if ($planifiedPayment->getMaxAmount() > 0 && $planifiedPayment->getMaxAmount() < $totalAmount) {
+                    continue;
+                }
+
+                $option = (new PaymentModuleOption())
+                    ->setCode('PaypalPlanifiedPayment_'.$planifiedPayment->getId())
+                    ->setTitle((string) $planifiedPayment->getTitle())
+                    ->setDescription((string) $planifiedPayment->getDescription());
+
+                $paymentModuleOptionGroup->appendPaymentModuleOption($option);
             }
-
-            if ($planifiedPayment->getMaxAmount() > 0 && $planifiedPayment->getMaxAmount() < $totalAmount) {
-                continue;
-            }
-
-            $option = (new PaymentModuleOption())
-                ->setCode('PaypalPlanifiedPayment_'.$planifiedPayment->getId())
-                ->setTitle((string) $planifiedPayment->getTitle())
-                ->setDescription((string) $planifiedPayment->getDescription());
-
-            $paymentModuleOptionGroup->appendPaymentModuleOption($option);
         }
 
         $event->appendPaymentModuleOptionGroups($paymentModuleOptionGroup);
